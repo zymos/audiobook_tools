@@ -46,6 +46,7 @@
 # Google credential json file
 GOOGLE_APPLICATION_CREDENTIALS="/home/zymos/Downloads/starbook6-aac17460d6ba.json"
 
+
 ###############################
 # Voices
 # 	run the following command to find available voices
@@ -66,11 +67,16 @@ GENDER='MALE'
 SPEAKINGRATE='0.95' # 1 is default
 
 
+####################
+# MP3 info
+BITRATE="32k"
+
 
 
 ##########################################################################################
-# Code
-#
+##########################################################################################
+## Code
+##
 
 
 
@@ -102,6 +108,18 @@ if ! [[ "$BOOKNAME" = /* ]]; then
 	BOOKNAME="$(pwd)/$BOOKNAME"
 fi
 
+
+# Use getopts for arguments (unimpleneted)
+# while getopts u:d:p:f: option
+# do
+	# case "${option}"
+	# in
+		# u) USER=${OPTARG};;
+		# d) DATE=${OPTARG};;
+		# p) PRODUCT=${OPTARG};;
+		# f) FORMAT=$OPTARG;;
+	# esac
+# done
 
 # Set output file
 OUTPUTFILE=$(echo "$BOOKNAME"|sed 's/\.txt/.mp3/')
@@ -190,14 +208,14 @@ done
 
 
 # Joins audio sections to single file
-if ! [ $(cat *.mp3 | ffmpeg -y -loglevel 8 -i - -b:a 32k "$OUTPUTFILE") ]; then
+if ! [ $(cat *.mp3 | ffmpeg -y -loglevel 8 -i - -b:a $BITRATE "$OUTPUTFILE") ]; then
 	echo
 	echo "Success: $OUTPUTFILE"
 	exit 0
 else
 	echo
 	echo "Error: merging sections failed"
-	echo "	Command: cat *.mp3 | ffmpeg -y -loglevel 8 -i - -b:a 32k \"$OUTPUTFILE\""
+	echo "	Command: cat *.mp3 | ffmpeg -y -loglevel 8 -i - -b:a $BITRATE \"$OUTPUTFILE\""
 	exit 1
 fi
 

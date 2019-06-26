@@ -6,18 +6,18 @@ These are some scripts to create and convert audiobooks.
 
 #### google-cloud-tts.sh
 *	Requirements:
-.*		ffmpeg
-.*		Google Cloud SDK
+	* ffmpeg
+	* Google Cloud SDK
 
 #### audiobook_reencoder
 * Requirments
-.* ffmpeg
-.* id3v2
+	* ffmpeg
+	* id3v2
 
 #### m4b split
 * Requirements
-.* ffmpeg
-.* libmp4v2
+	* ffmpeg
+	* libmp4v2
 
 ### Other useful external tools
 * id3v2 - MP3 ID3 tag command line editor

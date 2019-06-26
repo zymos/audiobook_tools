@@ -21,15 +21,15 @@ google-cloud-tts.sh [TEXT_FILE]
 ### Installation
 * Install required programs
 * Copy 'google-cloud-tts.sh' to where ever you want it.
-.* Add to $PATH if you want it.
+	* Add to $PATH if you want it.
 * Download Google application credential json file
 * Put the json file anywhere you want it.
 * Edit 'google-cloud-tts.sh' and go to the configuration section
-.* change 'GOOGLE_APPLICATION_CREDENTIALS="/home/bobthebuilder/google_cred.json"' to the location of your file
-.* Comment out all voices you are not using. Only one voice is set at a time.
-..* 'LANGUAGECODE, SPEACHVOICE, GENDER' are all required for each voice
-..* You can find the available voices, as on 06/2019 in voice.txt or get an up to date list by executing
-...* curl -H "Authorization: Bearer "$(gcloud auth application-default print-access-token) \
+	* change 'GOOGLE_APPLICATION_CREDENTIALS="/home/bobthebuilder/google_cred.json"' to the location of your file
+* Comment out all voices you are not using. Only one voice is set at a time.
+	* 'LANGUAGECODE, SPEACHVOICE, GENDER' are all required for each voice
+	* You can find the available voices, as on 06/2019 in voice.txt or get an up to date list by executing
+		* curl -H "Authorization: Bearer "$(gcloud auth application-default print-access-token) \
 -H "Content-Type: application/json; charset=utf-8" \
 "https://texttospeech.googleapis.com/v1/voices" > voices.txt
 
@@ -37,20 +37,20 @@ google-cloud-tts.sh [TEXT_FILE]
 
 ### Set up a Google Cloud acount and setup the TTS API
 * General Steps
-.* Create Google Cloud account
-.* Create Google Cloud Platform project
-.*	Enable the Cloud Text-to-Speech API
-.*	Set up authentication key, and download json file
-.*	Google Cloud Text-to-Speech: enabled
-.*	Google application credential json file
+	* Create Google Cloud account
+	* Create Google Cloud Platform project
+	*	Enable the Cloud Text-to-Speech API
+	*	Set up authentication key, and download json file
+	*	Google Cloud Text-to-Speech: enabled
+	*	Google application credential json file
 
 * For detailed steps see:
-.* https://cloud.google.com/text-to-speech/docs/quickstart-protocol
+	* https://cloud.google.com/text-to-speech/docs/quickstart-protocol
 
 
 ###	Useful tools:
 * Calibre
-.* ebook-convert zzzzzzz.epub zzzzzzz.txt
+	* ebook-convert zzzzzzz.epub zzzzzzz.txt
 
 
 ### Links
