@@ -53,6 +53,8 @@ GOOGLE_APPLICATION_CREDENTIALS="/home/zymos/Downloads/starbook6-aac17460d6ba.jso
 # 		curl -H "Authorization: Bearer "$(gcloud auth application-default print-access-token) \
 #  	 	-H "Content-Type: application/json; charset=utf-8" \
 #  		"https://texttospeech.googleapis.com/v1/voices" > voices.txt
+#
+# All 3 variables required to match google's specific voice, comment out all voices not used
 
 # Wavenet voice (better, but more expensive, <1M free)
 # LANGUAGECODE='en-US'
@@ -70,6 +72,13 @@ SPEAKINGRATE='0.95' # 1 is default
 ####################
 # MP3 info
 BITRATE="32k"
+
+###################
+# Debuging
+DELETETMPFILES=1
+
+
+
 
 
 
@@ -109,15 +118,24 @@ if ! [[ "$BOOKNAME" = /* ]]; then
 fi
 
 
-# Use getopts for arguments (unimpleneted)
+# Use getopts for arguments (unimpleneted
+# https://stackoverflow.com/questions/16483119/an-example-of-how-to-use-getopts-in-bash
+# https://wiki.bash-hackers.org/howto/getopts_tutorial
+# usage() { echo "Usage: $0 [-s <45|90>] [-p <string>]" 1>&2; exit 1; }
 # while getopts u:d:p:f: option
 # do
 	# case "${option}"
 	# in
-		# u) USER=${OPTARG};;
-		# d) DATE=${OPTARG};;
-		# p) PRODUCT=${OPTARG};;
-		# f) FORMAT=$OPTARG;;
+		# u) 
+			# USER=${OPTARG};;
+		# d) 
+			# DATE=${OPTARG};;
+		# p) 
+			# PRODUCT=${OPTARG};;
+		# f) 
+			# FORMAT=$OPTARG;;
+		# h | *) 
+			# usage;;
 	# esac
 # done
 
@@ -211,7 +229,6 @@ done
 if ! [ $(cat *.mp3 | ffmpeg -y -loglevel 8 -i - -b:a $BITRATE "$OUTPUTFILE") ]; then
 	echo
 	echo "Success: $OUTPUTFILE"
-	exit 0
 else
 	echo
 	echo "Error: merging sections failed"
@@ -219,5 +236,11 @@ else
 	exit 1
 fi
 
+
+# Delete tmp files
+if $DELETETMPFILES; then
+	cd ..
+	rm -rf tmp
+fi
 
 exit 0
