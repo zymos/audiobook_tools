@@ -35,7 +35,7 @@ $BACKUP_DIR = "/home/zymos/tmp/original_audio_files";
 $NORMALIZATION = 1;
 $DELETE_ORIGINAL = 1;
 $USE_MP3GAIN_FOR_NORMALIZATION = 1;
-
+$ADD_ID3_AUDIOBOOK_TAG = 1;
 
 
 #################################
@@ -65,9 +65,9 @@ sub m4btomp3 {
 	my $top_dir = $File::Find::dir; 
 	$top_dir =~ s/.*\///; 	
 	$file2 = $file;
-	$file2 =~ s/m4b$/mp3/;
+	$file2 =~ s/[Mm]4[AaBb]$/mp3/;
 
-	print "# Convert m4b to mp3...\n";
+	print "# Convert m4b/m4a to mp3...\n";
 	print "#  [$file] to [$file2]\n";
 	
 	$command = "avconv -i \"$file\" -c:v copy \"$file2\""; # c:v copy copies cover art
@@ -95,7 +95,7 @@ sub backup_files{
 				#sleep before delete incase you made a 
 				# terible mistake and want to Ctrl-c
 				sleep(3); 
-				$out = `$command`; # ID3 tag content->"Audiobook"
+				$out = `$command`; 
 			}else{
 				print ">>Executing: $command\n";
 			}
@@ -105,7 +105,7 @@ sub backup_files{
 			$dup = $BACKUP_DIR . "/" . $file . "-dup.mp3";
 			$command = "mv \"$file\" \"$dup\"";
 			if(! $TEST ){
-				$out = `$command`; # ID3 tag content->"Audiobook"
+				$out = `$command`; 
 			}else{
 				print ">>Executing: $command\n";
 			}
@@ -113,7 +113,7 @@ sub backup_files{
 			print "# Moving original file to backup directory...\n";
 			$command = "mv \"$file\" \"$BACKUP_DIR\"";
 			if(! $TEST ){
-				$out = `$command`; # ID3 tag content->"Audiobook"
+				$out = `$command`;
 			}else{
 				print ">>Executing: $command\n";
 			}
@@ -139,7 +139,7 @@ sub the_operation {
 	}
 
 	#skip non-audiobooks ! *.mp3 or *.m4b
-	if( !( $file =~ /\.mp3/i || $file =~ /.m4b/i ) ){
+	if( !( $file =~ /\.mp3/i || $file =~ /\.m4b/i  || $file =~ /\.m4a/i ) ){
 		return;
 	}
 
@@ -152,9 +152,8 @@ sub the_operation {
 	print "#\n";
 
 
-
-	if( not( $file eq '.' || $file eq '..' ) && $file =~ /\.m4b$/ ){
-
+	# process M4B files
+	if( $file =~ /\.m4b$/i || $file =~ /\.m4a$/i ){
 		$file2 = &m4btomp3($file);
 		&backup_files($file);
 		$file = $file2;
@@ -166,11 +165,11 @@ sub the_operation {
 		print "# file is definitly already encoded...\n";
 		print "#\n";
 		$count += 1;
-	}elsif( not( $file eq '.' || $file eq '..' ) && $file =~ /\.mp3$/ && $top_dir ne "original") { #make sure its an mp3
+	}elsif( not( $file eq '.' || $file eq '..' ) && $file =~ /\.mp3$/i && $top_dir ne "original") { #make sure its an mp3
 
 		# Create new file name
 		$file2 = $file;
-		$file2 =~ s/\.mp3$/-32k.mp3/;
+		$file2 =~ s/\.[Mm][Pp]3$/-32k.mp3/;
 	
 		# print "# Encoding: [$file] \n    in [$top_dir]\n";
 		# print "# Processing [$count] of [$total_file_count]\n";
@@ -202,12 +201,14 @@ sub the_operation {
 				exit 1;
 			}else{ #lame sucsseded
 				print FILE "Good: $file2\n";
-				print "# Applying ID3 tag, \"Audiobook\" genre...\n";
-				$command = "id3v2 --TCON \"Audiobook\" \"$file2\"";
-				if(! $TEST ){
-					$out = `$command`; # ID3 tag content->"Audiobook"
-				}else{
-					print ">>Executing: $command\n";
+				if($ADD_ID3_AUDIOBOOK_TAG){
+					print "# Applying ID3 tag, \"Audiobook\" genre...\n";
+					$command = "id3v2 --TCON \"Audiobook\" \"$file2\"";
+					if(! $TEST ){
+						$out = `$command`; # ID3 tag content->"Audiobook"
+					}else{
+						print ">>Executing: $command\n";
+					}
 				}
 
 				if($USE_MP3GAIN_FOR_NORMALIZATION && $NORMALIZATION){
@@ -267,6 +268,15 @@ print "  Delete original: $DELETE_ORIGINAL\n";
 print "  Use MP3Gain for normalization: $USE_MP3GAIN_FOR_NORMALIZATION\n";
 if($TEST){
 	print "  ***Test mode enabled***\n";
+}
+
+# Check if programs are required
+if($USE_MP3GAIN_FOR_NORMALIZATION){
+	`mp3gain -v` || die "Error: 'mp3gain' not installed"
+}
+`avconv -version` || die "Error: 'avconv' not installed";
+if($ADD_ID3_AUDIOBOOK_TAG){
+	`id3v2 -v` || die "Error: 'id3v2' not installed";
 }
 
 # create backup dir
