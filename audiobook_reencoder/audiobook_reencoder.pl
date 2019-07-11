@@ -29,13 +29,18 @@
 #
 
 $TEST = 0;
-$LOG_DIR = "/home/zymos/tmp/";
-$BACKUP_DIR = "/home/zymos/tmp/original_audio_files";
+$LOG_DIR = "/tmp/";
+$BACKUP_DIR = "/tmp/original_audio_files";
 
 $NORMALIZATION = 1;
 $DELETE_ORIGINAL = 1;
 $USE_MP3GAIN_FOR_NORMALIZATION = 1;
 $ADD_ID3_AUDIOBOOK_TAG = 1;
+
+
+
+
+
 
 
 #################################
@@ -51,9 +56,10 @@ use Cwd 'abs_path';
 
 # Check input must inckude dir
 $dirname = $ARGV[0];
-if($dirname eq ""){
-  print "the first arg is the directory\n";
-  exit;
+if($dirname eq "" || !(-d $dirname) ){
+  print "Error: the first arg is the directory\n";
+  print "Usage: audiobook_reencoder.pl [DIRECTORY]\n";
+  exit 1;
 }
 
 
