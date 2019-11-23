@@ -11,13 +11,13 @@
 #			Volume nomalized: Yes
 #			Backup directory: in config section
 #	Author:	ZyMOS
-#	Date: 	17 June 2016 -
+#	Date: 	17 June 2016 - 2019
 #	License: GPLv2
 #	Requirments:
 #		LAME MP3 Encoder (http://lame.sourceforge.net/)
 #		MP3Gain (http://mp3gain.sourceforge.net/)
 #		id3v2 (http://id3v2.sourceforge.net/)
-#		avconv ()
+#		ffmpeg ()
 #
 ############################################################################
 
@@ -28,27 +28,14 @@
 # Config
 #
 
-$TEST = 0; # no commands actually execuded
-$DEBUG = 1; # more verbose outputs
+$TEST = 0;
+$LOG_DIR = "/home/zymos/tmp/";
+$BACKUP_DIR = "/home/zymos/tmp/original_audio_files";
 
-$LOG_DIR = "/tmp";
-
+$NORMALIZATION = 1;
 $DELETE_ORIGINAL = 1;
-
-$BACKUP_ORIGINAL = 0;
-$BACKUP_DIR = "/tmp/original_audio_files"; # if !delete, move here
-
-$NORMALIZATION = 1; # mp3 gain normalization
 $USE_MP3GAIN_FOR_NORMALIZATION = 1;
-$ADD_ID3_AUDIOBOOK_TAG = 1;
-
-$DELETE_CUE_FILE = 1;
-
-$SAMPLERATE = 22050;
-$BITRATE = 32;
-
-
-
+$EXTRACT_COVER_ART = 1;
 
 
 #################################
@@ -64,10 +51,9 @@ use Cwd 'abs_path';
 
 # Check input must inckude dir
 $dirname = $ARGV[0];
-if($dirname eq "" || !(-d $dirname) ){
-  print "Error: the first arg is the directory\n";
-  print "Usage: audiobook_reencoder.pl [DIRECTORY]\n";
-  exit 1;
+if($dirname eq ""){
+  print "the first arg is the directory\n";
+  exit;
 }
 
 
@@ -78,22 +64,17 @@ sub m4btomp3 {
 	# Grab top directory of file
 	my $top_dir = $File::Find::dir; 
 	$top_dir =~ s/.*\///; 	
-	my $file2 = $file;
-	$file2 =~ s/\.[Mm]4[AaBb]$/-tmp-for-m4b.mp3/;
+	$file2 = $file;
+	$file2 =~ s/m4b$/mp3/;
 
-	print "# > Converting m4b/m4a...\n";
-	if($DEBUG){
-		print "# >	[$file] to \n";
-		print "# >	[$file2]\n";
-	}
-
-	$command = "avconv -loglevel \"fatal\" -i \"$file\" -c:v copy \"$file2\""; # c:v copy copies cover art
+	print "# Convert m4b to mp3...\n";
+	print "#  [$file] to [$file2]\n";
+	
+	$command = "ffmpeg -nostats -hide_banner -loglevel panic -i \"$file\" -c:v copy \"$file2\""; # c:v copy copies cover art
 	if(! $TEST ){
 		$out = `$command`;
-		print FILE ">m4b to mp3: $file\n   $file2";
-
 	}else{
-		print ">>Executing: $command\n";
+		print ">>Test/Executing: $command\n";
 	}
 	return($file2);
 }
@@ -102,58 +83,42 @@ sub m4btomp3 {
 
 
 sub backup_files{
-	my $file = $_;
+	my $file = $_[0];
 	# Grab top directory of file
 	my $top_dir = $File::Find::dir; 
 	$top_dir =~ s/.*\///; 	
 
 	if($DELETE_ORIGINAL){ # Delete the origional files after encoding
-		print "# Deleting original file...\n";
-		$command = "/bin/rm \"$file\"";
-		if(! $TEST ){
-			#sleep before delete incase you made a 
-			# terrible mistake and want to Ctrl-c
-			sleep(3); 
-			print FILE " rm original file: $file\n";
-			$out = `$command`; 
-		}else{
-			print ">>Executing: $command\n";
-		}
-	}elsif( -e $BACKUP_DIR . "/" . $file ){ #Backup original file, if file already exists, move to 
-		 # backup dir as dup filename
-		print "# Moving original file to backup directory...\n";
-		$dup = $BACKUP_DIR . "/" . $file . "-dup.mp3";
-		$command = "mv \"$file\" \"$dup\"";
-		if(! $TEST ){
-			$out = `$command`; 
-		}else{
-			print ">>Executing: $command\n";
-		}
-	}else{ # Backup origional file, move to backup dir
-		print "# Moving original file to backup directory...\n";
-		$command = "mv \"$file\" \"$BACKUP_DIR\"";
-		if(! $TEST ){
-			$out = `$command`;
-		}else{
-			print ">>Executing: $command\n";
-		}
-	}
-
-	if($DELETE_CUE_FILE){
-		my $cue_file =~ s/\.mp3$/.cue/;
-		if( -e $cue_file ){
 			$command = "/bin/rm \"$file\"";
 			if(! $TEST ){
 				#sleep before delete incase you made a 
-				# terrible mistake and want to Ctrl-c
-				$out = `$command`; 
-				print FILE "rm cue file: $file\n";
-
+				# terible mistake and want to Ctrl-c
+				print "# Deleting original file...(Ctrl-C to cancel)...\n";
+				sleep(3); 
+				$out = `$command`; # ID3 tag content->"Audiobook"
 			}else{
-				print ">>Executing(rm cue file): $command\n";
+				print ">>Test/Executing DELETE: $command\n";
 			}
-		}
+		}elsif( -e $BACKUP_DIR . "/" . $file ){ #Backup original file, if file already exists, move to 
+			 # backup dir as dup filename
+			print "# Moving original file to backup directory...\n";
+			$dup = $BACKUP_DIR . "/" . $file . "-dup.mp3";
+			$command = "mv \"$file\" \"$dup\"";
+			if(! $TEST ){
+				$out = `$command`; # ID3 tag content->"Audiobook"
+			}else{
+				print ">>Test/Executing: $command\n";
+			}
+		}else{ # Backup origional file, move to backup dir
+			print "# Moving original file to backup directory...\n";
+			$command = "mv \"$file\" \"$BACKUP_DIR\"";
+			if(! $TEST ){
+				$out = `$command`; # ID3 tag content->"Audiobook"
+			}else{
+				print ">>Test/Executing: $command\n";
+			}
 	}
+	return;
 }
 
 
@@ -161,9 +126,6 @@ sub backup_files{
 # Encode the files
 sub the_operation {
 	my $file = $_;
-	my $file2 = '';
-	my $file_m4b_tmp = '';
-
 	# Grab top directory of file
 	my $top_dir = $File::Find::dir; 
 	$top_dir =~ s/.*\///; 	
@@ -176,7 +138,7 @@ sub the_operation {
 	}
 
 	#skip non-audiobooks ! *.mp3 or *.m4b
-	if( !( $file =~ /\.mp3/i || $file =~ /\.m4b/i  || $file =~ /\.m4a/i ) ){
+	if( !( $file =~ /\.mp3/i || $file =~ /.m4b/i ) ){
 		return;
 	}
 
@@ -188,92 +150,104 @@ sub the_operation {
 	print "# Processing [$count] of [$total_file_count]\n";
 	print "#\n";
 
+	# Extract cover art to cover.jpg if DNE
+	# print "CWD Dir: " . abs_path() . "\n";
+	# $path_name = abs_path() . "/*.[jJ][pP][gG]";
+	# print "PATH : $path_name";
+	my @files1 = glob( "*.[jJ][pP][gG]" );
+	my @files2 = glob(  "*.[pP][nN][gG]" );
 
-	# preprocess M4B files
-	my $is_m4b=0;
-	if( $file =~ /\.m4b$/i || $file =~ /\.m4a$/i ){
-		$file_m4b_tmp = &m4btomp3($file);
-		$file2 = $file;
-		$file2 =~ s/\.[Mm]4[BbAa]$/-32k.mp3/;
-		$file = $file_m4b_tmp;
-		$is_m4b=1;
+	# print "Files :";
+	# foreach ( @files ){
+		# print "X: $_\n";
+	# }
+	if( !( @files1 || @files2 ) && $file =~ /\.m[p4][b3]$/ && $EXTRACT_COVER_ART ){
+		print "# Extracting cover art -> cover.jpg\n";
+		$command = "ffmpeg -nostats -hide_banner -loglevel panic -i \"$file\" \"cover.jpg\"";
+		if( ! $TEST ){
+			$out = `$command`;
+		}else{
+			print ">>Test/Executing: $command\n";
+		}
+
 	}else{
-		$file2 = $file;
-		$file2 =~ s/\.[Mm][Pp]3$/-32k.mp3/;			
+		print "# Cover art exists\n";
 	}
 
 
-	# dont encode if its definatly already encoded
-	if($file =~ /-32k-32k\.mp3$/){ # Skip encoding
-		print "# 	Skipping Encoding: [$file]\n";
-		print "# 	file is definitly already encoded...\n";
+
+	if( not( $file eq '.' || $file eq '..' ) && $file =~ /\.m4b$/ ){
+
+		$file2 = &m4btomp3($file);
+		&backup_files($file);
+		$file = $file2;
+	}
+
+	# dont encode if it's already encoded
+	if($file =~ /-32k\.mp3$/){ # Skip encoding
+		print "# Skipping Encoding: [$file]\n";
+		print "# file is already encoded...\n";
 		print "#\n";
 		$count += 1;
-	}elsif( not( $file eq '.' || $file eq '..' ) && $file =~ /\.mp3$/i && $top_dir ne "original") { #make sure its an mp3
+	}elsif( not( $file eq '.' || $file eq '..' ) && $file =~ /\.mp3$/ && $top_dir ne "original") { #make sure its an mp3
 
+		# Create new file name
+		$file2 = $file;
+		$file2 =~ s/\.mp3$/-32k.mp3/;
 	
 		# print "# Encoding: [$file] \n    in [$top_dir]\n";
 		# print "# Processing [$count] of [$total_file_count]\n";
 		$count += 1;
 		
 		# The encoding processes, (lame + id3 + mp3gain + del orginal)
-		if(!$NORMALIZATION){
-			$lame_normalization_arguments = "--noreplaygain";
-		}elsif(!$USE_MP3GAIN_FOR_NORMALIZATION){
-			$lame_normalization_arguments = "--replaygain-accurate";
-		}else{
-			$lame_normalization_arguments = "--noreplaygain";
-		}
-		print "# >	Starting Lame...\n";
-		# to add --tv \"TCON=Audiobook\"
-		if($ADD_ID3_AUDIOBOOK_TAG){
-			$lame_command = "lame --quiet --tv \"TCON=Audiobook\" --resample $SAMPLERATE --cbr -b $BITRATE $lame_normalization_arguments \"$file\" \"$file2\"";
-		}else{
-			$lame_command = "lame --quiet --resample $SAMPLERATE --cbr -b $BITRATE  $lame_normalization_arguments \"$file\" \"$file2\"";
-		}
-		if(! $TEST ){
-			$out = `$lame_command`;
-		}else{
-			print ">>Executing: $lame_command\n";
-		}
+		if(1){ #legacy crap
+			if(!$NORMALIZATION){
+				$lame_normalization_arguments = "--noreplaygain";
+			}elsif(!$USE_MP3GAIN_FOR_NORMALIZATION){
+				$lame_normalization_arguments = "--replaygain-accurate";
+			}else{
+				$lame_normalization_arguments = "--noreplaygain";
+			}
+			print "# Starting Lame...\n";
+			$lame_command = "lame --resample 22050 --cbr -b 32 $lame_normalization_arguments \"$file\" \"$file2\"";
+			if(! $TEST ){
+				$out = `$lame_command`;
+			}else{
+				print ">>Test/Executing: $lame_command\n";
+			}
 
-		if($? && !$TEST){ # lame encode failed
-			print "# ERROR encoding: $file \n";
-			print FILE "Lame Failed: $file\n";
-			print FILE " >$lame_command\n";
-			print "# Deleting newly created, failed file\n";
-			$out = `rm -f "$file2"`;
-			print "EXITING (1)\n";
-			exit 1;
-		}else{ #lame sucsseded
-			print FILE "Good: $file\n   -->$file2\n";
-			# if($ADD_ID3_AUDIOBOOK_TAG){
-				# print "# >	Applying ID3 tag, \"Audiobook\" genre...\n";
-				# $command = "id3v2 --TCON \"Audiobook\" \"$file2\"";
-				# if(! $TEST ){
-					# $out = `$command`; # ID3 tag content->"Audiobook"
-				# }else{
-					# print ">>Executing: $command\n";
-				# }
-			# }
-
-			if($USE_MP3GAIN_FOR_NORMALIZATION && $NORMALIZATION){
-				print "# >	Applying volume normilization...\n";
-				$command = "mp3gain \"$file2\" > /dev/null 2>&1 &";	
-				# replay gain
-				# runs oput of perl as a seperate parrallel proccess
+			if($? && !$TEST){ # lame encode failed
+				print "# ERROR encoding: $file \n";
+				print FILE "Fail: $file\n";
+				print "# Deleting newly created, failed file\n";
+				$out = `rm -f "$file2"`;
+				print "EXITING (1)\n";
+				exit 1;
+			}else{ #lame sucsseded
+				print FILE "Good: $file2\n";
+				print "# Applying ID3 tag, \"Audiobook\" genre...\n";
+				$command = "id3v2 --TCON \"Audiobook\" \"$file2\"";
 				if(! $TEST ){
-					$out = system($command); # ID3 tag content->"Audiobook"
+					$out = `$command`; # ID3 tag content->"Audiobook"
 				}else{
-					print ">>Executing: $command\n";
+					print ">>Test/Executing: $command\n";
 				}
+
+				if($USE_MP3GAIN_FOR_NORMALIZATION && $NORMALIZATION){
+					print "# Applying volume normilization...\n";
+					$command = "mp3gain \"$file2\" > /dev/null 2>&1 &";	
+					# replay gain
+					# runs oput of perl as a seperate parrallel proccess
+					if(! $TEST ){
+						$out = system($command); # ID3 tag content->"Audiobook"
+					}else{
+						print ">>Test/Executing: $command\n";
+					}
+				}
+				backup_files("$file");
 			}
-			&backup_files($file);
-			if($is_m4b){
-				&backup_files($file_m4b_tmp);
-			}
+			print "# Encoding complete\n#\n";
 		}
-		print "# Encoding complete\n#\n";
 	}
 }
 
@@ -317,23 +291,9 @@ print "  Use MP3Gain for normalization: $USE_MP3GAIN_FOR_NORMALIZATION\n";
 if($TEST){
 	print "  ***Test mode enabled***\n";
 }
-if($DEBUG){
-	print "  ***Debug mode enabled***\n";
-}
-
-# Check if programs are required
-# if($USE_MP3GAIN_FOR_NORMALIZATION){
-	# `mp3gain -v` || die "Error: 'mp3gain' not installed"
-# }
-# `avconv -version` || die "Error: 'avconv' not installed";
-# `lame --version` || die "Error: 'mp3lame' not installed";
-
-# if($ADD_ID3_AUDIOBOOK_TAG){
-	# `id3v2 -v` || die "Error: 'id3v2' not installed";
-# }
 
 # create backup dir
-if($BACKUP_ORIGINAL){
+if($DELETE_ORIGINAL){
 	$BACKUP_DIR = abs_path($BACKUP_DIR);
 	$BACKUP_DIR = $BACKUP_DIR . "/" . $time_string; #global var for the backup_dir
 	print "Create backup directory:\n";
