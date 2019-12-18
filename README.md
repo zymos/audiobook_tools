@@ -29,7 +29,7 @@ These are some scripts to create and convert audiobooks.
 	* ffmpeg
 	* libmp4v2
 
-#### audiobook_youtube-dl
+### Convert Youtube audiobooks to mp3 files
 * Description: Downloads audiobooks from youtube
 * Requirements:
 	* youtube-dl
@@ -40,11 +40,32 @@ These are some scripts to create and convert audiobooks.
 * Extracts cover art:  
 	* youtube-dl --get-thumbnail "URL_GOES_HERE" | xargs wget -O cover.jpg
  
+### Audible tools
 
+#### Extract your Audible authorization code
+* Description: Find your Audible 'activation byte', aka 'auth code', which is required for listening or converting your Audible audiobooks
+* Download: <https://github.com/inAudible-NG/audible-activator>
+* Notes: This tool requires Google Crome, but you can download Chrome and CromeDriver from the site, install it in a temp folder, adn delete it after.  Make sure the version of Chrome and CromeDriver are the same.
 
-### Other useful external tools
-* id3v2 - MP3 ID3 tag command line editor
-* Calibre - ebook reader/converter
-* easyTag - MP3 ID3 tags GUI editor
-* puddletag - MP3 ID3 tags GUI editor
+#### Convert Audible AAX files to mp3 (or other formats)
+* Description: Convert **your** Audible audio book to a useful non-DRM format, default is chaptered mp3s, but it can do m4b and other formats
+* Download: <https://github.com/KrumpetPirate/AAXtoMP3>
+* Usage: AAXtoMP3 --authcode YOUR_AUTH_CODE YOUR_AUDIBLE_FILE
+* Notes: If you want to use ffmpeg or avconv instead of AAXtoMP3, just use 'ffmpeg -activation_bytes YOUR_AUTH_CODE .....'
+
+### Useful external tools
+* id3v2 - MP3 ID3 tag command line editor (CLI)
+	* <http://id3v2.sourceforge.net/>
+* Calibre - ebook reader/converter (GUI and CLI)
+	* <https://calibre-ebook.com/>
+* EasyTag - MP3 ID3 tags GUI editor (GUI)
+	*<https://sourceforge.net/projects/easytag/>
+* puddletag - MP3 ID3 tags GUI editor (GUI)
+	* <http://docs.puddletag.net/>
+* Audible-activator - extract your Audible authorization code (CLI)
+	* <https://github.com/inAudible-NG/audible-activator>
+* AAXtoMP3 - convert your Audible audiobooks to useful format ie. mp3, m4b (CLI)
+* inAudible - Convert Audible audiobooks to useful format ie. mp3, m4b (GUI, windows only)
+* youtube-dl - Download videos (or audiobooks) from Youtube (CLI)
+	* <https://youtube-dl.org/>
 
