@@ -2,8 +2,9 @@
 
 These are some scripts to create and convert audiobooks.
 
-Download tools: <https://github.com/zymos/audiobook_tools/archive/master.zip master.zip>
+Download tools: [zip file](https://github.com/zymos/audiobook_tools/archive/master.zip master.zip)
 
+Git: git clone https://github.com/zymos/audiobook_tools.git
 
 
 
