@@ -1,0 +1,11 @@
+ <break time="200ms"/>
+The fairy turned to the rest of her flock, or herd, or swarm or whatever they were called en-masse.<break time="200ms"/>
+ <break time="200ms"/>
+“Harken, sisters! This human sees us but pretends we are naught but dust in the wind!”<break time="200ms"/>
+ <break time="200ms"/>
+Ryoka ignored them. The Frost Fairies were nearly a hundred in the air now, a huge mass that whirled around. They were<break time="200ms"/>arguing, or perhaps debating. Ryoka listened.<break time="200ms"/>
+ <break time="200ms"/>
+“Bah. Who cares what mortals think? What fools these mortals be! Let us go and bring snow and ice to the rest of this mudball!”<break time="200ms"/>
+“No, no! I want to stay at the inn!”<break time="200ms"/>
+“The running cow interests me. I say we follow her!”<break time="200ms"/>
+ <break time="200ms"/>

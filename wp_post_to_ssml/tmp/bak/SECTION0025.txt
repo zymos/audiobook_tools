@@ -1,0 +1,12 @@
+She raised a finger.<break time="200ms"/>
+“Discretion.”<break time="200ms"/>
+Ryoka stared at Erin. Erin nodded obediently.<break time="200ms"/>
+“Discretion. Right. Got it.”<break time="200ms"/>
+Ryoka pulled open the door to the inn as Erin hovered anxious around her.<break time="200ms"/>
+“You’ll be back soon though, right?”<break time="200ms"/>
+“In a week or less. Don’t worry. Can you check on Ceria for me?”<break time="200ms"/>
+“Oh, sure, sure. But do you want something to take with you? A snack? Lunch? Dinner? I can make something.”<break time="200ms"/>
+“I’ll be fine. I’ve got to go.”<break time="200ms"/>
+“What about<break time="200ms"/>”<break time="200ms"/>
+“Erin. I’ll see you later.”<break time="200ms"/>
+Ryoka stood up, pushed her feet into the ill-fitting boots she had to wear to avoid freezing her feet off, and nodded at Erin. She stepped out the door.<break time="200ms"/>

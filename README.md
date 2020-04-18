@@ -5,17 +5,32 @@ These are some scripts to create and convert audiobooks.
 ### Tools
 
 #### google-cloud-tts.sh
-* Description: Creates audiobooks from ebooks using Google voice
+* Description: Creates audiobooks from ebooks using Google voice (text-to-speech)
 *	Requirements:
 	* ffmpeg
 	* Google Cloud SDK
-	* Calibre
+	* Calibre (ebooks to txt)
 
 #### audiobook_reencoder
-* Description: Re-encodes all mp3/m4b files in a directories, extracts cover art, and some basic audiobook stuff
+* Description: Re-encodes all mp3/m4b files in a directory, recursivly.
+	* Features:
+          * Encodes using ffmpeg
+          * Accepts mp3, m4b, m4a (todo maybe flac)
+          * Grabs audio files data using ffprobe, for re-encoding and embedding cover art
+          * Split into chapters (not implemented)
+          * Removes unneeded files (nfo/cue/m3u) (can be disabled)
+          * Add genre="Audiobook" (can be disabled)
+          * Normalize volume (can be disabled)
+		  *	Won't re-encode if it is obvious it has been done before (can be forced)
+          * Cover art:
+              * Extracts cover art to cover.jpg (can be disabled)
+              * Embeds cover art to each audiofile (can be disabled)
+              * If directory contains multiple different audiobooks it won't try extract/embed cover art
+              * Can delete original image file, after embedding (not default)
+
 * Requirments
-	* ffmpeg
-	* id3v2
+	* ffmpeg and ffprobe
+	* python
 
 #### audio_extract_cover_art
 * Description: Extracts the cover art from mp3s, recursivly
@@ -36,7 +51,7 @@ These are some scripts to create and convert audiobooks.
 * Downloads single file
 	* youtube-dl --extract-audio --embed-thumbnail --add-metadata --audio-format mp3 "[URL_GOES_HERE]"
 * Downloads entire playlist: 
-	* youtube-dl --extract-audio --embed-thumbnail --add-metadata --audio-format mp3 --yes-playlist "'URL_GOES_HERE]"
+	* youtube-dl --extract-audio --embed-thumbnail --add-metadata --audio-format mp3 --yes-playlist "[URL_GOES_HERE]"
 * Extracts cover art:  
 	* youtube-dl --get-thumbnail "[URL_GOES_HERE]" | xargs wget -O cover.jpg
  
@@ -58,6 +73,8 @@ These are some scripts to create and convert audiobooks.
 	* <http://id3v2.sourceforge.net/>
 * Calibre - ebook reader/converter (GUI and CLI)
 	* <https://calibre-ebook.com/>
+		* Ebook to txt: 'ebook-convert Book.epub Book.txt'
+		* Extract cover art: ebook-meta --get-cover=cover.jpg
 * EasyTag - MP3 ID3 tags GUI editor (GUI)
 	* <https://sourceforge.net/projects/easytag/>
 * puddletag - MP3 ID3 tags GUI editor (GUI)
@@ -69,4 +86,5 @@ These are some scripts to create and convert audiobooks.
 * inAudible - Convert Audible audiobooks to useful format ie. mp3, m4b (GUI, windows only)
 * youtube-dl - Download videos (or audiobooks) from Youtube (CLI)
 	* <https://youtube-dl.org/>
-
+* eyeD3 - ID3 editor with ability to add cover art
+	* <https://eyed3.readthedocs.io/en/latest/>

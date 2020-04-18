@@ -1,0 +1,31 @@
+
+Start: <div class="entry-content">
+	<speak>
+End: </div><!-- .entry-content -->
+	</speak>
+
+<em>: 
+	<emphasis level="moderate">To be</emphasis>
+
+<p>: remove
+</p>: <break time="400ms"/>
+
+<p>&nbsp;</p>
+<p>&#8212;-</p>
+<p>&nbsp;</p>
+
+—
+…
+&#8230;
+
+<time class="entry-date" datetime="2017-03-12T01:55:04+00:00">
+
+<h1 class="entry-title">2.00</h1>
+
+<title>2.00 | The Wandering Inn</title>
+
+
+-space before emphasis
+-asteris
+-speaking quote
+-speak title

@@ -1,0 +1,9 @@
+“It doesn’t hurt them, and it’s one of the only ways to get these creatures to leave. I thought it best to expedite the process if they are a threat.”<break time="200ms"/>
+ <break time="200ms"/>
+“Fire, fire!”<break time="200ms"/>
+“It will burn our snowflakes! Our snow gifts!”<break time="200ms"/>
+“Bah. This mage seeks to play with flame? Let’s show him a true taste of cold, sisters!”<break time="200ms"/>
+ <break time="200ms"/>
+One of the fairies spoke as the herd of fairies flew in panic. In a moment the mood changed.<break time="200ms"/>
+Erin didn’t see what happened, but one instant the flaming bird or insect of fire was chasing a fairy, and then the fairy had stopped and suddenly the [Firefly] spell went out. In a moment. There wasn’t so much as a flicker of smoke. The fire was just <emphasis level="moderate">gone.</emphasis><break time="200ms"/>
+Pisces frowned upwards as one of the fairies raised a tiny hand. He stroked at his chin.<break time="200ms"/>

@@ -1,0 +1,24 @@
+<speak>
+<metadata>
+   <rdf:RDF
+       xmlns:rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+       xmlns:rdfs = "http://www.w3.org/2000/01/rdf-schema#"
+       xmlns:dc = "http://purl.org/dc/elements/1.1/">
+	<rdf:Description rdf:about="http://www.example.com/meta.ssml"
+       dc:title="Hamlet-like Soliloquy"
+       dc:description="Aldine's Soliloquy in the style of Hamlet"
+       dc:publisher="W3C"
+       dc:language="en-US"
+       dc:date="2002-11-29"
+       dc:rights="Copyright 2002 Aldine Turnbet"
+       dc:format="application/ssml+xml" >   
+   </rdf:Description>
+  </rdf:RDF>
+ </metadata>	   
+ talt to the hand<break />
+“<emphasis level="moderate">One</emphasis>”<break time="200ms"/>
+“Two”<break time="200ms"/>
+<emphasis level="moderate">“three”<Ow that stinks!</emphasis><break time="200ms"/>
+
+Erin screamed in pain and punched the Golem in the head. His bite didn’t hurt<break time="200ms"/>well, it didn’t hurt
+</speak>

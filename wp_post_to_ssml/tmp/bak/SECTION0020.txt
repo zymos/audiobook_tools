@@ -1,0 +1,6 @@
+“What?”<break time="200ms"/>
+“Wow. That was so well<break time="200ms"/>thought out! Hey, do you want a job working here? You can be the head innkeeper with all the ideas and I’ll be the innkeeper who does everything else.”<break time="200ms"/>
+“No thanks.”<break time="200ms"/>
+Ryoka said it deadpan. Erin guessed that to her, the idea of being a smiling innkeeper was probably like torture. But Ryoka had good ideas, so Erin pressed her.<break time="200ms"/>
+“Okay, you don’t have to be an innkeeper. But what about my inn? Is there anything else I should be doing?”<break time="200ms"/>
+It took Ryoka all of five seconds to come up with an answer as she stared around the empty room.<break time="200ms"/>
