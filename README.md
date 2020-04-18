@@ -2,16 +2,15 @@
 
 These are some scripts to create and convert audiobooks.
 
-### Tools
 
-#### google-cloud-tts.sh
+## google-cloud-tts.sh
 * Description: Creates audiobooks from ebooks using Google voice (text-to-speech)
 *	Requirements:
 	* ffmpeg
 	* Google Cloud SDK
 	* Calibre (ebooks to txt)
 
-#### audiobook_reencoder
+## audiobook_reencoder
 * Description: Re-encodes all mp3/m4b files in a directory, recursivly.
 * Features:
 	* Encodes using ffmpeg
@@ -101,20 +100,20 @@ optional arguments:
   --debug               prints debug info
 ```
 
-#### audio_extract_cover_art
+## audio_extract_cover_art
 * Description: Extracts the cover art from mp3s, recursivly
 * Requirments
 	* ffmpeg
 
 
-#### m4b split
+## m4b split
 * Desciption: Splits m4b files to chaptered mp3 files
 * Requirements
 	* ffmpeg
 	* libmp4v2
 
 
-#### wp post to ssml
+## wp post to ssml
 * Description: Converts a Wordpress post to an SSML file to be used in a text-to-speech program or service.  This is useful for coverting web-novels to audio.
 * Requirements
 	* python
@@ -131,7 +130,7 @@ positional arguments:
 	-q, --dont-remove-quotes    Leave quotes in place and may or may not be spoken    (off by default)
 ```
 
-### Convert Youtube audiobooks to mp3 files
+## Convert Youtube audiobooks to mp3 files
 * Description: Downloads audiobooks from youtube
 * Requirements:
 	* youtube-dl
@@ -142,20 +141,20 @@ positional arguments:
 * Extracts cover art:  
 	* youtube-dl --get-thumbnail "[URL_GOES_HERE]" | xargs wget -O cover.jpg
  
-### Audible tools
+## Audible tools
 
-#### Extract your Audible authorization code
+### Extract your Audible authorization code
 * Description: Find your Audible 'activation byte', aka 'auth code', which is required for listening or converting your Audible audiobooks
 * Download: <https://github.com/inAudible-NG/audible-activator>
 * Notes: This tool requires Google Crome, but you can download Chrome and CromeDriver from the site, install it in a temp folder, adn delete it after.  Make sure the version of Chrome and CromeDriver are the same.
 
-#### Convert Audible AAX files to mp3 (or other formats)
+### Convert Audible AAX files to mp3 (or other formats)
 * Description: Convert **your** Audible audio book to a useful non-DRM format, default is chaptered mp3s, but it can do m4b and other formats
 * Download: <https://github.com/KrumpetPirate/AAXtoMP3>
 * Usage: AAXtoMP3 --authcode [YOUR_AUTH_CODE] [YOUR_AUDIBLE_FILE]
 * Notes: If you want to use ffmpeg or avconv instead of AAXtoMP3, just use 'ffmpeg -activation_bytes [YOUR_AUTH_CODE] .....'
 
-### Useful external tools
+# Useful external tools
 * Calibre - ebook reader/converter (GUI and CLI)
 	* <https://calibre-ebook.com/>
 		* Ebook to txt: 'ebook-convert Book.epub Book.txt'
