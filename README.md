@@ -156,22 +156,30 @@ positional arguments:
 * Notes: If you want to use ffmpeg or avconv instead of AAXtoMP3, just use 'ffmpeg -activation_bytes [YOUR_AUTH_CODE] .....'
 
 ### Useful external tools
-* id3v2 - MP3 ID3 tag command line editor (CLI)
-	* <http://id3v2.sourceforge.net/>
 * Calibre - ebook reader/converter (GUI and CLI)
 	* <https://calibre-ebook.com/>
 		* Ebook to txt: 'ebook-convert Book.epub Book.txt'
 		* Extract cover art: ebook-meta --get-cover=cover.jpg
-* EasyTag - MP3 ID3 tags GUI editor (GUI)
-	* <https://sourceforge.net/projects/easytag/>
-* puddletag - MP3 ID3 tags GUI editor (GUI)
-	* <http://docs.puddletag.net/>
 * Audible-activator - extract your Audible authorization code (CLI)
 	* <https://github.com/inAudible-NG/audible-activator>
 * AAXtoMP3 - convert your Audible audiobooks to useful format ie. mp3, m4b (CLI)
 	*  <https://github.com/KrumpetPirate/AAXtoMP3>
-* inAudible - Convert Audible audiobooks to useful format ie. mp3, m4b (GUI, windows only)
+* inAudible - Convert Audible audiobooks to useful format ie. mp3, m4b (GUI, windows/mac only) <https://github.com/rmcrackan/inAudible>
 * youtube-dl - Download videos (or audiobooks) from Youtube (CLI)
 	* <https://youtube-dl.org/>
-* eyeD3 - ID3 editor with ability to add cover art
-	* <https://eyed3.readthedocs.io/en/latest/>
+* ffmpeg - video/audio converter/encoder <https://ffmpeg.org/>
+* MP3 error checking
+	* mpck <http://checkmate.gissen.nl/>
+	* mp3diag <http://mp3diags.sourceforge.net/>
+	* mp3check <https://sourceforge.net/projects/mp3check/>
+	* mp3val <http://mp3val.sourceforge.net/>
+	* mp3guessenc <https://mp3guessenc.sourceforge.io/>
+* MP3 ID3 tag
+	* id3v2  <http://id3v2.sourceforge.net/>
+	* exiftool <https://exiftool.org/>
+	* EasyTag - MP3 ID3 tags GUI editor (GUI) <https://sourceforge.net/projects/easytag/>
+	* puddletag - MP3 ID3 tags GUI editor (GUI) <http://docs.puddletag.net/>
+* MP3 info tool
+	* mp3guessenc <https://mp3guessenc.sourceforge.io/>
+	* eyeD3 <https://eyed3.readthedocs.io/en/latest/>
+	* ffprobe, part of ffmpeg <https://ffmpeg.org/>
