@@ -30,8 +30,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('URL', type=str, help='URL to a Wordpress post')
     parser.add_argument('--format', help='Format of each file')
-    parser.add_argument('-a', '--speak-asterisk', help='Speaks out asterisk[*] (off by default)')
-    parser.add_argument('-q', '--dont-remove-quotes', help='Leave quotes in place and may or may not be spoken (off by default)')
+    parser.add_argument('-a', '--speak-asterisk', help='Speaks out asterisk[*] (off by default)', action="store_true")
+    parser.add_argument('-q', '--dont-remove-quotes', help='Leave quotes in place and may or may not be spoken (off by default)', action="store_true")
     args = parser.parse_args()
 
 
