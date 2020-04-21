@@ -22,6 +22,11 @@
 ############################################################################
 
 
+#
+# ffmpeg -i in.mp3 -i test.jpeg -map 0:0 -map 1:0 -codec copy -id3v2_version 3 \ 
+# -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" out.mp3
+#
+#  -filter:a loudnorm -filter:a loudnorm
 
 
 ################################
@@ -65,7 +70,7 @@ sub m4btomp3 {
 	my $top_dir = $File::Find::dir; 
 	$top_dir =~ s/.*\///; 	
 	$file2 = $file;
-	$file2 =~ s/m4b$/mp3/;
+	$file2 =~ s/[Mm]4[aAbB]$/mp3/;
 
 	print "# Convert m4b to mp3...\n";
 	print "#  [$file] to [$file2]\n";
@@ -138,7 +143,7 @@ sub the_operation {
 	}
 
 	#skip non-audiobooks ! *.mp3 or *.m4b
-	if( !( $file =~ /\.mp3/i || $file =~ /.m4b/i ) ){
+	if( !( $file =~ /\.mp3/i || $file =~ /\.m4b/i || $file =~ /\.m4a/i) ){
 		return;
 	}
 
@@ -176,7 +181,7 @@ sub the_operation {
 
 
 
-	if( not( $file eq '.' || $file eq '..' ) && $file =~ /\.m4b$/ ){
+	if( not( $file eq '.' || $file eq '..' ) && ($file =~ /\.m4b$/i || $file =~ /\.m4a/i) ){
 
 		$file2 = &m4btomp3($file);
 		&backup_files($file);
@@ -262,7 +267,7 @@ sub the_count {
 	$top_dir =~ s/.*\///; 	
 
 	if( not( $file eq '.' || $file eq '..' || -d $file ) && $top_dir ne "original") { 
-		if( $file =~ /\.mp3$/ || $file =~ /\.m4b$/){
+		if( $file =~ /\.mp3$/i || $file =~ /\.m4[ab]$/i){
 			#make sure its an mp3
 			$total_file_count += 1;
 		}

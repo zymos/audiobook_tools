@@ -58,17 +58,16 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 
 
 
-## Convert Youtube audiobooks to mp3 files (external tool)
-* Description: Downloads audiobooks from youtube
-* Requirements:
-	* youtube-dl
+# youtube-dl: Convert Youtube audiobooks to mp3 files (external tool)
+* Description: There are many audiobooks on youtube.  Mostly web-novels and light-novels read by computers, that will likely never be produced in studios.
 * Downloads single file
 	* youtube-dl --extract-audio --embed-thumbnail --add-metadata --audio-format mp3 "[URL_GOES_HERE]"
 * Downloads entire playlist: 
 	* youtube-dl --extract-audio --embed-thumbnail --add-metadata --audio-format mp3 --yes-playlist "[URL_GOES_HERE]"
 * Extracts cover art:  
 	* youtube-dl --get-thumbnail "[URL_GOES_HERE]" | xargs wget -O cover.jpg
-
+* Download: <https://youtube-dl.org/>
+* Git: <https://github.com/ytdl-org/youtube-dl>
 
 
 # Audible.com (very-unofficial) tools
