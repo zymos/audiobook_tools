@@ -113,6 +113,9 @@ most of these can be changed using command line flags or editing a little bit of
 ## Re-encode all files in a directory
 * python audiobook_reencoder.py DIRECTORY
 
+## Re-encode single file
+* python audiobook_reencoder.py FILE
+
 ## Set default bitrate, samplerate and/or audio format
 by default bitrate=32k; samplerate=22050; format=mp3
 * python audiobook_reencoder.py --bitrate 64k --samplerate 44100 --audio-output-format m4b DIRECTORY
@@ -131,6 +134,11 @@ by default bitrate=32k; samplerate=22050; format=mp3
 
 ## Split into chapters
 * todo
+
+
+# Bugs
+* Can't read mp3 APE tags
+
 
 # Useful external tools
 * Audible-activator - extract your Audible authorization code (CLI)

@@ -153,7 +153,7 @@ def main():
 
     # banner for test
     if args.test:
-        print "******************************************************"
+        print("******************************************************")
         print "* Running in test mode, no actions will be performed *"
         print "******************************************************"
 
@@ -735,7 +735,7 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             ffmpeg_metadata += " -metadata genre=\"Audiobook\""
         if args.audio_output_format == 'mp3':
             # makes sure id3 tags are writen and removes some leftovers from m4b files
-            ffmpeg_metadata += " -metadata compatible_brands= -metadata minor_version= -metadata major_brand= -id3v2_version 3 -write_id3v1 1"
+            ffmpeg_metadata += " -metadata compatible_brands= -metadata minor_version= -metadata major_brand= "
 
     # Cover art
     if not no_need_to_reencode: #cover_art_same:
@@ -795,6 +795,7 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             # Remove chapter data from single file
             ffmpeg_metadata += " -map_chapters -1"
 
+            logger.debug("making tmp dir: " + ffmpeg_output_chap_temp_dirname)
             if not os.path.isdir(ffmpeg_output_chap_temp_dirname):
                 os.mkdir(ffmpeg_output_chap_temp_dirname)
 
@@ -804,7 +805,8 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             ffmpeg_single_tmp = os.path.join(temp_root_dir, "temp-single." + args.audio_output_format)
             
             # Encoding (1st stage) 
-            ffmpeg_cmd = "ffmpeg -loglevel error -y -i \"" + ffmpeg_input + "\"" + ffmpeg_audio_codec + ffmpeg_bitrate + ffmpeg_samplerate + ffmpeg_loudnorm + " -id3v2_version 3 -write_id3v1 1  \"" + ffmpeg_single_tmp + "\"" 
+            #   copy id3, Remove chapter data, encode w/ codec/bitrate/samplerate, vol normalize
+            ffmpeg_cmd = "ffmpeg -loglevel error -y -i \"" + ffmpeg_input + "\"" + ffmpeg_audio_codec + ffmpeg_bitrate + ffmpeg_samplerate + ffmpeg_loudnorm + " -id3v2_version 3 -write_id3v1 1 -map_chapters -1 \"" + ffmpeg_single_tmp + "\"" 
 
             if debug:
                 logging.debug("    Encoding (" + str(file_count) + " of " + str(total_count) + "): " + os.path.basename(ffmpeg_input_old) )
@@ -870,7 +872,7 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
                     break
 
                 # Encoding: adding cover are and metadata (3rd stage)
-                ffmpeg_cmd_add_art = "ffmpeg -loglevel error" + " -y -i \"" + ffmpeg_output_tmp + "\"" + ffmpeg_cover_art + " -c:v copy -c:a copy" + ffmpeg_metadata + " -id3v2_version 3 -write_id3v1 1 \"" + ffmpeg_output + "\""   
+                ffmpeg_cmd_add_art = "ffmpeg -loglevel error" + " -y -i \"" + ffmpeg_output_tmp + "\"" + ffmpeg_cover_art + " -c:a copy" + ffmpeg_metadata + ffmpeg_metadata_track + "  -id3v2_version 3 -write_id3v1 1 \"" + ffmpeg_output + "\""   
                 if debug:
                     logger.debug("         Adding cover art and ID3 tags")
                 else:
@@ -895,6 +897,8 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             ####################################
             # Encoding - Not-Chaptered
 
+            ffmpeg_output = os.path.join(temp_root_dir,os.path.basename(ffmpeg_input))
+            
             # Creating ffmpeg command
             ffmpeg_cmd = "ffmpeg -loglevel error" + " -y -i \"" + ffmpeg_input + "\"" + ffmpeg_cover_art + ffmpeg_audio_codec + ffmpeg_bitrate + ffmpeg_samplerate + ffmpeg_metadata + ffmpeg_loudnorm + " \"" + ffmpeg_output + "\""
 
@@ -928,7 +932,7 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             final_output = ffmpeg_input
         # end single file encoding
 
-        # moving files to proper place, deleting old
+        # Error delete tmp
         if encoder_error:
             logger.debug("encoding failed, deleting temporary file:")
             if not args.test and os.path.exists(temp_output):
@@ -936,17 +940,28 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
         else: 
             # encoding sucess
             if chapter_it:
-                logger.debug("Encoding sucess: moving old file to backup(in desired), moving new file to original")
+                logger.debug("Encoding success: moving old file to backup(in desired), moving new file to original")
+                # create backup of original
+                if args.keep_original_files and not args.test:
+                    new_filename = os.path.join(os.path.dirname(ffmpeg_input), "original-" + os.path.basename(ffmpeg_input))
+                    if os.path.exists(new_filename):
+                        new_filename = os.path.join(os.path.dirname(ffmpeg_input), "original2-" + os.path.basename(ffmpeg_input))
+                    os.rename(ffmpeg_input,new_file_name)
+                # move temp to original location
+                if os.path.exists(final_output):
+                    # if folder already exists , move to "folder-new"
+                    final_output = final_output + "-new"
+                os.rename(temp_output,final_output)
+            else: # single file
                 if args.keep_original_files and not args.test:
                     new_filename = os.path.join(os.path.dirname(ffmpeg_input), "original-" + os.path.basename(ffmpeg_input))
                     if os.path.exists(new_filename):
                         new_filename = os.path.join(os.path.dirname(ffmpeg_input), "original2-" + os.path.basename(ffmpeg_input))
                     os.rename(ffmpeg_input,new_file_name)
                 if os.path.exists(final_output):
-                    final_output = final_output + "new"
+                    # if folder already exists , delete
+                    os.remove(final_output)
                 os.rename(temp_output,final_output)
-
-
     return
 # end encode_audio_files
 

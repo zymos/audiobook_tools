@@ -32,11 +32,17 @@
 #		Standard (non-WaveNet) voices < 4 million characters free
 #		WaveNet voices < 1 million characters free
 #		Max characters per request < 5,000; shorter requests give less errors
-#		
+#		Characters per minute 	150,000
+#
 #	Useful tools:
 #		Calibre
 #			ebook-convert zzzzzzz.epub zzzzzzz.txt
 #
+#
+#	Bugs:
+#		pronunciation check for isnt -> isn't 
+#			Im
+
 
 
 ########################################################################################
@@ -47,7 +53,7 @@
 # Google credential json file
 GOOGLE_APPLICATION_CREDENTIALS_DEFAULT="$HOME/.auth/google.json"
 
-
+DELETETMPFILES=0
 ###############################
 # Voices
 # 	run the following command to find available voices
@@ -109,7 +115,11 @@ SPLITSIZE=1000
 if ! [[ "$BOOKNAME" = /* ]]; then
 	BOOKNAME="$(pwd)/$BOOKNAME"
 fi
-echo "b: $BOOKNAME"
+
+# Current working directory
+CURRENT_WORKING_DIR=$(pwd)
+
+
 function usage_function {
 	echo "Usage: google-cloud-tts.sh [--ssml] [--gender GENDER] [--voice-name VOICE_NAME] [--google-auth-file JSON_FILE] [--output FILENAME] [--language-code LOCALE] TEXT_OR_SSML_FILE"
 	echo
@@ -183,7 +193,7 @@ while true; do
 					;;
 	# Anything else should be input file, but we will check
     *               )
-					BOOKNAME=$1
+					BOOKS=( $@ )
                     break ;;
   esac
 done
@@ -237,26 +247,6 @@ if ! [[ `which bash` || `which pwd` || `which readline` || `which dirname` || `w
   usage_function
   exit 1
 fi
-# book file has a prob
-if [ -z "$BOOKNAME" ]; then
-	echo "Error: \"$BOOKNAME\" is not a file"
-	echo
-	usage_function
-	exit 1
-fi
-if ! [[ $(file -0 "$BOOKNAME" | cut -d $'\0' -f2 | grep text) ]]; then
-	echo "Error: \"$BOOKNAME\" is not a text file"
-	echo
-	usage_function	
-	exit 1
-fi
-if ! [ -f "$BOOKNAME" ]; then
-	echo "Error: \"$BOOKNAME\" is not a file"
-	echo
-	usage_function
-	exit 1
-fi
-
 
 # Gender check
 if [[ -z "$SPEACHVOICE" ]];then
@@ -282,171 +272,221 @@ fi
 
 
 
-echo "book $BOOKNAME"
-# Set output filename
-if [ SSML ];then
-	OUTPUTFILE=$(echo "$BOOKNAME"|sed 's/\.ssml//i')
-	INPUT_TYPE='ssml'
-else
-	OUTPUTFILE=$(echo "$BOOKNAME"|sed 's/\.txt//i')
-	INPUT_TYPE='txt'
-fi
-OUTPUTFILE+="`dirname "$BOOKNAME"`.mp3"
-if [ OUTPUT_FILE_ASSIGNED ];then
-	OUTPUTFILE=$OUTPUT_FILENAME_ASSIGNED
-else
-	OUTPUTFILE+=".mp3"
-fi
-
-# if [[ "$DIR" = /* ]]; then
-# Starting
-echo "Converting: $BOOKNAME"
-echo "	Output: $OUTPUTFILE"
 
 
-BOOKNAME=`readlink -f "$BOOKNAME"`
 
-# echo "Book: $BOOKNAME"
+#Process Books(input files)
 
-# Generate tmp dirs
-TMPDIR=`mktemp -d`
-cd $TMPDIR
-echo "	Temp directory: $TMPDIR"
-
-# mkdir -p tmp
-# mkdir -p tmp/bak
-# mv tmp/* tmp/bak/ &> /dev/null
-# $(rm tmp/*.*)
-# cd tmp
-
-echo "	Google auth file: $GOOGLE_APPLICATION_CREDENTIALS"
-echo "	Voice: $SPEACHVOICE"
-echo "	Gender: $GENDER"
-
-# import credentals file
-export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
-
-
-# split into 5000 max charator files, google limit per request, less lines, gives less errors
-split -C $SPLITSIZE -a 4 --numeric-suffixes=0 --additional-suffix=".txt" "$BOOKNAME" SECTION
-
-# Display section counts
-SECTIONSLIST=(SECTION*.txt)
-SECTIONCOUNT=`echo "${SECTIONSLIST[@]: -1}" | sed 's/SECTION//'|sed 's/\.txt//'`
-echo "	File split into $SECTIONCOUNT sections"
-
-echo -n "Converting."
-# Encoding text section to audio
-for FILENAME in $(ls SECTION*)
-do
-	# echo "Converting: $FILENAME"
-	echo -n "."
-	# echo "$FILENAME"
-
-	TEXT="<speak>`cat $FILENAME | \
-		sed 's/<speak>//g' |\
-		sed 's/<\/speak>//g' |\
-		sed 's/['\''’‚‘´\`]/’/g' |\
-		sed 's/[“”„“‟”"❝❞⹂〝〞〟＂]/"/g' |\
-		sed 's/…/.../g' |\
-		sed 's/[–]/-/g'  `</speak>"
-	# echo $TEXT
-		# remove posible inconsistent quote problems
-		#TODO find a better dingle quote for I'll can't ets
-		# "‚" != comma
-
-		# double quotes: [„“‟”’"❝❞⹂〝〞〟＂]
-		# single quotes" [’‚‘‛❛❜❟´\`]
-		# other: /…/
-# ç.
-	# printf -v TEXT "%q" "`cat $FILENAME`" #remove any prob with quotes
-	# TEXT="`cat $FILENAME| tr -dc '[:alnum:]\n\r'`"
-	echo $TEXT > "$FILENAME-text-sent.txt" # for debuging
-
-	# Sends text to google and returns audio
-	# speaking_rate
-	TRY=0
-	while [ $TRY -le 2 ]; do
-		
-		# m,aybe change to ssml
-		# https://cloud.google.com/text-to-speech/docs/ssml
-
-
-		curl -s -H "Authorization: Bearer $(gcloud auth application-default print-access-token)" \
-		  -H "Content-Type: application/json; charset=utf-8" \
-	  --data "{
-		'input':{
-		  '$INPUT_TYPE':'$TEXT'
-		},
-		'voice':{
-		  'languageCode':'$LANGUAGECODE',
-		  'name':'$SPEACHVOICE',
-		  'ssmlGender':'$GENDER'
-		},
-		'audioConfig':{
-		  'audioEncoding':'MP3',
-		  'speakingRate':'$SPEAKINGRATE'
-		}
-		}" "https://texttospeech.googleapis.com/v1/text:synthesize" > $FILENAME$SYNTHTXT
-
-		# problem with the sections text, usually odd char
-		if [ "$?" != "0" ]; then
-			echo "Failure to encode section: $FILENAME"
-			echo "Content:"
-			echo "    $TEXT"
-		fi
-
-		# detect failures
-		if [ $(cat $FILENAME$SYNTHTXT|grep 'error') ]; then 
-			TRY=$(( $TRY + 1))
-			echo "\nError detected in: $FILENAME, Try $TRY"
-		else
-			TRY=10 # All is good
-		fi
-	done
+#foreach book
+for BOOKNAME in "$@"; do
 	
-	# Failed too many times, exit
-	if [ $TRY -ne 10 ]; then 
-		echo "\n----------------------------"
-		cat $FILENAME$SYNTHTXT
-		echo "----------------------------"
-		echo " See: https://cloud.google.com/speech-to-text/docs/reference/rpc/google.rpc"
-		exit 1
-	fi
+	BOOKNAME_LOC=`readlink -f "$BOOKNAME"`
+	# book file has a prob
+	if [ -z "$BOOKNAME" ]; then
+		echo "Error: \"$BOOKNAME\" is not a file"
+		continue
+		# echo
+		# usage_function
+		# exit 1
+	elif ! [[ $(file -0 "$BOOKNAME" | cut -d $'\0' -f2 | grep text) ]]; then
+		echo "Error: \"$BOOKNAME\" is not a text file"
+		continue
+		# echo
+		# usage_function	
+		# exit 1
+	elif ! [ -f "$BOOKNAME" ]; then
+		echo "Error: \"$BOOKNAME\" is not a file"
+		continue
+		# echo
+		# usage_function
+		# exit 1
+	else
+		# Process file
 
-	# convert output to mp3
-	cat $FILENAME$SYNTHTXT | grep 'audioContent' | \
-		sed 's|audioContent| |' | tr -d '\n ":{},' > tmp.txt && \
-		base64 tmp.txt --decode > $FILENAME$SYNTHAUD && \
-		rm tmp.txt
-done
+		# echo "Input file:  $BOOKNAME"
+		# Set output filename
+		if [ SSML ];then
+			OUTPUTFILE=$(echo "$BOOKNAME"|sed 's/\.ssml//i')
+			INPUT_TYPE='ssml'
+		else
+			OUTPUTFILE=$(echo "$BOOKNAME"|sed 's/\.txt//i')
+			INPUT_TYPE='txt'
+		fi
+		# OUTPUTFILE+=".mp3"
 
-# echo "PWD: " `pwd`
+		# echo "	Output: $OUTPUTFILE"
 
-# if ! [ `ls *.mp3` ]; then
-	# echo "Error: no mp3s created"
-	# exit 1
-# fi
+		if [ $OUTPUT_FILE_ASSIGNED -eq 1 ];then
+			OUTPUTFILE="$CURRENT_WORKING_DIR/$OUTPUT_FILENAME_ASSIGNED"
+		else
+			OUTPUTFILE="$CURRENT_WORKING_DIR/$OUTPUTFILE.mp3"
+		fi
 
-# Joins audio sections to single file
-
-
-if ! [ $(ffmpeg -y -loglevel 8 -f concat -safe 0 -i <(for f in ./*.mp3; do echo "file '$PWD/$f'"; done) -b:a $BITRATE -af "apad=pad_dur=2" "$OUTPUTFILE") ]; then
-	echo
-	echo "Success: $OUTPUTFILE"
-else
-	# echo "ffmpeg -y -loglevel 8 -f concat -safe 0 -i <(for f in ./*.mp3; do echo "file '$PWD/$f'"; done) -b:a $BITRATE "$OUTPUTFILE"
-	echo "Error: merging sections failed"
-
-	echo "	Command: ffmpeg -y -loglevel 8 -f concat -safe 0 -i <(for f in ./*.mp3; do echo \"file '$PWD/$f'\"; done) -b:a $BITRATE \"$OUTPUTFILE\"  "
-	exit 1
-fi
+		# if [[ "$DIR" = /* ]]; then
+		# Starting
+		# echo "File assigned: $OUTPUT_FILE_ASSIGNED"
 
 
-# Delete tmp files
-# if [ $DELETETMPFILES ]; then
-	# cd ..
-	# rm -rf tmp
-# fi
+		echo "Converting: $BOOKNAME"
+		echo "	Output: $OUTPUTFILE"
+
+		# continue
+
+		BOOKNAME=`readlink -f "$BOOKNAME"`
+
+		# echo "Book: $BOOKNAME"
+		# exit
+
+
+		# Generate tmp dirs
+		TMPDIR=`mktemp -d`
+		cd $TMPDIR
+		echo "	Temp directory: $TMPDIR"
+
+		# mkdir -p tmp
+		# mkdir -p tmp/bak
+		# mv tmp/* tmp/bak/ &> /dev/null
+		# $(rm tmp/*.*)
+		# cd tmp
+
+		echo "	Google auth file: $GOOGLE_APPLICATION_CREDENTIALS"
+		echo "	Voice: $SPEACHVOICE"
+		echo "	Gender: $GENDER"
+
+		# import credentals file
+		export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
+
+
+		# split into 5000 max charator files, google limit per request, less lines, gives less errors
+		split -C $SPLITSIZE -a 4 --numeric-suffixes=0 --additional-suffix=".txt" "$BOOKNAME" SECTION
+
+		# Display section counts
+		SECTIONSLIST=(SECTION*.txt)
+		SECTIONCOUNT=`echo "${SECTIONSLIST[@]: -1}" | sed 's/SECTION//'|sed 's/\.txt//'`
+		echo "	File split into $SECTIONCOUNT sections"
+
+		echo -n "Converting."
+		# Encoding text section to audio
+		for FILENAME in $(ls SECTION*)
+		do
+			# echo "Converting: $FILENAME"
+			echo -n "."
+			# echo "$FILENAME"
+
+			# isn’t \xe2\x80\x99
+		# \u0027\u0027\u0027\u2019\u201a\u2018\u00b4\u0060 to \u2019
+			# TEXT="<speak>`cat $FILENAME | \
+				# sed 's/<speak>//g' |\
+				# sed 's/<\/speak>//g' |\
+				# sed 's/['\''’‚‘´\`]/’/g' |\
+				# sed 's/[“”„“‟”"❝❞⹂〝〞〟＂]/"/g' |\
+				# sed 's/…/\.\.\. /g' |\
+				# sed 's/[–]/-/g'  `</speak>"
+
+			TEXT="<speak>`cat $FILENAME | \
+				sed 's/<speak>//g' |\
+				sed 's/<\/speak>//g' `</speak>"
+
+
+		# echo $TEXT
+				# remove posible inconsistent quote problems
+				#TODO find a better dingle quote for I'll can't ets
+				# "‚" != comma
+
+				# double quotes: [„“‟”’"❝❞⹂〝〞〟＂]
+				# single quotes" [’‚‘‛❛❜❟´\`]
+				# other: /…/
+		# ç.
+			# printf -v TEXT "%q" "`cat $FILENAME`" #remove any prob with quotes
+			# TEXT="`cat $FILENAME| tr -dc '[:alnum:]\n\r'`"
+			echo $TEXT > "$FILENAME-text-sent.txt" # for debuging
+
+			# Sends text to google and returns audio
+			# speaking_rate
+			TRY=0
+			while [ $TRY -le 2 ]; do
+				
+				# m,aybe change to ssml
+				# https://cloud.google.com/text-to-speech/docs/ssml
+
+
+				curl -s -H "Authorization: Bearer $(gcloud auth application-default print-access-token)" \
+				  -H "Content-Type: application/json; charset=utf-8" \
+			  --data "{
+				'input':{
+				  '$INPUT_TYPE':'$TEXT'
+				},
+				'voice':{
+				  'languageCode':'$LANGUAGECODE',
+				  'name':'$SPEACHVOICE',
+				  'ssmlGender':'$GENDER'
+				},
+				'audioConfig':{
+				  'audioEncoding':'MP3',
+				  'speakingRate':'$SPEAKINGRATE'
+				}
+				}" "https://texttospeech.googleapis.com/v1/text:synthesize" > $FILENAME$SYNTHTXT
+
+				# problem with the sections text, usually odd char
+				if [ "$?" != "0" ]; then
+					echo "Failure to encode section: $FILENAME"
+					echo "Content:"
+					echo "    $TEXT"
+				fi
+
+				# detect failures
+				if [ "$(cat $FILENAME$SYNTHTXT|grep "Invalid JSON payload")" != "" ]; then 
+					TRY=$(( $TRY + 1))
+					echo "\nError detected in: $FILENAME, Try $TRY"
+				else
+					TRY=10 # All is good
+				fi
+			done
+			
+			# Failed too many times, exit
+			if [ $TRY -ne 10 ]; then 
+				echo "\n----------------------------"
+				cat $FILENAME$SYNTHTXT
+				echo "----------------------------"
+				echo " See: https://cloud.google.com/speech-to-text/docs/reference/rpc/google.rpc"
+				exit 1
+			fi
+
+			# convert output to mp3
+			cat $FILENAME$SYNTHTXT | grep 'audioContent' | \
+				sed 's|audioContent| |' | tr -d '\n ":{},' > tmp.txt && \
+				base64 tmp.txt --decode > $FILENAME$SYNTHAUD && \
+				rm tmp.txt
+		done
+
+		# echo "PWD: " `pwd`
+
+		# if ! [ `ls *.mp3` ]; then
+			# echo "Error: no mp3s created"
+			# exit 1
+		# fi
+
+		# Joins audio sections to single file
+
+
+		if ! [ $(ffmpeg -y -loglevel 8 -f concat -safe 0 -i <(for f in ./*.mp3; do echo "file '$PWD/$f'"; done) -b:a $BITRATE -af "apad=pad_dur=2" "$OUTPUTFILE") ]; then
+			echo
+			echo "Success: $OUTPUTFILE"
+		else
+			# echo "ffmpeg -y -loglevel 8 -f concat -safe 0 -i <(for f in ./*.mp3; do echo "file '$PWD/$f'"; done) -b:a $BITRATE "$OUTPUTFILE"
+			echo "Error: merging sections failed"
+
+			echo "	Command: ffmpeg -y -loglevel 8 -f concat -safe 0 -i <(for f in ./*.mp3; do echo \"file '$PWD/$f'\"; done) -b:a $BITRATE \"$OUTPUTFILE\"  "
+			exit 1
+		fi
+
+
+		# Delete tmp files
+		if [[ $DELETETMPFILES ]]; then
+			cd ..
+			rm -rf "$TMPDIR"
+		fi
+	fi # done single book
+done # done each book
 
 exit 0

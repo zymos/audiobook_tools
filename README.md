@@ -113,3 +113,4 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 	* mp3guessenc <https://mp3guessenc.sourceforge.io/>
 	* eyeD3 <https://eyed3.readthedocs.io/en/latest/>
 	* ffprobe, part of ffmpeg <https://ffmpeg.org/>
+	* mediainfo: <https://mediaarea.net/en/MediaInfo>

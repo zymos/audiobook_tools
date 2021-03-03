@@ -9,16 +9,18 @@ import re
 import sys
 import getopt
 
-import urllib2
+import urllib3
 from lxml import html
 
 from lxml import etree
 
 import requests
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 
 import argparse
 
+# for sleep func debug
+import time
 
 ############################
 # Main
@@ -44,14 +46,15 @@ def main():
     # response = urllib2.urlopen(url)
     # page_text = str(response.read())
     try:
-        response = urllib2.urlopen(url)
+        #  response = urllib3.urlopen(url)
+        response = requests.get(url)
     except:
-        print "URL is invalid: " + url
+        print("URL is invalid: " + url)
         exit(1)
     # page = requests.get(url)
     # tree = html.fromstring(page.content)
 
-    html_content = response.read()
+    html_content = response.text
     # tree = html.fromstring(html_content)
     # print "Get all data: ", html
 
@@ -82,7 +85,7 @@ def main():
         if re.search('<meta property="og:title"', line):
             article_title = re.sub('<meta property="og:title" content="', '', line)
             article_title = re.sub('".*', '', article_title)
-            article_title = h.unescape(article_title.decode('utf-8',errors='ignore'))
+            #  article_title = h.unescape(article_title.decode('utf-8',errors='ignore'))
 
         
         # article has ended
@@ -96,7 +99,11 @@ def main():
 
             # text line adds break
             line_mod = re.sub('<p>', '', line_mod)
+
             line_mod = re.sub('</p>', '@!@!@!@!break time="200ms"/!@!@!@!@', line_mod)
+
+            # nbsp space
+            line_mod = re.sub('&nbsp;', '@!@!@!@!break time="200ms"/!@!@!@!@', line_mod)
             
             # remove spoken asterisk
             if not args.speak_asterisk:
@@ -105,6 +112,15 @@ def main():
             # remove spoken quotes
             if not args.dont_remove_quotes:
                 line_mod = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '', line_mod)
+                # line_mod = re.sub("['\''’‚‘´\`]", "’", line_mod)
+		
+                # sed 's/['\''’‚‘´\`]/’/g' |\
+		# sed 's/[“”„“‟”"❝❞⹂〝〞〟＂]/"/g' |\
+		# sed 's/…/\.\.\. /g' |\
+		# sed 's/[–]/-/g'  `</speak>"
+            # —
+            # fix single quotes
+            line_mod = re.sub("['\''’‚‘´\`]", "’", line_mod)
 
             # emphasised text
             line_mod = re.sub('<em>', '@!@!@!@!emphasis level="moderate"!@!@!@!@', line_mod)
@@ -117,11 +133,11 @@ def main():
             
             # Extra breaks
             # ': ', '…', '—' '—-' '—'
-            line_mod = re.sub('—-', '@!@!@!@!break time="200ms"/!@!@!@!@', line_mod)
-            line_mod = re.sub('—', '@!@!@!@!break time="200ms"/!@!@!@!@', line_mod)
-            line_mod = re.sub('…', '@!@!@!@!break time="200ms"/!@!@!@!@', line_mod)     
+            line_mod = re.sub('—-', '@!@!@!@!break time="200ms"/!@!@!@!@ ', line_mod)
+            line_mod = re.sub('—', '@!@!@!@!break time="200ms"/!@!@!@!@ ', line_mod)
+            line_mod = re.sub('…', '@!@!@!@!break time="200ms"/!@!@!@!@ ', line_mod)     
             if re.search('[a-zA-Z]: [a-zA-Z]', line_mod): 
-                line_mod = re.sub(': ', '@!@!@!@!break time="200ms"/!@!@!@!@', line_mod)
+                line_mod = re.sub(': ', '@!@!@!@!break time="200ms"/!@!@!@!@ ', line_mod)
 
             # print line_mod
 
@@ -134,7 +150,11 @@ def main():
             line_mod = re.sub('@!@!@!@!', '<', line_mod)
             line_mod = re.sub('!@!@!@!@', '>', line_mod)
             
-            line_mod = h.unescape(line_mod.decode('utf-8',errors='ignore'))
+            # print line
+            # print line_mod
+            # print "--------------------------------------------------------------------"
+
+            #  line_mod = h.unescape(line_mod.decode('utf-8',errors='ignore'))
 
             # line_mod = unescape(line_mod)
             article_text += line_mod + "\n"
@@ -142,15 +162,16 @@ def main():
         # Article has started
         if re.search('<div class="entry-content">', line):
             article_write = 1
-            article_text += article_title + "<break time=\"1s\" />\n"
+            article_text += article_title + "<break time=\"1s\" />\n\n"
        
     # print article_text.encode('utf-8')
     article_text = "<speak>\n<!--\nWordpress articles post: Metadata\n   <meta property=\"og:title\" content=\"\" />\n    <meta property=\"og:url\" content=\"\" />\n    <meta property=\"article:published_time\" content=\"\" />\n    <meta property=\"og:site_name\" content=\"\" />\n    <meta property=\"og:image\" content=\"\" />\n-->\n    <metadata>\n        <dc:date><dc:date>\n        <dc:publisher></dc:publisher>\n        <dc:source></dc:source>\n     <dc:title></dc:title>\n    </metadata>\n" + article_text
     filename = article_date + " - " + article_title + ".ssml"
-    print "Saving to filename: " + filename
+    print("Saving to filename: " + filename)
 
     file = open(filename, "w")
-    file.write(article_text.encode('utf-8'))
+    #  file.write(article_text.encode('utf-8'))
+    file.write(article_text)
     file.close()
 
     
