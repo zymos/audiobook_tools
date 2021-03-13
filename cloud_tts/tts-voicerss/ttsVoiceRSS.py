@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-# -*- coding: latin-1 -*-
+# -*- coding: utf-8 -*-
 
 ###########################################################################
 #
@@ -69,7 +69,6 @@ TEST=0
 
 VOICE='Amy' # Amy, Mary, Linda ...
 LOCALE='en-us' # locale must match voice
-KEY='f46e67af78d74976833caaaed05b9719'
 CHARACTOR_LIMIT=10000
 POST_CHAR_LIMIT=1000 #max number of charators to send for each convertion
 INPUT_FORMAT='txt'
@@ -83,17 +82,38 @@ TTS_AUDIO_SETTINGS='16khz_16bit_stereo'
 # Code
 #
 
+# debug
 import pprint
+
+# tts
 import voicerss_tts
+
+# system stuff
 import os
-#  import getopt
+
+# command line args
 import argparse
+
+# temp file directory
 import tempfile
+
 #  import sys
 import subprocess
+
+# regex
 import re
+
+# for sleep
 import time
-#  import glob
+
+# for loading config files
+from appdirs import *
+import configparser
+#  from configparser import ConfigParser
+
+
+config_file = configparser.ConfigParser()
+
 
 ######################################
 # CLI Arguments
@@ -104,7 +124,21 @@ def parse_args():
     parser.add_argument('EBOOK', nargs='+', type=str, help='ebook txt file')
     parser.add_argument('--bitrate', type=str, help='audio encoding bitrate', choices=["32k","48k","64k","96k","128k","196k"], default="64k")
     parser.add_argument('--samplerate', type=str, help='audio encoding samplerate', choices=[16000,22050,48000], default="22050")
-    parser.add_argument('--format', type=str, help='audio encoding format', choices=["mp3"], default="mp3")
+    parser.add_argument('--format', type=str, help='audio encoding format', choices=["mp3", "wav", "ogg"], default="mp3")
+    parser.add_argument('--input-format', type=str, help='format sent to TTS service', choices=["txt","ssml","json-txt","json-ssml"])
+    parser.add_argument('--key', type=str, help='key, auth code, auth file')
+    parser.add_argument('--locale', type=str, help='example: en-us, en-au,')
+    parser.add_argument('--voice', type=str, help='voice')
+    #  parser.add_argument('--', type=str, help='', choices=[""], default="")
+    #  parser.add_argument('--', type=str, help='', choices=[""], default="")
+    #  parser.add_argument('--', type=str, help='', choices=[""], default="")
+    #  parser.add_argument('--', type=str, help='', choices=[""], default="")
+    #  parser.add_argument('--', type=str, help='', choices=[""], default="")
+    #  parser.add_argument('--', type=str, help='', choices=[""], default="")
+    #  parser.add_argument('--', type=str, help='', choices=[""], default="")
+    #  parser.add_argument('--', type=str, help='', choices=[""], default="")
+
+
 # all ffmpeg vars should strings even numbers
 
 #  parser.add_argument('-a', '--speak-asterisk', help='Speaks out asterisk[*] (off by default)', action="store_true")
@@ -112,6 +146,65 @@ def parse_args():
     args = parser.parse_args()
     
     return args
+
+
+
+
+
+
+
+
+############################
+# Config file
+#
+def load_config_file():
+    
+
+    # Format:
+    #
+    # [tt
+
+    # Get config file location
+    appname = "audiobook-tools"
+    appauthor = "audiobook-tools"
+    config_file = os.path.join(user_config_dir(appname, appauthor), "audiobook-tools.conf")
+
+    #  print("Config file:", config_file)
+
+    # read config file
+    if os.path.isfile(config_file):  
+        print("Config file:", config_file)
+        cfg = configparser.ConfigParser()
+        cfg.read(config_file)
+    else:
+        print("Config file not found.")
+        exit()
+
+    config = {}
+
+    # service
+    config['SERVICE'] = cfg['TTY_SERVICE']['SERVICE']
+    
+    # voice
+    if( args.voice ):
+        config['VOICE'] = args.voice
+    elif( cfg['GENERAL']['VOICE'] ):
+        config['VOICE'] = cfg['GENERAL']['VOICE']
+    else:
+        config['VOICE'] = VOICE
+
+    # locale
+    config['LOCALE'] = cfg['GENERAL']['LOCALE']
+    config['KEY'] = cfg['GENERAL']['KEY']
+    config['INPUT_FORMAT'] = cfg['GENERAL']['INPUT_FORMAT']
+    config['AUDIO_FORMAT'] = cfg['GENERAL']['AUDIO_FORMAT']
+    config['AUDIO_SETTINGS'] = cfg['GENERAL']['AUDIO_SETTINGS']
+    #  config['VOICE'] = cfg['GENERAL']['voice']
+
+    return config
+
+
+
 
 #######################################
 # Get file list
@@ -166,19 +259,59 @@ def get_char_count_forall_files(file_list):
 
 
 
+
+#######################################
+# VoiceRSS
+#
+
+
+def voicerss(text_in, VOICE_in, LOCALE_in, AUDIO_FORMAT_in, AUDIO_SETTINGS_in, INPUT_FORMAT_in, KEY_in):
+    
+    print(VOICE_in, LOCALE_in, AUDIO_FORMAT_in, AUDIO_SETTINGS_in, INPUT_FORMAT_in, KEY_in)
+    if( INPUT_FORMAT == 'ssml' ):
+        is_ssml = 'true'
+    else:
+        is_ssml = 'false'
+
+    voice = voicerss_tts.speech({
+            'key': KEY_in,
+            'hl': LOCALE_in,
+            #  'v': VOICE_in,
+            'src': text_in,
+            #  'r': '0',
+            #  'c': AUDIO_FORMAT_in,
+            #  'f': AUDIO_SETTINGS_in,
+            #  'ssml': is_ssml,
+            #  'b64': 'false'
+        })
+
+    # check for error
+    if voice['error']:
+        print("Error by VoiceRSS detected while converting chunk")
+        print("Error: " + voice['error'])
+        exit(1)
+
+    return voice['responce']
+
+
 #######################################
 # Main funcion
 #
 def main():
 
+    global args
     # get inpout args
     args = parse_args()
 
+
+    config = load_config_file()
     #  if(not TEST):
         #  print("setting:", TEST)
     #  else:
         #  print "no"
     #  exit()
+    
+    pprint.pprint(config)
 
     #####################
     # get the text
@@ -269,36 +402,19 @@ def main():
             #  INPUT_FORMAT='SSML'
             #  TTS_FORMAT='mp3'
             #  TTS_AUDIO_SETTINGS='16khz_16bit_stereo'
-            if( INPUT_FORMAT == 'SSML' ):
-                is_ssml = 'true'
-            else:
-                is_ssml = 'false'
             
             cnt = cnt + 1
             print("    >Chunk:", cnt) # print a dot showing progress
             time.sleep(1) # to avoid clobbering servers
+      
+# voicerss(text_in, voice, locale, audio_format, audio_settings, input_format, key):
 
             if(not TEST):
-                voice = voicerss_tts.speech({
-                        'key': KEY,
-                        'hl': LOCALE,
-                        'v': VOICE,
-                        'src': chunk,
-                        'r': '0',
-                        'c': TTS_FORMAT,
-                        'f': TTS_AUDIO_SETTINGS,
-                        'ssml': is_ssml,
-                        'b64': 'false'
-                    })
-                # check for error
-                if voice['error']:
-                    print("Error by VoiceRSS detected while converting chunk", cnt)
-                    print("Error: " + voice['error'])
-                    exit(1)
     
+                response = voicerss(chunk, config['VOICE'], config['LOCALE'], config['AUDIO_FORMAT'], config['AUDIO_SETTINGS'], config['INPUT_FORMAT'], config['KEY']) 
 
                 # join the mp3 fragments together
-                mp3_data = mp3_data + voice['response']        # write mp3_data to file (temp mp3 file, needs re-encode)
+                mp3_data = mp3_data + response        # write mp3_data to file (temp mp3 file, needs re-encode)
 
           
             else:
