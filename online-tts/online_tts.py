@@ -70,7 +70,7 @@
 # Configure
 # 
 
-DEBUG=0
+DEBUG=1
 TEST=0
 
 # number of char to send to service (smaller has less errors)
@@ -85,10 +85,11 @@ POST_CHAR_LIMIT = 1000
 import pprint
 
 # tts
-import voicerss_tts
+#  import voicerss_tts
 
 # system stuff
 import os
+import sys
 
 # command line args
 import argparse
@@ -106,12 +107,27 @@ import re
 import time
 
 # for loading config files
-from appdirs import *
-import configparser
-config_file = configparser.ConfigParser()
+try:
+    from appdirs import *
+except:
+    print("Error: module 'appdirs' not installed")
+    print("Install: pip install appdirs")
+    exit(1)
+try:
+    import configparser
+    config_file = configparser.ConfigParser()
+except:
+    print("Error: module 'configparser' not installed")
+    print("Install: pip install configparser")
+    exit(1)
 
 # web grab
-import requests
+try:
+    import requests
+except:
+    print("Error: module 'requests' not installed")
+    print("Install: pip install requests")
+    exit(1)
 
 # load external file for APIs
 from tts_service_APIs import *
@@ -133,8 +149,12 @@ def parse_args():
     parser.add_argument('--key', type=str, help='key, auth code, auth file')
     parser.add_argument('--locale', type=str, help='example: en-us, en-au,')
     parser.add_argument('--voice', type=str, help='voice')
-    #  parser.add_argument('--', type=str, help='', choices=[""], default="")
-    #  parser.add_argument('--', type=str, help='', choices=[""], default="")
+    parser.add_argument('--gender', type=str, help='')
+    parser.add_argument('--profile', type=str, help='use profile instead of default, set in config file')
+    parser.add_argument('--url_parameters', type=str, help='this will be attached to url after question mark')
+    parser.add_argument('--audio_settings', type=str, help='')
+    parser.add_argument('--gtts-lang', type=str, help='language for google-translate-tts')
+    parser.add_argument('--gtts-tld', type=str, help='top-level-domain for google-tanslate-tts accents')
     #  parser.add_argument('--', type=str, help='', choices=[""], default="")
     #  parser.add_argument('--', type=str, help='', choices=[""], default="")
     #  parser.add_argument('--', type=str, help='', choices=[""], default="")
@@ -142,15 +162,13 @@ def parse_args():
     #  parser.add_argument('--', type=str, help='', choices=[""], default="")
     #  parser.add_argument('--', type=str, help='', choices=[""], default="")
 
-
-# all ffmpeg vars should strings even numbers
-
-#  parser.add_argument('-a', '--speak-asterisk', help='Speaks out asterisk[*] (off by default)', action="store_true")
-#  parser.add_argument('-q', '--dont-remove-quotes', help='Leave quotes in place and may or may not be spoken (off by default)', action="store_true")
+    parser.add_argument('-a', '--speak-asterisk', help='Speaks out asterisk[*] (off by default)', action="store_true")
+    parser.add_argument('-q', '--dont-remove-quotes', help='Leave quotes in place and may or may not be spoken (off by default)', action="store_true")
+    
     args = parser.parse_args()
     
     return args
-
+#  End: parse_args 
 
 
 
@@ -164,43 +182,66 @@ def parse_args():
 def load_config():
     
     # Get config file location
-
     global config
-
     config = {}
 
+    # set app name and gets config location
     appname = "audiobook-tools"
     appauthor = "audiobook-tools"
     config_file = os.path.join(user_config_dir(appname, appauthor), "audiobook-tools.conf")
-
-    #  print("Config file:", config_file)
-
+    default_config_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "online-tts.conf")
+ 
     # read config file
     if os.path.isfile(config_file):  
         print("Config file:", config_file)
         cfg = configparser.ConfigParser()
         cfg.read(config_file)
+    elif os.path.isfile(default_config_file):
+        print("Config file:", default_config_file)
+        cfg = configparser.ConfigParser()
+        cfg.read(default_config_file)
     else:
         print("Config file not found.")
-        exit()
+        print(" Not:", config_file)
+        print(" Not:", default_config_file)
+        exit(1)
 
-
+    # create dictionary
     config = {s:dict(cfg.items(s)) for s in cfg.sections()}
-    #  # voice
-    #  if( args.voice ):
-        #  config['VOICE'] = args.voice
-    #  elif( cfg['GENERAL']['VOICE'] ):
-        #  config['VOICE'] = cfg['GENERAL']['VOICE']
-    #  else:
-        #  config['VOICE'] = VOICE
 
-    #  # locale
-    #  config['LOCALE'] = cfg['GENERAL']['LOCALE']
-    #  config['KEY'] = cfg['GENERAL']['KEY']
-    #  config['INPUT_FORMAT'] = cfg['GENERAL']['INPUT_FORMAT']
-    #  config['AUDIO_FORMAT'] = cfg['GENERAL']['AUDIO_FORMAT']
-    #  config['AUDIO_SETTINGS'] = cfg['GENERAL']['AUDIO_SETTINGS']
-    #  #  config['VOICE'] = cfg['GENERAL']['voice']
+    #  Overrides via commandline
+    # voice
+    if( args.voice ):
+        config.update({'OVERRIDE':{'voice': args.voice}}) 
+    #locale
+    if( args.locale ):
+        config.update({'OVERRIDE':{'locale': args.locale}}) 
+        #  config['OVERRIDE']['locale'] = args.locale
+    # gender
+    if( args.gender ):
+        config.update({'OVERRIDE':{'gender': args.gender}}) 
+        #  config['OVERRIDE']['gender'] = args.gender
+    # key
+    if( args.key ):
+        config.update({'OVERRIDE':{'key': args.key}}) 
+        #  config['OVERRIDE']['key'] = args.key
+    # input format
+    if( args.input_format ):
+        config.update({'OVERRIDE':{'input_format': args.input_format}}) 
+        #  config['OVERRIDE']['input_format'] = args.input_format
+    # PROFILE
+    if( args.profile ):
+        config.update({'OVERRIDE':{'profile': args.profile}}) 
+    # URL_PARAMETERS
+    if( args.url_parameters ):
+        config.update({'OVERRIDE':{'url_parameters': args.url_parameters}}) 
+
+    # Places to store variables
+    config.update({'INPUT':{'filename': ''}}) 
+    config.update({'INPUT':{'text': ''}}) 
+    config.update({'INPUT':{'text_ssml': ''}}) 
+    config.update({'INPUT':{'text_chunk': ''}}) 
+    config.update({'OUTPUT':{'filename': ''}}) 
 
     #  return config
 # End load_config
@@ -226,7 +267,10 @@ def get_file_list(list_in):
         file_list.append(filename)
 
     return file_list
-        
+# End: get_file_list
+
+
+
 
 #######################################
 #   Check if file is binary
@@ -245,7 +289,7 @@ def is_binary(filename):
             if b'\0' in block:
                 return True
     return False
-
+# End: is_binary
 
 
 
@@ -270,49 +314,89 @@ def get_char_count_forall_files(file_list):
 
 
 
+#########################################
+# Open file
+#
+def open_text_file(filename):
+    print("Filename:", filename)
+
+    # Open file
+    try:
+        fin=open(filename, 'r')
+    except:
+        # failed but no need to exit
+        print("Error: Could not open file!")
+
+    text=fin.read()
+    fin.close()
+
+    return text # return the text
+
+
 
 ###################################
 # Split text into chunks
 #   to avoid errors in long conversions
 #   and service char limits
 #
-# TO FIX: add <speak> tag to each txt chunk
 def split_file_into_text_chunks(filename):
-        print("Filename:", filename)
-        # Open file
-        try:
-            fin=open(filename, 'r')
-        except:
-            # failed but no need to exit
-            print("Error: Could not open file!")
 
         # read first line
-        ebook_txt_line = fin.readline()
+        #  ebook_txt_line = fin.readline()
 
         # initialize
         total_char_cnt=0
         chunk_cnt=0
         char_cnt=0
-        ebook_txt_chunks=[''] * 1000
+        #  ebook_txt_chunks=[''] * 1000
+        ebook_txt_chunks = [''] # one line array
         # Read books lines, seperates into chunks of text
+
         # read first line
-        ebook_txt_line = fin.readline()
-        while ebook_txt_line:
-            #counts chars for post, splits into chunks
+        #  ebook_txt_line = fin.readline()
+        content = open_text_file(filename).splitlines()
+        
+        #  process each line in file
+        for ebook_txt_line in content:
+
+            # remove html tags if txt
+            if( args.input_format == 'txt'):
+                 ebook_txt_line = re.sub('<[^>]+>', '', ebook_txt_line)
+            elif( args.input_format == 'ssml'):
+                #remove <speak> tags, will add later
+                 ebook_txt_line = re.sub('<\?speak>', '', ebook_txt_line)
+
+            #counts chars for post, splits into chunks, increment
             if char_cnt >  POST_CHAR_LIMIT:
+                ebook_txt_chunks.append('')
                 chunk_cnt = chunk_cnt + 1
                 char_cnt = 0
+            
             # increment current char cnt for chunk
             char_cnt = char_cnt + len(ebook_txt_line)
             total_char_cnt = total_char_cnt + len(ebook_txt_line)
+            
             # add text to chunk
             ebook_txt_chunks[chunk_cnt] = ebook_txt_chunks[chunk_cnt] + ebook_txt_line
             #read next line
-            ebook_txt_line = fin.readline()
+            #  ebook_txt_line = fin.readline()
+        
         # close file
-        fin.close()
+        #  fin.close()
+        
+        # add <speak> tag to each chunk for ssml
+        if(args.input_format == 'ssml'):
+            x=0
+            for chunk in ebook_txt_chunks:
+                ebook_txt_chunks[x] = "<speak>\n" + chunk + "\n</speak>\n"
+                x += 1
+
         return (ebook_txt_chunks, total_char_cnt, chunk_cnt)
 # End: split_file_into_text_chunks(
+
+
+
+
 
 
 ################################
@@ -344,7 +428,7 @@ def process_chunks(ebook_txt_chunks):
 
             # actually send the data
             if(not TEST):
-                response = tts_service_selection(chunk, config)
+                response = tts_service_selection(chunk, config, args)
 
                 # join the mp3 fragments together
                 # temp mp3 file has errors, needs re-encode
@@ -373,8 +457,9 @@ def process_chunks(ebook_txt_chunks):
 #   errors, need re-encode
 def ffmpeg_reencode(filename_orig, filename_tmp_audio):
 
-        # Set Output file name
-        filename_output_audio = re.sub("\.....?", "." + args.format, filename_orig)
+        # output filename
+        filename_output_audio = config['OUTPUT']['filename']
+
 
         # ffmpeg command for re-encoding
         ffmpeg_cmd = ['ffmpeg',
@@ -388,6 +473,7 @@ def ffmpeg_reencode(filename_orig, filename_tmp_audio):
             print(" Temp audio file: " + filename_tmp_audio)
             pprint.pprint(ffmpeg_cmd)
 
+
         # Run ffmpeg command
         print("  Joining audio chunks.")
         if(not TEST):
@@ -399,6 +485,45 @@ def ffmpeg_reencode(filename_orig, filename_tmp_audio):
 
         print("Output file: ", filename_output_audio)
 # End: ffmpeg_reencode()
+
+
+
+
+
+
+
+#######################################
+# Process each file
+#
+def process_file(filename):
+        
+        # store the filename to variable
+        config['INPUT']['filename'] = filename
+        # output filename
+        config['OUTPUT']['filename'] = re.sub("\.....?", "." + args.format, filename)
+
+        # Run the python TTS module instead of online services
+        if config['GENERAL']['tts_service'] == 'offline_tts':
+            
+            text = open_text_file(filename)
+            # Set Output file name
+            offline_tts(text, config, args)
+            return
+            
+
+        # open file and split into text chunks
+        (ebook_txt_chunks, total_char_cnt, chunk_cnt) = split_file_into_text_chunks(filename)
+
+        # Sends chunks of text to audio and merging
+        print("  Coverting to audio:", str(total_char_cnt) , " charators, seperated in", str(chunk_cnt + 1), "chunks.")
+        filename_tmp_audio = process_chunks(ebook_txt_chunks)
+
+        # re-encode broken audiofile
+        ffmpeg_reencode(filename, filename_tmp_audio)
+# End: process_file()
+
+
+
 
 
 
@@ -424,19 +549,11 @@ def main():
     # in case your service has limits
     print("Total of", get_char_count_forall_files(file_list) , "charactors in ", len(file_list), "file(s)")
 
+    print("Using TTS service:", config['GENERAL']['tts_service'])
+
     # Run for each file inputed
     for filename in file_list:
-        
-        # open file and split into text chunks
-        (ebook_txt_chunks, total_char_cnt, chunk_cnt) = split_file_into_text_chunks(filename)
-
-        # Sends chunks of text to audio and merging
-        print("  Coverting to audio:", str(total_char_cnt) , " charators, seperated in", str(chunk_cnt + 1), "chunks.")
-        filename_tmp_audio = process_chunks(ebook_txt_chunks)
-
-        # re-encode broken audiofile
-        ffmpeg_reencode(filename, filename_tmp_audio)
-
+        process_file(filename)
     # End for each file
 # End: main()
 
