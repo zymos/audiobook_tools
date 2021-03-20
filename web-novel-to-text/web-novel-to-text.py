@@ -22,7 +22,8 @@
 #
 #   Sources currently working:
 #        * royalroad.com 
-#
+#       * wordpress articles
+#       * to add: Webnovel, Wattpad, scribblehub.com
 #   Tested:
 #       https://www.royalroad.com/fiction/31429/cinnamon-bun/
 #
@@ -36,9 +37,7 @@
 #   Configure:
 #       $XDG_CONFIG_HOME
 # bugs
-#   Chapter Sixty-Eight
-#   "You're Awawen? Hi Awawen! Let's be friends!"
-#   Youâre Awawen? Hi Awawen! Letâs be friends!
+#   check it date all ready exists
 #
 #########################################################################
 
@@ -49,8 +48,8 @@
 # Configure
 #
 
-DEBUG = 0
-
+DEBUG = 1
+TEST = 0
 
 
 
@@ -98,6 +97,34 @@ import time
 # debugging
 import pprint
     
+# for filenames with spelled out numbers
+use_text2digits = 1
+try:
+    from text2digits import text2digits
+except:
+    print("Warning: module 'text2digits' not installed")
+    print("   Used for converting spelled out numbers to numeric charactors")
+    print("   Useful for keeping file names in order when spelled out chapters")
+    print("   Install: pip3 install text2digits")
+    use_text2digits = 0
+
+
+# for loading config files
+try:
+    from appdirs import *
+except:
+    print("Error: module 'appdirs' not installed")
+    print("Install: pip install appdirs")
+    exit(1)
+try:
+    import configparser
+    config_file = configparser.ConfigParser()
+except:
+    print("Error: module 'configparser' not installed")
+    print("Install: pip install configparser")
+    exit(1)
+
+
 
 
 
@@ -106,6 +133,7 @@ import pprint
 # Parse Args
 #
 def parse_args():
+
     # CLI Arguments
     parser = argparse.ArgumentParser(description='Converts a post to a txt or ssml file.')
 
@@ -119,8 +147,131 @@ def parse_args():
 
     args = parser.parse_args()
     
+    if DEBUG: pprint.pprint(args)
+
     return args
 # END:  parse_args()
+
+
+
+
+##########################################
+# Config file
+#
+def load_config():
+    
+    # Get config file location
+    global config
+    config = {}
+
+    # set app name and gets config location
+    appname = "audiobook-tools"
+    appauthor = "audiobook-tools"
+    config_filename = "web-novel.conf"
+    config_file = os.path.join(user_config_dir(appname, appauthor), config_filename) 
+    default_config_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), config_filename)
+    
+    #  print(default_config_file)
+
+    # read config file
+    if os.path.isfile(config_file):  
+        cfg = configparser.ConfigParser()
+        cfg.read(config_file)
+    elif os.path.isfile(default_config_file):
+        print("Config file:", default_config_file)
+        cfg = configparser.ConfigParser()
+        cfg.read(default_config_file)
+    else:
+        print("Config file not found.")
+        print(" Not:", config_file)
+        print(" Not:", default_config_file)
+        exit(1)
+
+    # create dictionary
+    config = {s:dict(cfg.items(s)) for s in cfg.sections()}
+
+    # Variables
+    # config['GENERAL']['delay_between_requests']
+
+
+
+    # Set Prefered settings
+
+    #  Overrides via commandline
+    #  voice
+    #  config.update({'preferred':{'voice': ''}})
+    #  if( args.voice ):
+        #  config['preferred']['voice'] = args.voice
+    #  elif config[config['GENERAL']['tts_service']].get('voice') is not None:
+        #  config['preferred']['voice'] = config[config['GENERAL']['tts_service']]['voice'] 
+
+
+
+    ####################
+    # Preferred Settings
+    
+    # create the 'preferred' key
+    config.update({'preferred':{'preferrences': 1}})
+
+    # TTS Service
+    #  if args.profile :
+        #  if config[args.profile].get('tts_service') is not None:
+            #  config['preferred']['tts_service'] = config[args.profile]['tts_service']
+        #  else:
+            #  config['preferred']['tts_service'] =  config['GENERAL']['tts_service']
+    #  else:
+        #  config['preferred']['tts_service'] =  config['GENERAL']['tts_service']
+    #  print("------------------------------------------------")
+    #  print("            a",vars(args)['format'])
+    #  print("            a",type(vars(args)))
+
+    #  pprint.pprint(vars(args))
+    #  pprint.pprint(vars(args).keys())
+
+    #  print("================================================")
+    # Preferred vars 
+    preferred_vars = ('format','delay_between_requests')
+    # go through each setting
+    for setting in preferred_vars:
+        config['preferred'].update({setting: ''}) 
+        if setting in vars(args).keys(): # var exists
+            if vars(args)[setting]: # var is set
+                config['preferred'][setting] = vars(args)[setting]
+        elif config['GENERAL'].get(setting) is not None:
+            config['preferred'][setting] = config['GENERAL'][setting] 
+    
+
+    # Debugging and testing
+    config.update({'DEBUG':{'debug': False}})
+    config['DEBUG'].update({'test': False})
+    if DEBUG:
+        config['DEBUG']['debug'] = True
+    if TEST:
+        config['DEBUG']['test'] = True
+
+
+    # Places to store variables
+    #  config.update({'INPUT':{'filename': ''}}) 
+    #  config.update({'INPUT':{'text': ''}}) 
+    #  config.update({'INPUT':{'text_ssml': ''}}) 
+    #  config.update({'INPUT':{'text_chunk': ''}}) 
+    #  config.update({'OUTPUT':{'filename': ''}}) 
+    #  config.update({'TMP':{'tmp_dir': tmp_dir}})
+
+    if DEBUG: 
+        print("Config file:", config_file)
+        print("------------------------config------------------------")
+        pprint.pprint(config)
+        print("------------------------------------------------------")
+    #  return config
+# End load_config
+
+
+
+
+
+
+
 
 
 
@@ -243,8 +394,7 @@ def extract_txt_royalroad(site_code):
     #  if( args.format == "txt"):
         #  filename_out = pub_date + " - " + chap_title + ".txt"
     #  else:
-    filename_out = pub_date + " - " + chap_title
-    
+     
 
     #  print("  * Title: ", title)
     #  print("  * Chap Title: ", chap_title)
@@ -260,8 +410,12 @@ def extract_txt_royalroad(site_code):
             'source': source,
             'date': pub_date,
             'year': pub_year,
-            'filename': filename_out }
+            'filename': '' }
 
+
+    meta = create_filename(meta)
+
+    #  pprint.pprint(meta)
     #  pprint.pprint(meta)
 
     # returns the string of articles txt, with tags and a decent filename to use
@@ -294,7 +448,7 @@ def extract_txt_wordpress(site_code):
     #
     #   Article contents:   <div class="entry-content">
     #                       </div><!-- .entry-content -->
-    #
+
 
     author = ''
     book_title = ''
@@ -392,8 +546,18 @@ def extract_txt_wordpress(site_code):
 
 
 
-    # set extention for output file
-    filename_out = pub_date + " - " + chap_title
+    #  # set extention for output file
+    #  filename_out = pub_date + " - " + chap_title
+
+
+    #  meta = { 'author': author,
+            #  'book_title': book_title,
+            #  'chap_title': chap_title,
+            #  'cover': cover,
+            #  'source': source,
+            #  'date': pub_date,
+            #  'year': pub_year,
+            #  'filename': filename_out }
 
 
     meta = { 'author': author,
@@ -403,13 +567,49 @@ def extract_txt_wordpress(site_code):
             'source': source,
             'date': pub_date,
             'year': pub_year,
-            'filename': filename_out }
+            'filename': '' }
 
+
+    meta = create_filename(meta)
 
     return (content, meta)
 # END: wordpress
 
 
+
+
+
+#########################################
+# Create filename
+#
+def create_filename(meta):
+
+        #  meta = { 'author': author,
+            #  'book_title': book_title,
+            #  'chap_title': chap_title,
+            #  'cover': cover,
+            #  'source': source,
+            #  'date': pub_date,
+            #  'year': pub_year,
+            #  'filename': '' }
+
+    filename_out = meta['date'] + " - " + meta['chap_title']
+
+
+    filename_out = re.sub(r"[\?:\"\|\*\\><]", ".", filename_out) 
+
+    if(config['preferred']['format'] == "json"):
+        filename_out = filename_out + '.json'
+    elif(config['preferred']['format']== "ssml"):
+        filename_out = filename_out + ".ssml"
+    else: # text
+        filename_out = filename_out + ".txt"   
+
+
+    meta['filename'] = filename_out
+
+    return meta
+# End create_filename()
 
 
 
@@ -424,35 +624,22 @@ def generate_ssml(content):
     article_write = 0
     line_cnt=0
 
-    # add tag if ssml
-    #  if( args.format == "ssml"):
-        #  article_text = "<speak>\n"
-    #  else:
-        #  article_text = ""
-    
-    #  print("type", type(content))
-    article_text = "<speak>\n"
+    article_text = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="string">\n'
 
     for line in content:
         #  print("line type", type(line))
         #  print("line etree", type(etree.tostring(line)))
         # line_mod is the output
-
+        
+        # strip leading/trailing whitespace
+        
+        # remove non-unicode chars
         line_mod = etree.tostring(line).decode('utf-8')
+        line_mod = bytes(line_mod, 'utf-8').decode('utf-8', 'ignore')
 
-        #  line_mod = line.decode('utf-8')
-        
+        # remove leading/tailing with space
+        line_mod = line_mod.strip()
 
-        # text line adds break
-        line_mod = re.sub('<p>', '', line_mod)
-
-        line_mod = re.sub('</p>', '@!@!@!@!break time="200ms"/!@!@!@!@\n', line_mod)
-
-        # nbsp space
-        line_mod = re.sub('&nbsp;', '@!@!@!@!break time="200ms"/!@!@!@!@  ', line_mod)
-        
-        # line breaks
-        line_mod = re.sub('<br ?[\/]?>', "@!@!@!@!break time=\"400ms\"/!@!@!@!@\n", line_mod)
         #  line_mod = re.sub('<br \\>', "\n", line_mod)
 
 
@@ -466,6 +653,8 @@ def generate_ssml(content):
         # remove spoken quotes
         if not args.dont_remove_quotes:
             line_mod = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '', line_mod)
+        else:
+            line_mod = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '"', line_mod)
             # line_mod = re.sub("['\''’‚‘´\`]", "’", line_mod)
             
             # sed 's/['\''’‚‘´\`]/’/g' |\
@@ -477,8 +666,28 @@ def generate_ssml(content):
         # fix single quotes
         line_mod = re.sub("['\''’‚‘´\`']", "’", line_mod)
 
-        #  â<80><99> problem   0xE2, 0x80 and 0x99
-        #  line_mod = re.sub(u"\xE2\x80\x99",  "", line_mod) #byte substitute
+        # 2+ white space
+        line_mod = re.sub("[ \t][ \t]*", " ", line_mod)
+    
+        # fix single quotes
+        line_mod = re.sub("['\''’‚‘´\`']", "’", line_mod)
+
+
+        # 2+ single quote
+        line_mod = re.sub("[’][’]*", "’", line_mod)
+        line_mod = line_mod.replace('’’', '')
+        
+
+        # text line adds break
+        line_mod = re.sub('<p>', '', line_mod)
+        line_mod = re.sub('</p>', '@!@!@!@!break time="200ms"/!@!@!@!@\n', line_mod)
+
+        # nbsp space
+        line_mod = re.sub('&nbsp;', '@!@!@!@!break time="200ms"/!@!@!@!@  ', line_mod)
+        
+        # line breaks
+        line_mod = re.sub('<br ?[\/]?>', '@!@!@!@!break time=\"400ms\"/!@!@!@!@\n', line_mod)
+
 
         # emphasised text
         line_mod = re.sub('<strong>', '@!@!@!@!emphasis level="moderate"!@!@!@!@', line_mod)
@@ -508,22 +717,35 @@ def generate_ssml(content):
         line_mod = re.sub('@!@!@!@!', '<', line_mod)
         line_mod = re.sub('!@!@!@!@', '>', line_mod)
         
-        # if txt file remove all html tags
-        #  if ( args.format == "txt"):
-            #  line_mod = re.sub('<[^>]+>', '', line_mod) # remove any tags
-
-
         # Add line to text
         article_text += line_mod + "\n"
 
-    # add tag if ssml
-    #  if( args.format == "ssml"):
-        #  article_text = "</speak>\n"
     article_text += "</speak>\n"
 
+    # final fixes
+    # white space + newline
+    article_text = re.sub("[ \t]*\n", "\n", article_text)
+
+    # 2+ new line
+    article_text = re.sub("[\n][\n]*", "\n", article_text)
+
+    # fix problem with multiplu delays
+    article_text = re.sub("(<break time=\"[0-9]*ms\"/>\n){3,}", "<break time=\"1s\">\n", article_text)
+    article_text = re.sub("(<break time=\"[0-9]*ms\"/>\n){2,}", "<break time=\"500ms\">\n", article_text)
+
+    #  article_text = re.sub("<break time=\"[0-9]*ms\"/>\n<break time=\"[0-9]*ms\"/>\n", "<break time=\"1s\">\n", article_text)
+
+    #  print(article_text)
     # return modified text
     return article_text
 # END: generate_ssml()
+
+
+
+
+
+
+
 
 
 
@@ -533,7 +755,7 @@ def generate_ssml(content):
 # Process each URLs
 #
 def process_url(url):
-    global args
+    #  global args
 
     # grab the url text
     try:
@@ -543,13 +765,11 @@ def process_url(url):
         print("Error: not a valid URL: " + url)
         return
 
-
+    # get html text
     html_content = site_code.text
 
-    #  print(html_content)
     # decide which web novel source and how to extract text 
-    # and a useful output filename to use
-    #  usually [publication date] - [article title].[output format]
+    #   and a useful output filename to use
     if re.search(r"royalroad\.com", url, re.IGNORECASE):
         if DEBUG: print("  > Royal Road article found")
         (content, meta) = extract_txt_royalroad(site_code)
@@ -557,7 +777,7 @@ def process_url(url):
         if DEBUG: print("  > WordPress article found")
         (content, meta) = extract_txt_wordpress(site_code)
     else:
-        print("  >Unknown web-novel type for\'", url, "'")
+        print("  > Unknown web-novel type for\'", url, "'")
         print("Skipping...")
         return
 
@@ -567,31 +787,35 @@ def process_url(url):
     article_ssml = generate_ssml(content)
     article_text  = re.sub('<[^>]+>', '', article_ssml) # remove any tags
 
-    #  print(article_ssml)
-    # print article 
-    if DEBUG: print(article_text)
+    #  if DEBUG: 
+        #  print("----------------------TEXT-------------------------------")
+        #  print(article_text)
+        #  print("---------------------------------------------------------")
+        # print(article_ssml)
 
-    # Write to output file
-    if(args.format == "json"):
+    # Write to output file (without invalid chars)
+    #  meta['filename'] = re.sub(r"[\?:\"\|\*\\><]", ".", meta['filename'] ) 
+    if(config['preferred']['format'] == "json"):
         # json stores metadata, article txt and ssml
         import json
         # Write meta info to file
         meta['txt'] = str(article_text)
         meta['ssml'] = str(article_ssml)
-        meta_json = json.dumps(meta)
-        file = open(meta['filename'] + '.json', "w")
-        file.write(meta_json)
-        file.close()
-    elif(args.format == "ssml"):
-        file = open(meta['filename'] + ".ssml", "w")   
-        file.write(article_ssml)
-        file.close()
+        text_w = json.dumps(meta)
+        #  filename = meta['filename'] + '.json'
+    elif(config['preferred']['format']  == "ssml"):
+        #  filename = meta['filename'] + ".ssml"
+        text_w = article_ssml
     else: # text
-        file = open(meta['filename'] + ".txt", "w")   
-        file.write(article_text)
-        file.close()
+        #  filename = meta['filename'] + ".txt"   
+        text_w = article_text
+    
+    # Writing file
+    file = open(meta['filename'], "w")   
+    file.write(text_w)
+    file.close()
 
-
+    return meta['filename']
 # END: process_url()
 
 
@@ -606,7 +830,8 @@ def main():
     global args 
     args = parse_args()
 
-    load_config_file()
+    # Load config file
+    load_config()
 
     # Get urls
     urls = []
@@ -622,8 +847,9 @@ def main():
 
     # process urls
     for url in urls:
-        print(" >Processing URL:", url.rstrip())
-        process_url(url.rstrip())
+        print("Processing URL:", url.rstrip())
+        file = process_url(url.rstrip())
+        print("  File:", file)
 # END: def main()
       
 
