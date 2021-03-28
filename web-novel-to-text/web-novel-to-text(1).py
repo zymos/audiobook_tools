@@ -694,38 +694,36 @@ def generate_ssml(content):
         line_mod = re.sub("[’][’]*", "’", line_mod)
         line_mod = line_mod.replace('’’', '')
         
-        # remove empty <p>paragraphs FIXME!! still isnt catching all
-        line_mod = re.sub('<p>[\s\\n]*</p>', '', line_mod)
 
-        # text line adds break 
-        line_mod = re.sub('<p>', '@!@!@!@!s!@!@!@!@', line_mod)
-        line_mod = re.sub('</p>', "@!@!@!@!/s!@!@!@!@", line_mod)
+        # text line adds break
+        line_mod = re.sub('<p>', '', line_mod)
+        line_mod = re.sub('</p>', '@!@!@!@!break time="200ms"/!@!@!@!@\n', line_mod)
 
         # nbsp space
-        line_mod = re.sub('&nbsp;', "@!@!@!@!break time=\"200ms\"/!@!@!@!@  ", line_mod)
+        line_mod = re.sub('&nbsp;', '@!@!@!@!break time="200ms"/!@!@!@!@  ', line_mod)
         
         # line breaks
-        line_mod = re.sub('<br ?[\/]?>', "@!@!@!@!break time=\"400ms\"/!@!@!@!@\n", line_mod)
+        line_mod = re.sub('<br ?[\/]?>', '@!@!@!@!break time=\"400ms\"/!@!@!@!@\n', line_mod)
 
 
         # emphasised text
-        line_mod = re.sub('<strong>', "@!@!@!@!emphasis level=\"moderate\"!@!@!@!@", line_mod)
-        line_mod = re.sub('</strong>', "@!@!@!@!/emphasis!@!@!@!@ ", line_mod)
+        line_mod = re.sub('<strong>', '@!@!@!@!emphasis level="moderate"!@!@!@!@', line_mod)
+        line_mod = re.sub('</strong>', '@!@!@!@!/emphasis!@!@!@!@\n', line_mod)
 
-        line_mod = re.sub('<em>', "@!@!@!@!emphasis level=\"moderate\"!@!@!@!@", line_mod)
-        line_mod = re.sub('</em>', "@!@!@!@!/emphasis!@!@!@!@ ", line_mod)
+        line_mod = re.sub('<em>', '@!@!@!@!emphasis level="moderate"!@!@!@!@', line_mod)
+        line_mod = re.sub('</em>', '@!@!@!@!/emphasis!@!@!@!@\n', line_mod)
 
         line_mod = re.sub('<[^>]+>', '', line_mod) # remove any html tags codes not em, strong
         
         
         # Extra breaks
         # ': ', '…', '—' '—-' '—'
-        line_mod = re.sub('—-', "@!@!@!@!break time=\"200ms\"/!@!@!@!@ ", line_mod)
-        line_mod = re.sub('—', "@!@!@!@!break time=\"200ms\"/!@!@!@!@ ", line_mod)
-        line_mod = re.sub('…', "@!@!@!@!break time=\"200ms\"/!@!@!@!@ ", line_mod)
+        line_mod = re.sub('—-', '@!@!@!@!break time="200ms"/!@!@!@!@ ', line_mod)
+        line_mod = re.sub('—', '@!@!@!@!break time="200ms"/!@!@!@!@ ', line_mod)
+        line_mod = re.sub('…', '@!@!@!@!break time="200ms"/!@!@!@!@ ', line_mod)
         # add pause for colon "Speaking: Words"
         if re.search('[a-zA-Z]: [a-zA-Z]', line_mod): 
-            line_mod = re.sub(': ', "@!@!@!@!break time=\"200ms\"/!@!@!@!@ ", line_mod)
+            line_mod = re.sub(': ', '@!@!@!@!break time="200ms"/!@!@!@!@ ', line_mod)
         
 
         # Removes Previous Chapter Next Chapter
@@ -774,9 +772,6 @@ def generate_ssml(content):
 # Process each URLs
 #
 def process_url(url):
-    """
-    Process each URL
-    """
     #  global args
 
     # grab the url text
@@ -847,9 +842,7 @@ def process_url(url):
 # Main
 #
 def main():
-    """
-    Main function
-    """
+    
     # Process command line args
     global args 
     args = parse_args()

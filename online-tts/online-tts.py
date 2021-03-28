@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ###########################################################################
@@ -37,33 +37,49 @@
 #
 #
 #   Bugs:
-#       abreviations are prononced fully, sometimes incorrectly
-#       Miss is pronounced as Missisipi
+#       -abreviations are prononced fully, sometimes incorrectly
+#           ie. Miss is pronounced as Missisipi for voicerss
 #
+#   Non-featurs:
+#       -no inteligent checks to see if settings are valid for tts service
+#           ie invalid voices
+#       -no ssml error checking
 #
 #   Cloud/Online TTS services
 #
 #       VoiceRSS
 #           http://www.voicerss.org/api/ 
-#       Google Cloud Text-to=Speech
-#           pip install google-cloud-texttospeech
+#       Google Cloud Text-to=Speech (not implimented yet)
+#           Install: pip install google-cloud-texttospeech
 #           https://googleapis.dev/python/texttospeech/latest/index.html
-#
 #       Google translate tts (not cloud):
 #           https://pypi.org/project/gTTS/
 #           install:  pip install gTTS
-#
-#       Amazon Polly:
-#           pip install boto3
+#       Amazon Polly: (not implimented yet)
+#           Install: pip install boto3
 #           import boto3
+#       Microsoft Azure Text-to-Speech:
+#           Install: pip install azure-cognitiveservices-speech
+#      Offline
+#           local (offline) (not implimented):
+#           Install: pip install pyttsx3
 #
-#   Offline
-#       local (offline):
-#           pip install pyttsx3
-
+#   Requirments:
+#       python3
+#       "appdirs" module
+#            Install: pip install appdirs
+#       "configparser" module
+#           Install: pip install configparser
+#       "requests" module
+#           Install: pip install requests
+#       modules for specific services, see above
+#
+#   TODO:
+#       fix config priority
+#       fix voicerss call
+#       
 #
 ############################################################################
-
 
 
 ############################################################################
@@ -76,15 +92,19 @@ DEBUG=1
 TEST=0
 
 # number of char to send to service (smaller has less errors)
-POST_CHAR_LIMIT = 1500
+#  POST_CHAR_LIMIT = 1500
 
 
 #############################################################################
 # Code
 #
 
+# API selector
+#from APIs.api_select import tts_conversion
+
 # debug
 import pprint
+
 
 # tts
 #  import voicerss_tts
@@ -107,6 +127,7 @@ import re
 
 # for sleep
 import time
+
 
 # for loading config files
 try:
@@ -132,16 +153,18 @@ except:
     exit(1)
 
 # load external file for APIs
-from tts_service_APIs import *
+#  from tts_service_APIs import *
 
 
 
 
-######################################
+#################################################
 # CLI Arguments
 #
 def parse_args():
-    # CLI Arguments
+    """
+    CLI Arguments
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('EBOOK', nargs='+', type=str, help='ebook txt file')
     parser.add_argument('--bitrate', type=str, help='audio encoding bitrate', choices=["32k","48k","64k","96k","128k","196k"], default="64k")
@@ -177,12 +200,14 @@ def parse_args():
 
 
 
-##########################################
+##################################################
 # Config file
 #
 def load_config():
+    """
+    Get config file location
+    """
     
-    # Get config file location
     global config
     config = {}
 
@@ -238,16 +263,22 @@ def load_config():
 
 
     # Preferred vars 
-    preferred_vars = ('voice', 'profile', 'locale', 'gender', 'key', 'input_format', 'audio_format', 'audio_settings', 'gtts_lang', 'gtts_tld', 'url_parameters', 'delay_between_requests', 'max_charactors')
+    preferred_vars = ('voice', 'profile', 'locale', 'gender', 'key', 'input_format', 'audio_format', 'audio_settings', 'gtts_lang', 'gtts_tld', 'url_parameters', 'delay_between_requests', 'max_charactors','speaking_rate')
     # go through each setting
     for setting in preferred_vars:
         config['preferred'].update({setting: ''}) 
-        if 'vars(args)[setting]' in locals(): # var exists
+        if setting in vars(args).keys(): # var exists
             if vars(args)[setting]: # var is set
                 config['preferred'][setting] = vars(args)[setting]
+            elif config[config['GENERAL']['tts_service']].get(setting) is not None:
+                config['preferred'][setting] = config[config['GENERAL']['tts_service']][setting] 
         elif config[config['GENERAL']['tts_service']].get(setting) is not None:
             config['preferred'][setting] = config[config['GENERAL']['tts_service']][setting] 
+            #  print("asdasdasdasda", setting)
     
+    # set some hard defaults
+    if config['preferred']['max_charactors'] == '':
+        config['preferred']['max_charactors'] = 1000
 
     # Debugging and testing
     config.update({'DEBUG':{'debug': False}})
@@ -302,7 +333,7 @@ def load_config():
 
 
 
-#######################################
+#########################################################
 # Get file list
 #
 
@@ -311,7 +342,12 @@ def get_file_list(list_in):
     file_list = []
     for filename in list_in:
         # Ignore binary files
-        if( is_binary(filename) ):
+        if filename == '': # ignore blanks
+            continue
+        elif not os.path.isfile(filename):
+            print("Warning (file not found): ", filename)
+            continue
+        elif( is_binary(filename) ): #ignore binary files
             print("  File is binary, ignoring.")
             continue
         # add the file to list
@@ -323,7 +359,7 @@ def get_file_list(list_in):
 
 
 
-#######################################
+#########################################################
 #   Check if file is binary
 #   
 #       Used to ignore all non-text files
@@ -344,11 +380,14 @@ def is_binary(filename):
 
 
 
-###################################
+########################################################
 # Get total char count for all the files loaded
 #   to display when your TTS service has char limit
 def get_char_count_forall_files(file_list):
-
+    """
+    Get total char count for all the files loaded
+    to display when your TTS service has char limit  
+    """
     total_cnt = 0
     for filename in file_list:
         f = open(filename, 'r')
@@ -365,10 +404,13 @@ def get_char_count_forall_files(file_list):
 
 
 
-#########################################
+#########################################################
 # Open file
 #
 def open_text_file(filename):
+    """
+    Open a file
+    """
     print("  Filename:", filename)
 
     # Open file
@@ -385,13 +427,17 @@ def open_text_file(filename):
 
 
 
-###################################
+#########################################################
 # Split text into chunks
 #   to avoid errors in long conversions
 #   and service char limits
 #
 def split_file_into_text_chunks(filename):
-
+        """
+        Split text into chunks
+        to avoid errors in long conversions
+        and service char limits
+        """
         # read first line
         #  ebook_txt_line = fin.readline()
 
@@ -410,13 +456,14 @@ def split_file_into_text_chunks(filename):
         # debug
         if config['DEBUG']['debug']:
             print("-------------------------------------------------")
-
+        
+        #print(content)
         #  process each line in file
         for ebook_txt_line in content:
 
             # Clean up text
             #  ebook_txt_line = clean_text(ebook_txt_line)
-
+            #print(ebook_txt_line)
             # remove html tags if txt
             if( config['preferred']['input_format'] == 'txt'):
                 ebook_txt_line = re.sub('<[^>]+>', '', ebook_txt_line)
@@ -441,7 +488,7 @@ def split_file_into_text_chunks(filename):
             ebook_txt_chunks[chunk_cnt] = ebook_txt_chunks[chunk_cnt] + " " + ebook_txt_line
             #read next line
             #  ebook_txt_line = fin.readline()
-        
+
 
         # debug
         if config['DEBUG']['debug']:
@@ -453,7 +500,12 @@ def split_file_into_text_chunks(filename):
         # clean the text for each chunk
         x = 0
         for chunk in ebook_txt_chunks:
-            ebook_txt_chunks[x] = clean_text(chunk)
+            print(chunk)
+            try:
+                from audiobook_tools.common.text_conversion import clean_text
+            except:
+                print("error loading audiobook_tools python files")
+            ebook_txt_chunks[x] = clean_text(chunk, args.dont_remove_asterisk, args.dont_remove_quotes, config['preferred']['input_format'])
             x +=1
 
         # add <speak> tag to each chunk for ssml
@@ -470,65 +522,58 @@ def split_file_into_text_chunks(filename):
 
 
 
-#######################################
-# Clean Text
+
+
+#############################################################################
+#   TTS Service Selection
 #
-def clean_text(text):
 
-    # strip leading/trailing whitespace
-    text = text.strip()
+def tts_api_selection(text):
+    """
+    Uses config file or args to select which servies is used
+    Ex: google_translate_tts, google_cloud_tts, voicerss
+    """
+    import importlib
+    
+    api = config['preferred']['tts_service']
+    
+    print("api", api)
 
-    # remove all non-unicode
-   #  for line in text:
-    text = bytes(text, 'utf-8').decode('utf-8', 'ignore')
-    # convert html escape code
-    #  line_mod = unescape(line_mod)
-
-    # remove spoken asterisk
-    if not args.dont_remove_asterisk:
-        text = re.sub('\*', '', text)
-
-    # remove spoken quotes
-    if not args.dont_remove_quotes:
-        text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '', text)
-    else:
-        text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '"', text)
-        # line_mod = re.sub("['\''’‚‘´\`]", "’", line_mod)
+    try:
+        selected_api = importlib.import_module('audiobook_tools.APIs.' + api)
+    except:
+        print("Error: ", api, "(api) not found in folder 'APIs'")
         
-        # sed 's/['\''’‚‘´\`]/’/g' |\
-        # sed 's/[“”„“‟”"❝❞⹂〝〞〟＂]/"/g' |\
-        # sed 's/…/\.\.\. /g' |\
-        # sed 's/[–]/-/g'  `</speak>"
-    # —
+    response = selected_api.get_tts_audio(text, config, args)
 
+    #response = ''
+    #  pprint.pprint(config)
 
-    # 2+ white space
-    text = re.sub("[ \t][ \t]*", " ", text)
-    
-    # fix single quotes
-    text = re.sub("['\''’‚‘´\`']", "’", text)
+    #if config['preferred']['tts_service'] == 'voicerss':
+        #from APIs.voicerss_tts import voicerss_tts
+        #response = voicerss_tts(text, config, args)
+    #elif config['preferred']['tts_service'] == 'google_translate_tts':
+        #from APIs.google_translate_tts import google_translate_tts
+        #response = google_translate_tts(text, config, args)
+    ##  elif( config['preferred']['tts_service'] == 'offine_tts' ):
+        ##  from  import
+        ##  response = offine_tts(text, config, args)
+    #elif config['preferred']['tts_service'] == 'ms_azure_tts':
+        #from APIs.ms_azure_tts import ms_azure_tts
+        #response = ms_azure_tts(text, config, args)
+    ## elif( config['GENERAL']['tts_service'] == 'example_tts' ):
+    ##   from example_tts import example_tts
+    ##   response = example_tts(text, config, args)
+    #else:
+        #print("TTS service incorrectly set")
+        #exit(1)
 
-
-    # white space + newline
-    text = re.sub("[ \t]*\n", "\n", text)
-
-    # 2+ new line
-    text = re.sub("[\n][\n]*", "\n", text)
-
-
-    # 2+ single quote
-    text = re.sub("[’][’]*", "’", text)
-    text = text.replace('’’', '')
-    
-
-    return text
-# End: clean_text()
-
+    return response
+# End: tts_service_selection()
 
 
 
-
-################################
+################################################
 # Process each chunk of text
 #
 def process_chunks(ebook_txt_chunks):
@@ -562,14 +607,14 @@ def process_chunks(ebook_txt_chunks):
 
             # actually send the data
             if(not TEST):
-                response = tts_service_selection(chunk, config, args)
+                response = tts_api_selection(chunk)
 
                 # join the mp3 fragments together
                 # temp mp3 file has errors, needs re-encode
                 audio_data = audio_data + response        
             else:
                 # blank in test mode
-                audio_data = ''
+                audio_data = b''
         
         # Write TMP mp3 file of joined chunks
         filename_tmp_audio = os.path.join(tmp_dir, 'joined-out.mp3')
@@ -587,7 +632,7 @@ def process_chunks(ebook_txt_chunks):
 
 
 
-################################
+###############################################
 # FFMPEG: re-encode audio
 #   merged audio chunks have 
 #   errors, need re-encode
@@ -673,6 +718,7 @@ def process_file(filename):
 #
 def main():
 
+    print("main")
     # Get CLI args
     # make args global for easy
     global args
@@ -699,6 +745,9 @@ def main():
     # Run for each file inputed
     for filename in file_list:
         process_file(filename)
+        
+    print("done.")
+    exit()
     # End for each file
 # End: main()
 

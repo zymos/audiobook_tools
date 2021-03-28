@@ -1,5 +1,15 @@
 # Audiobook Tools
 
+
+Allot of things are changing so much of this file is a bit off
+
+
+
+
+
+
+
+
 These are some scripts to create and convert audiobooks.
 
 Download tools: [zip file](https://github.com/zymos/audiobook_tools/archive/master.zip)
