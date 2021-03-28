@@ -77,7 +77,7 @@
 #   TODO:
 #       fix config priority
 #       fix voicerss call
-#       
+#       check if profiles actually work
 #
 ############################################################################
 
@@ -207,7 +207,7 @@ def load_config():
     """
     Get config file location
     """
-    
+
     global config
     config = {}
 
@@ -246,6 +246,13 @@ def load_config():
     #  elif config[config['GENERAL']['tts_service']].get('voice') is not None:
         #  config['preferred']['voice'] = config[config['GENERAL']['tts_service']]['voice'] 
 
+    #print(config[config['GENERAL']['tts_service']])
+    if config.get(config['GENERAL']['tts_service']) is None :
+        print("Error: tts serivce \"" + config['GENERAL']['tts_service'] + 
+        "\" is set in config, yet the section does not exist.  Fix the [GENERAL] \"tts_service\" setting, or add a new section named \"" +
+        config['GENERAL']['tts_service'] , "\" an create a file in 'APIs' folder named \"" + config['GENERAL']['tts_service'] + ".py\"")
+        exit(1)
+
     ####################
     # Preferred Settings
     
@@ -263,12 +270,15 @@ def load_config():
 
 
     # Preferred vars 
+    # if DEBUG: print("pref vars")
     preferred_vars = ('voice', 'profile', 'locale', 'gender', 'key', 'input_format', 'audio_format', 'audio_settings', 'gtts_lang', 'gtts_tld', 'url_parameters', 'delay_between_requests', 'max_charactors','speaking_rate')
     # go through each setting
     for setting in preferred_vars:
         config['preferred'].update({setting: ''}) 
+        if DEBUG: print("Config settings:", setting)
         if setting in vars(args).keys(): # var exists
             if vars(args)[setting]: # var is set
+                if DEBUG: print("vars",vars(args)[setting] )
                 config['preferred'][setting] = vars(args)[setting]
             elif config[config['GENERAL']['tts_service']].get(setting) is not None:
                 config['preferred'][setting] = config[config['GENERAL']['tts_service']][setting] 
@@ -454,8 +464,8 @@ def split_file_into_text_chunks(filename):
         content = open_text_file(filename).splitlines()
             
         # debug
-        if config['DEBUG']['debug']:
-            print("-------------------------------------------------")
+        #if config['DEBUG']['debug']:
+        #    print("-------------------------------------------------")
         
         #print(content)
         #  process each line in file
@@ -491,8 +501,8 @@ def split_file_into_text_chunks(filename):
 
 
         # debug
-        if config['DEBUG']['debug']:
-            print("-------------------------------------------------")
+        #if config['DEBUG']['debug']:
+        #    print("-------------------------------------------------")
 
         # close file
         #  fin.close()
@@ -500,7 +510,7 @@ def split_file_into_text_chunks(filename):
         # clean the text for each chunk
         x = 0
         for chunk in ebook_txt_chunks:
-            print(chunk)
+            #print(chunk)
             try:
                 from audiobook_tools.common.text_conversion import clean_text
             except:
@@ -577,7 +587,9 @@ def tts_api_selection(text):
 # Process each chunk of text
 #
 def process_chunks(ebook_txt_chunks):
-
+        """
+        process the each chunk of text
+        """
 
 
         # Send request to service
@@ -601,9 +613,9 @@ def process_chunks(ebook_txt_chunks):
                 fp = open(os.path.join(config['TMP']['tmp_dir'], str(cnt) + ".txt"), "w")
                 fp.write(chunk)
                 fp.close()
-                print("------------------------------------------------")
-                print(chunk)
-                print("------------------------------------------------")
+                #print("----------------File Chunk (begin)------------------")
+                #print(chunk)
+                #print("----------------File chunk (end)--------------------")
 
             # actually send the data
             if(not TEST):
@@ -637,6 +649,9 @@ def process_chunks(ebook_txt_chunks):
 #   merged audio chunks have 
 #   errors, need re-encode
 def ffmpeg_reencode(filename_orig, filename_tmp_audio):
+        """
+        calls ffmpeg for reenconde
+        """
 
         # output filename
         filename_output_audio = config['OUTPUT']['filename']
@@ -677,7 +692,10 @@ def ffmpeg_reencode(filename_orig, filename_tmp_audio):
 # Process each file
 #
 def process_file(filename):
-        
+        """
+        process file
+        """
+
         # store the filename to variable
         config['INPUT']['filename'] = filename
 
@@ -717,7 +735,9 @@ def process_file(filename):
 # Main funcion
 #
 def main():
-
+    """
+    Main function for online-tts.py
+    """
     print("main")
     # Get CLI args
     # make args global for easy

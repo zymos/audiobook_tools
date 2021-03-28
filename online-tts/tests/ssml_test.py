@@ -80,7 +80,7 @@ if __name__ == "__main__":
         #print(test)
         #exit()
         
-        exec(open(prog).read())
+        #exec(open(prog).read())
         
         #import runpy 
         #runpy.run_path(prog)
@@ -89,8 +89,8 @@ if __name__ == "__main__":
     
     #p = importlib.import_module(command)
     #print(main_prog)
-    #p = subprocess.Popen(test_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-    #print(p.communicate()[0])
+    p = subprocess.Popen(test_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    print(p.communicate()[0])
     
     
     print("test done")
