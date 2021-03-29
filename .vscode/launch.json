@@ -8,8 +8,8 @@
             "name": "Python: ab test",
             "type": "python",
             "request": "launch",
-            "program": "/home/zymos/Documents/Projects/audiobook_tools/online-tts/online-tts.py",
-            "console": "integratedTerminal",
+            "program": "/home/zymos/Documents/working-dirs/audiobook_tools/online-tts/online-tts.py",
+            "console": "internalConsole",
             "args": ["testing.ssml"],
             "cwd": "/home/zymos/tmp/wanderinginn/4/"
 

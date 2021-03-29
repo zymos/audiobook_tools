@@ -168,7 +168,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('EBOOK', nargs='+', type=str, help='ebook txt file')
     parser.add_argument('--bitrate', type=str, help='audio encoding bitrate', choices=["32k","48k","64k","96k","128k","196k"], default="64k")
-    parser.add_argument('--samplerate', type=str, help='audio encoding samplerate', choices=[16000,22050,48000], default="22050")
+    parser.add_argument('--samplerate', type=str, help='audio encoding samplerate', choices=[16000,22050,44100,48000], default="22050")
     parser.add_argument('--format', type=str, help='audio encoding format', choices=["mp3", "wav", "ogg"], default="mp3")
     parser.add_argument('--input-format', type=str, help='format sent to TTS service', choices=["txt","ssml","json-txt","json-ssml"])
     parser.add_argument('--key', type=str, help='key, auth code, auth file')
@@ -206,6 +206,7 @@ def parse_args():
 def load_config():
     """
     Get config file location
+    priority is [CLI args] - > [local config] -> [default config]
     """
 
     global config
@@ -218,23 +219,43 @@ def load_config():
     default_config_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "online-tts.conf")
  
     # read config file
+    cfg_found = 0
+    cfg_default_found = 0
     if os.path.isfile(config_file):  
-        print("Config file:", config_file)
+        print("Local config file:", config_file)
         cfg = configparser.ConfigParser()
         cfg.read(config_file)
-    elif os.path.isfile(default_config_file):
-        print("Config file:", default_config_file)
-        cfg = configparser.ConfigParser()
-        cfg.read(default_config_file)
-    else:
+        cfg_found = 1
+    if os.path.isfile(default_config_file):
+        print("Default config file:", default_config_file)
+        cfg_default = configparser.ConfigParser()
+        cfg_default.read(default_config_file)
+        cfg_default_found = 1
+    if cfg_found == 0 and cfg_default_found == 0:
         print("Config file not found.")
         print(" Not:", config_file)
         print(" Not:", default_config_file)
         exit(1)
 
-    # create dictionary
-    config = {s:dict(cfg.items(s)) for s in cfg.sections()}
 
+    # create dictionary (from default config)
+    config = {s:dict(cfg_default.items(s)) for s in cfg_default.sections()}  
+
+    # overwrite config var's defaults using local config
+    if cfg_found:
+        for s in cfg.sections():
+            for op in cfg.items(s):
+                print(s, " --- ", op[0], " === ", op[1])
+                print(type(s), " --- ", type(op[0]), " === ", type(op[1]))
+                #config[s][op[0]] = op[1]
+    #config = {s:dict(cfg.items(s)) for s in cfg.sections()}
+    exit()
+    # TODO FIX check is setting in config exists befor setting see above
+    # Add args to config var for conveonce of a single var
+    config.update({'ARGS': {'set': 1}})
+    for setting in vars(args):
+        print(vars(args)[setting])
+        #config['ARGS'].update(setting:vars(args)[setting])
 
     # Set Prefered settings
 
