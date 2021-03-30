@@ -381,17 +381,7 @@ def extract_txt_royalroad(site_code):
     # <time datetime="2020-08-10T18:13:21.0000000Z" format="U" >
     pub_year = re.sub('-.*', '', pub_date)
 
-    # set extention for output file
-    #  if( args.format == "txt"):
-        #  filename_out = pub_date + " - " + chap_title + ".txt"
-    #  else:
-     
 
-    #  print("  * Title: ", title)
-    #  print("  * Chap Title: ", chap_title)
-    #  print("  * Title: ", title)
-    #  print("  * Publication Date: ", pub_date)
-    #  print("  * Saving to filename: " + filename_out)
 
 
     meta = { 'author': author,
@@ -450,12 +440,7 @@ def extract_txt_wordpress(site_code):
     pub_year = ''
     filename_out = ''
 
-    #  article_text = ""
-    #  article_title = ''
-    #  article_date = ''
-    #  article_write = 0
-    #  line_cnt=0
-    # TAG_RE = re.compile(r'<[^>]+>')
+
     
     #  h = HTMLParser()
     h = HTMLParser()
@@ -494,73 +479,6 @@ def extract_txt_wordpress(site_code):
     # pages contents (found between <div class="entry-content">
     content = tree.xpath('//div[@class="entry-content"]')
     
-    #  print(type(chap_title),type(content))
-
-    #  chap_title = etree.tostring("".join(chap_title)).decode('utf-8')
-
-    #  print("".join(chap_title))bytes(line_mod, 'utf-8').decode('utf-8', 'ignore')
-
-    #  content = [bytes(etree.tostring(s), 'utf-8').decode('utf-8', 'ignore') for s in content] 
-
-    #  content.insert(0, "".join(chap_title))
-    #  print(type(chap_title),type(content[0]))
-    #  pprint.pprint(content)
-    #  exit()
-    # pages text
-    #  html_content = site_code.text
-
-    #  # split pages text into lines
-    #  #   todo change to tree.xpath
-    #  for line in html_content.split('\n'):
-        #  line_cnt += 1
-        #  # pages_line = line
-        #  # print str(article_write) + "/" + str(line_cnt) + ": " + line
-
-        #  # Get publish date
-        #  if re.search('<meta property="article:published_time"', line):
-            #  pub_date = re.sub('<meta property="article:published_time" content="', '', line)
-            #  pub_date = re.sub('T[0-2].*', '', article_date)
-            #  # extracts publication year
-            #  pub_year = re.sub('-.*', '', pub_date)
-
-
-        #  # Get posts title
-        #  if re.search('<meta property="og:title"', line):
-            #  chap_title = re.sub('<meta property="og:title" content="', '', line)
-            #  chap_title = re.sub('".*', '', article_title)
-            #  #  article_title = h.unescape(article_title.decode('utf-8',errors='ignore'))
-
-        #  # article has ended
-        #  if re.search('<!-- .entry-content -->', line):
-            #  article_write = 0
-            #  article_text += "</speak>"
-        
-        #  # Adding article text
-        #  if article_write:
-            #  article_text += line + "\n"
-
-        #  # Article has started
-        #  if re.search('<div class="entry-content">', line):
-            #  article_write = 1
-            #  article_text += article_title + "<break time=\"1s\" />\n\n"
-       
-    #  # print article_text.encode('utf-8')
-    #  content = "<speak>\n<!--\nWordpress articles post: Metadata\n   <meta property=\"og:title\" content=\"\" />\n    <meta property=\"og:url\" content=\"\" />\n    <meta property=\"article:published_time\" content=\"\" />\n    <meta property=\"og:site_name\" content=\"\" />\n    <meta property=\"og:image\" content=\"\" />\n-->\n    <metadata>\n        <dc:date><dc:date>\n        <dc:publisher></dc:publisher>\n        <dc:source></dc:source>\n     <dc:title></dc:title>\n    </metadata>\n" + article_text
-
-
-
-    #  # set extention for output file
-    #  filename_out = pub_date + " - " + chap_title
-
-
-    #  meta = { 'author': author,
-            #  'book_title': book_title,
-            #  'chap_title': chap_title,
-            #  'cover': cover,
-            #  'source': source,
-            #  'date': pub_date,
-            #  'year': pub_year,
-            #  'filename': filename_out }
 
 
     meta = { 'author': author,
@@ -619,157 +537,6 @@ def create_filename(meta):
 
 
 
-
-#########################################################
-# Correct articles text for better speach
-#
-def generate_ssml(content):
-
-    article_write = 0
-    line_cnt=0
-
-    article_text = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="string">\n'
-
-    for line in content:
-        #  print("line type", type(line))
-        #  print("line etree", type(etree.tostring(line)))
-        # line_mod is the output
-        
-        # strip leading/trailing whitespace
-        
-        # remove non-unicode chars
-        #  print(line)
-        #  exit()
-        #  newlist = [str(s) for s in line]
-        #  pprint.pprint(newlist)
-        #  exit()
-        #  if re.search('etree', str(type(line))):
-            #  print(str(type(line)))
-            #  exit()
-        line_mod = etree.tostring(line).decode('utf-8')
-            #  print('etree')
-        #  else:
-            #  line_mod = str(line)
-            #  print("str")
-
-        line_mod = bytes(line_mod, 'utf-8').decode('utf-8', 'ignore')
-
-        # remove leading/tailing with space
-        line_mod = line_mod.strip()
-
-        #  line_mod = re.sub('<br \\>', "\n", line_mod)
-
-
-        # convert html escape code
-        line_mod = unescape(line_mod)
-
-        # remove spoken asterisk
-        if not args.speak_asterisk:
-            line_mod = re.sub('\*', '', line_mod)
-
-        # remove spoken quotes
-        if not args.dont_remove_quotes:
-            line_mod = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '', line_mod)
-        else:
-            line_mod = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '"', line_mod)
-            # line_mod = re.sub("['\''’‚‘´\`]", "’", line_mod)
-            
-            # sed 's/['\''’‚‘´\`]/’/g' |\
-            # sed 's/[“”„“‟”"❝❞⹂〝〞〟＂]/"/g' |\
-            # sed 's/…/\.\.\. /g' |\
-            # sed 's/[–]/-/g'  `</speak>"
-        # —
-
-        # fix single quotes
-        line_mod = re.sub("['\''’‚‘´\`']", "’", line_mod)
-
-        # 2+ white space
-        line_mod = re.sub("[ \t][ \t]*", " ", line_mod)
-    
-        # fix single quotes
-        line_mod = re.sub("['\''’‚‘´\`']", "’", line_mod)
-
-
-        # 2+ single quote
-        line_mod = re.sub("[’][’]*", "’", line_mod)
-        line_mod = line_mod.replace('’’', '')
-        
-        # remove empty <p>paragraphs FIXME!! still isnt catching all
-        line_mod = re.sub('<p>[\s\\n]*</p>', '', line_mod)
-
-        # text line adds break 
-        line_mod = re.sub('<p>', '@!@!@!@!s!@!@!@!@', line_mod)
-        line_mod = re.sub('</p>', "@!@!@!@!/s!@!@!@!@", line_mod)
-
-        # nbsp space
-        line_mod = re.sub('&nbsp;', "@!@!@!@!break time=\"200ms\"/!@!@!@!@  ", line_mod)
-        
-        # line breaks
-        line_mod = re.sub('<br ?[\/]?>', "@!@!@!@!break time=\"400ms\"/!@!@!@!@\n", line_mod)
-
-
-        # emphasised text
-        line_mod = re.sub('<strong>', "@!@!@!@!emphasis level=\"moderate\"!@!@!@!@", line_mod)
-        line_mod = re.sub('</strong>', "@!@!@!@!/emphasis!@!@!@!@ ", line_mod)
-
-        line_mod = re.sub('<em>', "@!@!@!@!emphasis level=\"moderate\"!@!@!@!@", line_mod)
-        line_mod = re.sub('</em>', "@!@!@!@!/emphasis!@!@!@!@ ", line_mod)
-
-        line_mod = re.sub('<[^>]+>', '', line_mod) # remove any html tags codes not em, strong
-        
-        
-        # Extra breaks
-        # ': ', '…', '—' '—-' '—'
-        line_mod = re.sub('—-', "@!@!@!@!break time=\"200ms\"/!@!@!@!@ ", line_mod)
-        line_mod = re.sub('—', "@!@!@!@!break time=\"200ms\"/!@!@!@!@ ", line_mod)
-        line_mod = re.sub('…', "@!@!@!@!break time=\"200ms\"/!@!@!@!@ ", line_mod)
-        # add pause for colon "Speaking: Words"
-        if re.search('[a-zA-Z]: [a-zA-Z]', line_mod): 
-            line_mod = re.sub(': ', "@!@!@!@!break time=\"200ms\"/!@!@!@!@ ", line_mod)
-        
-
-        # Removes Previous Chapter Next Chapter
-        line_mod = re.sub('Previous Chapter\s*Next Chapter', '', line_mod)
-
-        
-        # Avoid removing ssml tags
-        line_mod = re.sub('@!@!@!@!', '<', line_mod)
-        line_mod = re.sub('!@!@!@!@', '>', line_mod)
-        
-        # Add line to text
-        article_text += line_mod + "\n"
-
-    article_text += "</speak>\n"
-
-    # final fixes
-    # white space + newline
-    article_text = re.sub("[ \t]*\n", "\n", article_text)
-
-    # 2+ new line
-    article_text = re.sub("[\n][\n]*", "\n", article_text)
-
-    # fix problem with multiplu delays
-    article_text = re.sub("(<break time=\"[0-9]*ms\"/>\n){3,}", "<break time=\"1s\">\n", article_text)
-    article_text = re.sub("(<break time=\"[0-9]*ms\"/>\n){2,}", "<break time=\"500ms\">\n", article_text)
-
-    #  article_text = re.sub("<break time=\"[0-9]*ms\"/>\n<break time=\"[0-9]*ms\"/>\n", "<break time=\"1s\">\n", article_text)
-
-    #  print(article_text)
-    # return modified text
-    return article_text
-# END: generate_ssml()
-
-
-
-
-
-
-
-
-
-
-
-
 ##########################################################
 # Process each URLs
 #
@@ -790,6 +557,10 @@ def process_url(url):
     # get html text
     html_content = site_code.text
 
+    # print("######################html###############################")
+    # print(html_content)
+    # print("################### html (end) ##########################")
+
     # decide which web novel source and how to extract text 
     #   and a useful output filename to use
     if re.search(r"royalroad\.com", url, re.IGNORECASE):
@@ -803,11 +574,33 @@ def process_url(url):
         print("Skipping...")
         return
 
+    # Convert to single string from etree
+    article_html = ''
+    for line in content:
+        article_html += str(etree.tostring(line)).strip()    
+
+    # print("@@@@@@@@@@@@@@@@@@@@ article_html @@@@@@@@@@@@@@@@@@@@@@@@@@")
+    # print(article_html)    
+    # print("@@@@@@@@@@@@@@@@@ article_html (end) @@@@@@@@@@@@@@@@@@@@@@@")
+
 
     # process each line for basic correction to make tts better with less 
     # incorrect speach
-    article_ssml = generate_ssml(content)
-    article_text  = re.sub('<[^>]+>', '', article_ssml) # remove any tags
+    try:
+        from audiobook_tools.common.text_conversion import html_article2ssml
+    except:
+        print("error loading audiobook_tools python files")
+        exit(1) 
+    article_ssml = html_article2ssml(article_html, args)
+
+    # Convert ssml to text
+    try:
+        from audiobook_tools.common.text_conversion import ssml2text
+    except:
+        print("error loading audiobook_tools python files")
+        exit(1)
+    #article_text  = re.sub('<[^>]+>', '', article_ssml) # remove any tags
+    article_text = ssml2text(article_ssml)
 
     #  if DEBUG: 
         #  print("----------------------TEXT-------------------------------")
@@ -851,6 +644,7 @@ def main():
     Main function
     """
     # Process command line args
+
     global args 
     args = parse_args()
 
@@ -874,6 +668,8 @@ def main():
         print("Processing URL:", url.rstrip())
         file = process_url(url.rstrip())
         print("  File:", file)
+    
+    print("sssssssss")
 # END: def main()
       
 
