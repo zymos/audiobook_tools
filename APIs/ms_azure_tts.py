@@ -63,8 +63,6 @@ def get_tts_audio(text, config, args):
         sys.exit(1)
 
 
-    #  print(text)
-    #  print("00000000000000000000000000000000000000000000000000000000000")
 
     # alter text
     #   change rate
@@ -93,7 +91,9 @@ def get_tts_audio(text, config, args):
             print("loading text_conversion failed")
         text = clean_ssml(text, voice, speaking_rate)
 
-
+    print("000000000000000000 text to ms_azure0000000000000000000000000000")
+    print(text)
+    print("0000000000000000 text to ms azure end 0000000000000000000")
 #  <prosody pitch="value" contour="value" range="value" rate="value" duration="value" volume="value"></prosody>
     
     #print("~~~~~~~~~~~~~~~~~~~~~~~~~~~")

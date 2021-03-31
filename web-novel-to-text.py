@@ -1,8 +1,8 @@
 #/usr/bin/python
 # coding: utf-8
 
-
-##############################################################################################
+"""
+##############################################################################
 # 
 # Source: Web Novel Downloader and Converter to SSML/TXT 
 #
@@ -22,6 +22,7 @@
 #       * to add: Webnovel, Wattpad, scribblehub.com
 #   Tested:
 #       https://www.royalroad.com/fiction/31429/cinnamon-bun/
+#       https://wanderinginn.com/table-of-contents/
 #
 #
 #
@@ -33,12 +34,18 @@
 # bugs
 #   check it if date all ready exists
 #
-#############################################################################################
+# TODO
+#   use config file
+#   embed meta in ssml comments
+#   configurable output filename
+#   option: no empisis
+#
+###############################################################################
+"""
 
 
 
-
-#############################################################################################
+##############################################################################
 # Configure
 #
 
@@ -52,7 +59,7 @@ TEST = 0
 
 
 
-#############################################################################################
+###############################################################################
 # Code
 #
 
@@ -104,19 +111,19 @@ except:
 
 
 # for loading config files
-try:
-    from appdirs import *
-except:
-    print("Error: module 'appdirs' not installed")
-    print("Install: pip install appdirs")
-    exit(1)
-try:
-    import configparser
-    config_file = configparser.ConfigParser()
-except:
-    print("Error: module 'configparser' not installed")
-    print("Install: pip install configparser")
-    exit(1)
+# try:
+#     from appdirs import *
+# except:
+#     print("Error: module 'appdirs' not installed")
+#     print("Install: pip install appdirs")
+#     exit(1)
+# try:
+#     import configparser
+#     config_file = configparser.ConfigParser()
+# except:
+#     print("Error: module 'configparser' not installed")
+#     print("Install: pip install configparser")
+#     exit(1)
 
 
 
@@ -127,6 +134,9 @@ except:
 # Parse Args
 #
 def parse_args():
+    """
+    get args
+    """
 
     # CLI Arguments
     parser = argparse.ArgumentParser(description='Converts a post to a txt or ssml file.')
@@ -137,7 +147,8 @@ def parse_args():
     parser.add_argument('--format', type=str, help='Format to output (json stores metadata)', choices=["txt", "ssml", "json"], default="txt")
     parser.add_argument('-a', '--speak-asterisk', help='Speaks out asterisk[*] (off by default)', action="store_true")
     parser.add_argument('-q', '--dont-remove-quotes', help='Leave quotes in place and may or may not be spoken (off by default)', action="store_true")
-    parser.add_argument('--out', type=str, help='filename to output')
+    parser.add_argument('--dont-emphasize', help='Don\'t use emphasize tag in ssml', action="store_true")
+    parser.add_argument('--output-format', type=str, help='filename to output')
 
     args = parser.parse_args()
     
@@ -152,113 +163,116 @@ def parse_args():
 ##########################################
 # Config file
 #
-def load_config():
+# def load_config():
+#     """
+#     Config file
+#     """
+
+#     # Get config file location
+#     global config
+#     config = {}
+
+#     # set app name and gets config location
+#     appname = "audiobook-tools"
+#     appauthor = "audiobook-tools"
+#     config_filename = "web-novel-to-text.conf"
+#     config_file = os.path.join(user_config_dir(appname, appauthor), config_filename) 
+#     default_config_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), config_filename)
     
-    # Get config file location
-    global config
-    config = {}
+#     #  print(default_config_file)
 
-    # set app name and gets config location
-    appname = "audiobook-tools"
-    appauthor = "audiobook-tools"
-    config_filename = "web-novel-to-text.conf"
-    config_file = os.path.join(user_config_dir(appname, appauthor), config_filename) 
-    default_config_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), config_filename)
+#     # read config file
+#     if os.path.isfile(config_file):  
+#         cfg = configparser.ConfigParser()
+#         cfg.read(config_file)
+#     elif os.path.isfile(default_config_file):
+#         print("Config file:", default_config_file)
+#         cfg = configparser.ConfigParser()
+#         cfg.read(default_config_file)
+#     else:
+#         print("Config file not found.")
+#         print(" Not:", config_file)
+#         print(" Not:", default_config_file)
+#         exit(1)
+
+#     # create dictionary
+#     config = {s:dict(cfg.items(s)) for s in cfg.sections()}
+
+#     # Variables
+#     # config['GENERAL']['delay_between_requests']
+
+
+
+#     # Set Prefered settings
+
+#     #  Overrides via commandline
+#     #  voice
+#     #  config.update({'preferred':{'voice': ''}})
+#     #  if( args.voice ):
+#         #  config['preferred']['voice'] = args.voice
+#     #  elif config[config['GENERAL']['tts_service']].get('voice') is not None:
+#         #  config['preferred']['voice'] = config[config['GENERAL']['tts_service']]['voice'] 
+
+
+
+#     ####################
+#     # Preferred Settings
     
-    #  print(default_config_file)
+#     # create the 'preferred' key
+#     config.update({'preferred':{'preferrences': 1}})
 
-    # read config file
-    if os.path.isfile(config_file):  
-        cfg = configparser.ConfigParser()
-        cfg.read(config_file)
-    elif os.path.isfile(default_config_file):
-        print("Config file:", default_config_file)
-        cfg = configparser.ConfigParser()
-        cfg.read(default_config_file)
-    else:
-        print("Config file not found.")
-        print(" Not:", config_file)
-        print(" Not:", default_config_file)
-        exit(1)
+#     # TTS Service
+#     #  if args.profile :
+#         #  if config[args.profile].get('tts_service') is not None:
+#             #  config['preferred']['tts_service'] = config[args.profile]['tts_service']
+#         #  else:
+#             #  config['preferred']['tts_service'] =  config['GENERAL']['tts_service']
+#     #  else:
+#         #  config['preferred']['tts_service'] =  config['GENERAL']['tts_service']
+#     #  print("------------------------------------------------")
+#     #  print("            a",vars(args)['format'])
+#     #  print("            a",type(vars(args)))
 
-    # create dictionary
-    config = {s:dict(cfg.items(s)) for s in cfg.sections()}
+#     #  pprint.pprint(vars(args))
+#     #  pprint.pprint(vars(args).keys())
 
-    # Variables
-    # config['GENERAL']['delay_between_requests']
-
-
-
-    # Set Prefered settings
-
-    #  Overrides via commandline
-    #  voice
-    #  config.update({'preferred':{'voice': ''}})
-    #  if( args.voice ):
-        #  config['preferred']['voice'] = args.voice
-    #  elif config[config['GENERAL']['tts_service']].get('voice') is not None:
-        #  config['preferred']['voice'] = config[config['GENERAL']['tts_service']]['voice'] 
-
-
-
-    ####################
-    # Preferred Settings
-    
-    # create the 'preferred' key
-    config.update({'preferred':{'preferrences': 1}})
-
-    # TTS Service
-    #  if args.profile :
-        #  if config[args.profile].get('tts_service') is not None:
-            #  config['preferred']['tts_service'] = config[args.profile]['tts_service']
-        #  else:
-            #  config['preferred']['tts_service'] =  config['GENERAL']['tts_service']
-    #  else:
-        #  config['preferred']['tts_service'] =  config['GENERAL']['tts_service']
-    #  print("------------------------------------------------")
-    #  print("            a",vars(args)['format'])
-    #  print("            a",type(vars(args)))
-
-    #  pprint.pprint(vars(args))
-    #  pprint.pprint(vars(args).keys())
-
-    #  print("================================================")
-    # Preferred vars 
-    preferred_vars = ('format','delay_between_requests')
-    # go through each setting
-    for setting in preferred_vars:
-        config['preferred'].update({setting: ''}) 
-        if setting in vars(args).keys(): # var exists
-            if vars(args)[setting]: # var is set
-                config['preferred'][setting] = vars(args)[setting]
-        elif config['GENERAL'].get(setting) is not None:
-            config['preferred'][setting] = config['GENERAL'][setting] 
+#     #  print("================================================")
+#     # Preferred vars 
+#     preferred_vars = ('format','delay_between_requests')
+#     # go through each setting
+#     for setting in preferred_vars:
+#         config['preferred'].update({setting: ''}) 
+#         if setting in vars(args).keys(): # var exists
+#             if vars(args)[setting]: # var is set
+#                 config['preferred'][setting] = vars(args)[setting]
+#         elif config['GENERAL'].get(setting) is not None:
+#             config['preferred'][setting] = config['GENERAL'][setting] 
     
 
-    # Debugging and testing
-    config.update({'DEBUG':{'debug': False}})
-    config['DEBUG'].update({'test': False})
-    if DEBUG:
-        config['DEBUG']['debug'] = True
-    if TEST:
-        config['DEBUG']['test'] = True
+#     # Debugging and testing
+#     config.update({'DEBUG':{'debug': False}})
+#     config['DEBUG'].update({'test': False})
+#     if DEBUG:
+#         config['DEBUG']['debug'] = True
+#     if TEST:
+#         config['DEBUG']['test'] = True
 
 
-    # Places to store variables
-    #  config.update({'INPUT':{'filename': ''}}) 
-    #  config.update({'INPUT':{'text': ''}}) 
-    #  config.update({'INPUT':{'text_ssml': ''}}) 
-    #  config.update({'INPUT':{'text_chunk': ''}}) 
-    #  config.update({'OUTPUT':{'filename': ''}}) 
-    #  config.update({'TMP':{'tmp_dir': tmp_dir}})
+#     # Places to store variables
+#     #  config.update({'INPUT':{'filename': ''}}) 
+#     #  config.update({'INPUT':{'text': ''}}) 
+#     #  config.update({'INPUT':{'text_ssml': ''}}) 
+#     #  config.update({'INPUT':{'text_chunk': ''}}) 
+#     #  config.update({'OUTPUT':{'filename': ''}}) 
+#     #  config.update({'TMP':{'tmp_dir': tmp_dir}})
 
-    if DEBUG: 
-        print("Config file:", config_file)
-        print("------------------------config------------------------")
-        pprint.pprint(config)
-        print("------------------------------------------------------")
-    #  return config
-# End load_config
+#     if DEBUG: 
+#         print("Config file:", config_file)
+#         print("------------------------config------------------------")
+#         pprint.pprint(config)
+#         print("------------------------------------------------------")
+#     #  return config
+# # End load_config
 
 
 
@@ -273,6 +287,10 @@ def load_config():
 # Process file
 #
 def open_file_of_urls(filename):
+    """
+    open file create list of urls
+    """
+
     # open file
     urls = []
 
@@ -342,7 +360,7 @@ def extract_txt_royalroad(site_code):
 
     # site_code is entire website
 
-    h = HTMLParser()
+    #h = HTMLParser()
     
     # gets page in tree of code tags
     tree = html.fromstring(site_code.text)
@@ -438,12 +456,11 @@ def extract_txt_wordpress(site_code):
     source = ''
     pub_date = ''
     pub_year = ''
-    filename_out = ''
+    # filename_out = ''
 
 
     
     #  h = HTMLParser()
-    h = HTMLParser()
     
     # gets page in tree of code tags
     tree = html.fromstring(site_code.text)
@@ -648,8 +665,10 @@ def main():
     global args 
     args = parse_args()
 
-    # Load config file
-    load_config()
+    # generate config settings
+    global config
+    from audiobook_tools.common.load_config import load_config
+    config = load_config("web-novel-to-text.conf", args, "", DEBUG, TEST)
 
     # Get urls
     urls = []
@@ -668,8 +687,8 @@ def main():
         print("Processing URL:", url.rstrip())
         file = process_url(url.rstrip())
         print("  File:", file)
-    
-    print("sssssssss")
+
+    print("done.")
 # END: def main()
       
 

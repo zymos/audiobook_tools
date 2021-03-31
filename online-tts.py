@@ -14,10 +14,6 @@
 #
 #   License: GPLv3
 #
-#   Requirments:
-#       python configparser
-#
-#   
 #   Notes:
 #
 #   Optimize:
@@ -43,7 +39,7 @@
 #   Non-featurs:
 #       -no inteligent checks to see if settings are valid for tts service
 #           ie invalid voices
-#       -no ssml error checking
+#       -no ssml error checking (maybe use bs4)
 #
 #   Cloud/Online TTS services
 #
@@ -65,21 +61,23 @@
 #           Install: pip install pyttsx3
 #
 #   Requirments:
-#       python3
-#       "appdirs" module
-#            Install: pip install appdirs
-#       "configparser" module
-#           Install: pip install configparser
-#       "requests" module
-#           Install: pip install requests
-#       modules for specific services, see above
+#       - python3
+#       - "appdirs" module; Install: pip install appdirs
+#       - "configparser" module; Install: pip install configparser
+#       - "requests" module; Install: pip install requests
+#       - modules for specific services, see above
 #
 #   TODO:
 #       fix config priority
 #       fix voicerss call
 #       check if profiles actually work
+#       add post retries
 #
 ############################################################################
+
+
+
+
 
 
 ############################################################################
@@ -93,6 +91,10 @@ TEST=0
 
 # number of char to send to service (smaller has less errors)
 #  POST_CHAR_LIMIT = 1500
+
+
+
+
 
 
 #############################################################################
@@ -158,8 +160,10 @@ except:
 
 
 
+
+
 #################################################
-# CLI Arguments
+# Parse Arguments
 #
 def parse_args():
     """
@@ -200,165 +204,6 @@ def parse_args():
 
 
 
-##################################################
-# Config file
-#
-def load_config():
-    """
-    Get config file location
-    priority is [CLI args] - > [local config] -> [default config]
-    """
-
-    global config
-    config = {}
-
-    # set app name and gets config location
-    appname = "audiobook-tools"
-    appauthor = "audiobook-tools"
-    config_file = os.path.join(user_config_dir(appname, appauthor), "online-tts.conf")
-    default_config_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "online-tts.conf")
- 
-    # read config file
-    cfg_found = 0
-    cfg_default_found = 0
-    if os.path.isfile(config_file):  
-        print("Local config file:", config_file)
-        cfg = configparser.ConfigParser()
-        cfg.read(config_file)
-        cfg_found = 1
-    if os.path.isfile(default_config_file):
-        print("Default config file:", default_config_file)
-        cfg_default = configparser.ConfigParser()
-        cfg_default.read(default_config_file)
-        cfg_default_found = 1
-    if cfg_found == 0 and cfg_default_found == 0:
-        print("Config file not found.")
-        print(" Not:", config_file)
-        print(" Not:", default_config_file)
-        exit(1)
-
-
-    # create dictionary (from default config)
-    config = {s:dict(cfg_default.items(s)) for s in cfg_default.sections()}  
-
-    # overwrite config var's defaults using local config
-    if cfg_found:
-        for s in cfg.sections():
-            for op in cfg.items(s):
-                print(s, " --- ", op[0], " === ", op[1])
-                print(type(s), " --- ", type(op[0]), " === ", type(op[1]))
-                #config[s][op[0]] = op[1]
-    #config = {s:dict(cfg.items(s)) for s in cfg.sections()}
-    exit()
-    # TODO FIX check is setting in config exists befor setting see above
-    # Add args to config var for conveonce of a single var
-    config.update({'ARGS': {'set': 1}})
-    for setting in vars(args):
-        print(vars(args)[setting])
-        #config['ARGS'].update(setting:vars(args)[setting])
-
-    # Set Prefered settings
-
-    #  Overrides via commandline
-    #  voice
-    #  config.update({'preferred':{'voice': ''}})
-    #  if( args.voice ):
-        #  config['preferred']['voice'] = args.voice
-    #  elif config[config['GENERAL']['tts_service']].get('voice') is not None:
-        #  config['preferred']['voice'] = config[config['GENERAL']['tts_service']]['voice'] 
-
-    #print(config[config['GENERAL']['tts_service']])
-    if config.get(config['GENERAL']['tts_service']) is None :
-        print("Error: tts serivce \"" + config['GENERAL']['tts_service'] + 
-        "\" is set in config, yet the section does not exist.  Fix the [GENERAL] \"tts_service\" setting, or add a new section named \"" +
-        config['GENERAL']['tts_service'] , "\" an create a file in 'APIs' folder named \"" + config['GENERAL']['tts_service'] + ".py\"")
-        exit(1)
-
-    ####################
-    # Preferred Settings
-    
-    # create the 'preferred' key
-    config.update({'preferred':{'preferrences': 1}})
-
-    # TTS Service
-    if args.profile :
-        if config[args.profile].get('tts_service') is not None:
-            config['preferred']['tts_service'] = config[args.profile]['tts_service']
-        else:
-            config['preferred']['tts_service'] =  config['GENERAL']['tts_service']
-    else:
-        config['preferred']['tts_service'] =  config['GENERAL']['tts_service']
-
-
-    # Preferred vars 
-    # if DEBUG: print("pref vars")
-    preferred_vars = ('voice', 'profile', 'locale', 'gender', 'key', 'input_format', 'audio_format', 'audio_settings', 'gtts_lang', 'gtts_tld', 'url_parameters', 'delay_between_requests', 'max_charactors','speaking_rate')
-    # go through each setting
-    for setting in preferred_vars:
-        config['preferred'].update({setting: ''}) 
-        if DEBUG: print("Config settings:", setting)
-        if setting in vars(args).keys(): # var exists
-            if vars(args)[setting]: # var is set
-                if DEBUG: print("vars",vars(args)[setting] )
-                config['preferred'][setting] = vars(args)[setting]
-            elif config[config['GENERAL']['tts_service']].get(setting) is not None:
-                config['preferred'][setting] = config[config['GENERAL']['tts_service']][setting] 
-        elif config[config['GENERAL']['tts_service']].get(setting) is not None:
-            config['preferred'][setting] = config[config['GENERAL']['tts_service']][setting] 
-            #  print("asdasdasdasda", setting)
-    
-    # set some hard defaults
-    if config['preferred']['max_charactors'] == '':
-        config['preferred']['max_charactors'] = 1000
-
-    # Debugging and testing
-    config.update({'DEBUG':{'debug': False}})
-    config['DEBUG'].update({'test': False})
-    if DEBUG:
-        config['DEBUG']['debug'] = True
-    if TEST:
-        config['DEBUG']['test'] = True
-
-    #  pprint.pprint(vars(args)[profile])
-    #  if( args.key ):
-        #  config.update({'OVERRIDE':{'key': args.key}}) 
-    #  elif config[config['GENERAL']['tts_service']]['key']:
-        #  config.update({'preferred':{'key': config[config['GENERAL']['tts_service']]['key']}}) 
-    #  else:
-        #  config.update({'preferred':{'key': ''}}) 
-    # input format
-    #  config['preferred'].update({'input_format': ''}) 
-    #  if( args.input_format ):
-        #  config['preferred']['input_format'] = args.input_format
-    #  elif config[config['GENERAL']['tts_service']].get('input_format') is not None:
-        #  config['preferred']['input_format'] = config[config['GENERAL']['tts_service']]['input_format'] 
-
-
-    #  if( args.input_format ):
-        #  config.update({'OVERRIDE':{'input_format': args.input_format}}) 
-        #  #  config['OVERRIDE']['input_format'] = args.input_format
-    #  # PROFILE
-    #  if( args.profile ):
-        #  config.update({'OVERRIDE':{'profile': args.profile}}) 
-    #  # URL_PARAMETERS
-    #  if( args.url_parameters ):
-        #  config.update({'OVERRIDE':{'url_parameters': args.url_parameters}}) 
-
-    # Places to store variables
-    config.update({'INPUT':{'filename': ''}}) 
-    config.update({'INPUT':{'text': ''}}) 
-    config.update({'INPUT':{'text_ssml': ''}}) 
-    config.update({'INPUT':{'text_chunk': ''}}) 
-    config.update({'OUTPUT':{'filename': ''}}) 
-    config.update({'TMP':{'tmp_dir': tmp_dir}})
-
-    if DEBUG: 
-        print("------------------------config------------------------")
-        pprint.pprint(config)
-        print("------------------------------------------------------")
-    #  return config
-# End load_config
-
 
 
 
@@ -369,7 +214,9 @@ def load_config():
 #
 
 def get_file_list(list_in):
-
+    """
+    get file list
+    """
     file_list = []
     for filename in list_in:
         # Ignore binary files
@@ -567,37 +414,19 @@ def tts_api_selection(text):
     import importlib
     
     api = config['preferred']['tts_service']
-    
-    print("api", api)
+    api_module = 'APIs.' + api
 
+    if DEBUG: print("using api", api)
+
+    # load specific API module
     try:
-        selected_api = importlib.import_module('audiobook_tools.APIs.' + api)
+        selected_api = importlib.import_module(api_module)
     except:
         print("Error: ", api, "(api) not found in folder 'APIs'")
-        
+        exit(1)
+
+    # Call API to post text and get audio responce        
     response = selected_api.get_tts_audio(text, config, args)
-
-    #response = ''
-    #  pprint.pprint(config)
-
-    #if config['preferred']['tts_service'] == 'voicerss':
-        #from APIs.voicerss_tts import voicerss_tts
-        #response = voicerss_tts(text, config, args)
-    #elif config['preferred']['tts_service'] == 'google_translate_tts':
-        #from APIs.google_translate_tts import google_translate_tts
-        #response = google_translate_tts(text, config, args)
-    ##  elif( config['preferred']['tts_service'] == 'offine_tts' ):
-        ##  from  import
-        ##  response = offine_tts(text, config, args)
-    #elif config['preferred']['tts_service'] == 'ms_azure_tts':
-        #from APIs.ms_azure_tts import ms_azure_tts
-        #response = ms_azure_tts(text, config, args)
-    ## elif( config['GENERAL']['tts_service'] == 'example_tts' ):
-    ##   from example_tts import example_tts
-    ##   response = example_tts(text, config, args)
-    #else:
-        #print("TTS service incorrectly set")
-        #exit(1)
 
     return response
 # End: tts_service_selection()
@@ -631,7 +460,10 @@ def process_chunks(ebook_txt_chunks):
             #  time.sleep(3) 
 
             if DEBUG:
-                fp = open(os.path.join(config['TMP']['tmp_dir'], str(cnt) + ".txt"), "w")
+                filename_tmp = os.path.join(config['TMP']['tmp_dir'], str(cnt) 
+                + ".txt")
+                print(  "Writing tmp file:", filename_tmp)
+                fp = open(filename_tmp, "w")
                 fp.write(chunk)
                 fp.close()
                 #print("----------------File Chunk (begin)------------------")
@@ -641,7 +473,12 @@ def process_chunks(ebook_txt_chunks):
             # actually send the data
             if(not TEST):
                 response = tts_api_selection(chunk)
-
+                if DEBUG:
+                    filename_tmp = os.path.join(config['TMP']['tmp_dir'], str(cnt) + ".mp3")
+                    print(  "Writing tmp mp3 file:", filename_tmp)
+                    fp = open(filename_tmp, "wb")
+                    fp.write(response)
+                    fp.close()
                 # join the mp3 fragments together
                 # temp mp3 file has errors, needs re-encode
                 audio_data = audio_data + response        
@@ -649,7 +486,8 @@ def process_chunks(ebook_txt_chunks):
                 # blank in test mode
                 audio_data = b''
         
-        # Write TMP mp3 file of joined chunks
+        # Write TMP mp3 file of joined chunks 
+        #   TODO: ideally i would keep this as binary str and pipe to ffmpeg
         filename_tmp_audio = os.path.join(tmp_dir, 'joined-out.mp3')
         if(not TEST):
             f = open(filename_tmp_audio, 'wb')
@@ -667,11 +505,12 @@ def process_chunks(ebook_txt_chunks):
 
 ###############################################
 # FFMPEG: re-encode audio
-#   merged audio chunks have 
-#   errors, need re-encode
+#  
 def ffmpeg_reencode(filename_orig, filename_tmp_audio):
         """
         calls ffmpeg for reenconde
+        merged audio chunks have 
+        errors, need re-encode
         """
 
         # output filename
@@ -770,7 +609,9 @@ def main():
     tmp_dir = tempfile.mkdtemp() #tmp dir to store mp3 chunks
 
     # generate config settings
-    load_config()
+    global config
+    from audiobook_tools.common.load_config import load_config
+    config = load_config("online-tts.conf", args, tmp_dir, DEBUG, TEST)
 
     # get list of files inputed
     file_list = get_file_list(args.EBOOK)
