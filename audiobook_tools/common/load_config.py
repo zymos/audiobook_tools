@@ -122,13 +122,15 @@ def load_config(config_filename, args, tmp_dir, DEBUG, TEST):
     # web-novel-to-text.py config
     if config_filename =="web-novel-to-text.conf":
         # print("TODO: not enabled yet")
-        preferred_vars = ('format','delay_between_requests')
+        preferred_vars = ('delay_between_requests', 'format', 'speak_asterisk', 'dont_remove_quotes', 'dont_emphasize','filename_format')
         # go through each setting
         for setting in preferred_vars:
             config['preferred'].update({setting: ''}) 
             if setting in vars(args).keys(): # var exists
                 if vars(args)[setting]: # var is set
                     config['preferred'][setting] = vars(args)[setting]
+                elif config['GENERAL'].get(setting) is not None:
+                    config['preferred'][setting] = config['GENERAL'][setting]    
             elif config['GENERAL'].get(setting) is not None:
                 config['preferred'][setting] = config['GENERAL'][setting]
 
@@ -152,10 +154,10 @@ def load_config(config_filename, args, tmp_dir, DEBUG, TEST):
 
         for setting in preferred_vars:
             config['preferred'].update({setting: ''}) 
-            if DEBUG: print("Config settings:", setting)
+            # if DEBUG: print("Config settings:", setting)
             if setting in vars(args).keys(): # var exists
                 if vars(args)[setting]: # var is set
-                    if DEBUG: print("vars",vars(args)[setting] )
+                    #if DEBUG: print("vars",vars(args)[setting] )
                     config['preferred'][setting] = vars(args)[setting]
                 elif config[config['GENERAL']['tts_service']].get(setting) is not None:
                     config['preferred'][setting] = config[config['GENERAL']['tts_service']][setting] 

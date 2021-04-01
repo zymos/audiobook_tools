@@ -608,7 +608,7 @@ def process_url(url):
     except:
         print("error loading audiobook_tools python files")
         exit(1) 
-    article_ssml = html_article2ssml(article_html, args)
+    article_ssml = html_article2ssml(article_html, config, args)
 
     # Convert ssml to text
     try:

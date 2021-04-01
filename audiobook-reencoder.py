@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: latin-1 -*-
+# -*- coding: utf-8 -*-
 
 #####################################################################
 #	audiobook_reencode
@@ -154,8 +154,8 @@ def main():
     # banner for test
     if args.test:
         print("******************************************************")
-        print "* Running in test mode, no actions will be performed *"
-        print "******************************************************"
+        print("* Running in test mode, no actions will be performed *")
+        print("******************************************************")
 
     
     logger.debug("*********************************************************************")

@@ -132,19 +132,19 @@ import time
 
 
 # for loading config files
-try:
-    from appdirs import *
-except:
-    print("Error: module 'appdirs' not installed")
-    print("Install: pip install appdirs")
-    exit(1)
-try:
-    import configparser
-    config_file = configparser.ConfigParser()
-except:
-    print("Error: module 'configparser' not installed")
-    print("Install: pip install configparser")
-    exit(1)
+# try:
+#     from appdirs import *
+# except:
+#     print("Error: module 'appdirs' not installed")
+#     print("Install: pip install appdirs")
+#     exit(1)
+# try:
+#     import configparser
+#     config_file = configparser.ConfigParser()
+# except:
+#     print("Error: module 'configparser' not installed")
+#     print("Install: pip install configparser")
+#     # exit(1)
 
 # web grab
 try:
@@ -347,7 +347,7 @@ def split_file_into_text_chunks(filename):
                 ebook_txt_line = re.sub('<[^>]+>', '', ebook_txt_line)
             elif( config['preferred']['input_format'] == 'ssml'):
                 #remove <speak> tags, will add later
-                ebook_txt_line = re.sub('<\?speak>', '', ebook_txt_line)
+                ebook_txt_line = re.sub(r'<\?speak>', '', ebook_txt_line)
                     
 
             #counts chars for post, splits into chunks, increment
