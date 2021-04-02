@@ -1,0 +1,4 @@
+All files are under GPLv3, except aaxconverter
+
+aaxconverter is mostly a copy of AAX2MP3, by KrumpetPirate
+See: audiobook_tools/aaxconverter/LICENSE

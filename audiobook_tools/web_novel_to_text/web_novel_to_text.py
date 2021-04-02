@@ -49,7 +49,7 @@
 # Configure
 #
 
-DEBUG = 0
+DEBUG = 1
 TEST = 0
 
 
@@ -98,7 +98,7 @@ import time
 # debugging
 import pprint
     
-# for filenames with spelled out numbers
+# for filenames with spelled out numbers TODO
 use_text2digits = 1
 try:
     from text2digits import text2digits
@@ -108,24 +108,6 @@ except:
     print("   Useful for keeping file names in order when spelled out chapters")
     print("   Install: pip3 install text2digits")
     use_text2digits = 0
-
-
-# for loading config files
-# try:
-#     from appdirs import *
-# except:
-#     print("Error: module 'appdirs' not installed")
-#     print("Install: pip install appdirs")
-#     exit(1)
-# try:
-#     import configparser
-#     config_file = configparser.ConfigParser()
-# except:
-#     print("Error: module 'configparser' not installed")
-#     print("Install: pip install configparser")
-#     exit(1)
-
-
 
 
 
@@ -144,7 +126,7 @@ def parse_args():
     parser.add_argument('INPUT', type=str, help='URL of post or file with list of URLs')
 
     #  parser.add_argument('-f', '--file', help='Use a file with list of URLs, instead of URL in CLI', action="store_true")
-    parser.add_argument('--format', type=str, help='Format to output (json stores metadata)', choices=["txt", "ssml", "json"], default="txt")
+    parser.add_argument('--format', type=str, help='Format to output (json stores metadata)', choices=["txt", "ssml", "json"])
     parser.add_argument('-a', '--speak-asterisk', help='Speaks out asterisk[*] (off by default)', action="store_true")
     parser.add_argument('-q', '--dont-remove-quotes', help='Leave quotes in place and may or may not be spoken (off by default)', action="store_true")
     parser.add_argument('--dont-emphasize', help='Don\'t use emphasize tag in ssml', action="store_true")
@@ -581,10 +563,10 @@ def process_url(url):
     # decide which web novel source and how to extract text 
     #   and a useful output filename to use
     if re.search(r"royalroad\.com", url, re.IGNORECASE):
-        if DEBUG: print("  > Royal Road article found")
+        if config['DEBUG']['debug']: print("  > Royal Road article found")
         (content, meta) = extract_txt_royalroad(site_code)
     elif( re.search(r'meta name="generator" content="WordPress.com"', html_content, re.IGNORECASE)):
-        if DEBUG: print("  > WordPress article found")
+        if config['DEBUG']['debug']: print("  > WordPress article found")
         (content, meta) = extract_txt_wordpress(site_code)
     else:
         print("  > Unknown web-novel type for\'", url, "'")
@@ -646,6 +628,9 @@ def process_url(url):
     file = open(meta['filename'], "w")   
     file.write(text_w)
     file.close()
+
+    # Sleep between Requests
+    time.sleep(float(config['GENERAL']['delay_between_requests']))
 
     return meta['filename']
 # END: process_url()

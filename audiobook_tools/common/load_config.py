@@ -40,26 +40,32 @@ def load_config(config_filename, args, tmp_dir, DEBUG, TEST):
     # set app name and gets config location
     appname = "audiobook-tools"
     appauthor = "audiobook-tools"
+
     config_file = os.path.join(user_config_dir(appname, appauthor), config_filename)
-    default_config_file = os.path.join(os.path.dirname(__file__), '..', '..', config_filename)
+    default_config_file = os.path.join(os.path.dirname(__file__), '..', '..', 'config_files', config_filename)
     
     #print(os.path.dirname(__file__))
     # read config file
     # if DEBUG:
         # print("Local config file:", config_file)
         # print("Default config file:", default_config_file)
+
+    if DEBUG: print("Local config file:", config_file)
+    if DEBUG: print("Default config file:", default_config_file)
+
     cfg_found = 0
     cfg_default_found = 0
     if os.path.isfile(config_file):  
-        print("Local config file:", config_file)
+        print("Using local config file:", config_file)
         cfg = configparser.ConfigParser()
         cfg.read(config_file)
         cfg_found = 1
     if os.path.isfile(default_config_file):
-        print("Default config file:", default_config_file)
         cfg_default = configparser.ConfigParser()
         cfg_default.read(default_config_file)
         cfg_default_found = 1
+        if not cfg_found:
+            print("Using default config file:", default_config_file)
     if cfg_found == 0 and cfg_default_found == 0:
         print("Config file not found.")
         print(" Not:", config_file)
