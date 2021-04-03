@@ -1,12 +1,27 @@
 # Audiobook Tools
 
-
-Allot of things are changing so much of this file is a bit off
-
-
-
-
-
+* Description: A set of CLI tools for creating and optimizing audiobooks
+	* Tools:
+		* audiobook-reencoder (needs fixing)
+			* re-encoding your audiobooks to a standard format
+		* online-tts
+			* converting text-to-speech using online/cloud TTS services
+		* web-novel-to-text
+			* extracting web-novel chapters from websites and saving to TXT or SSML
+		* aaxconverter
+			* convert AAX files to MP3 or M4B, removing DRM
+	* Requirements:
+		* python
+			* programing environment
+		* ffmpeg
+			* tool for re-encoding audiobooks
+	* Recomended external tools:
+		* Calibre
+			* Contains CLI tools for converting ebooks to text
+		* youtube-dl
+			* Can extract youtube audiobooks and convert to MP3
+		* Mycroft - Mimic
+			* FOSS CLI off-line text-to-speech tool, not as good as commercial or online services
 
 
 
@@ -18,11 +33,12 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 
 
 
-## audiobook_reencoder
-* Description: Re-encodes all mp2/m4b files in a directory, recursivly.
+
+## audiobook_reencoder (needs fixing)
+* Description: Re-encodes all MP3/M4B files in a directory, recursivly.
 * Features:
 	* Encodes using ffmpeg
-    * Accepts mp2, m4b, m4a (todo maybe flac)
+    * Accepts mp3, m4b, m4a 
     * Grabs audio files data using ffprobe, for re-encoding and embedding cover art
     * Split into chapters (not implemented)
     * Removes unneeded files (nfo/cue/m2u) (can be disabled)
@@ -40,13 +56,62 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/audiobook_reencoder)
 
 
+## online-tts
+* Description
+* Usage:
+<pre>
+usage: online-tts [-h] [--bitrate {32k,48k,64k,96k,128k,196k}]
+                  [--samplerate {16000,22050,44100,48000}] [--format {mp3,wav,ogg}]
+                  [--input-format {txt,ssml,json-txt,json-ssml}] [--key KEY]
+                  [--locale LOCALE] [--voice VOICE] [--gender GENDER]
+                  [--url_parameters URL_PARAMETERS]
+                  [--audio_settings AUDIO_SETTINGS] [--gtts-lang GTTS_LANG]
+                  [--gtts-tld GTTS_TLD] [--tts-service TTS_SERVICE]
+                  [--profile PROFILE] [--dont_remove_asterisk]
+                  [--dont_remove_quotes]
+                  EBOOK [EBOOK ...]
+
+positional arguments:
+  EBOOK                 ebook txt file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --bitrate {32k,48k,64k,96k,128k,196k}
+                        audio encoding bitrate
+  --samplerate {16000,22050,44100,48000}
+                        audio encoding samplerate
+  --format {mp3,wav,ogg}
+                        audio encoding format
+  --input-format {txt,ssml,json-txt,json-ssml}
+                        format sent to TTS service
+  --key KEY             key, auth code, auth file
+  --locale LOCALE       example: en-us, en-au,
+  --voice VOICE         voice
+  --gender GENDER
+  --url_parameters URL_PARAMETERS
+                        this will be attached to url after question mark
+  --audio_settings AUDIO_SETTINGS
+  --gtts-lang GTTS_LANG
+                        language for google-translate-tts
+  --gtts-tld GTTS_TLD   top-level-domain for google-tanslate-tts accents
+  --tts-service TTS_SERVICE
+                        tts service to use. ie google_translate_tts, voicerss,
+                        google_cloud_tts(unimplemented), amazone_polly(unimplemented
+  --profile PROFILE     profile to use, set in config file
+  --dont_remove_asterisk
+                        Some TTS servers speak out "asterisk", by default they are
+                        removed
+  --dont_remove_quotes  Some TTS servers speak out "quote", by default they are
+                        removed
+
+</pre>
+
 
 ## google-cloud-tts.sh
 * Description: Creates audiobooks from ebooks using Google voice (text-to-speech)
 *	Requirements:
 	* ffmpeg
 	* Google Cloud SDK
-	* Calibre (ebooks to txt)
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/google_cloud_tts)
 
 
@@ -60,15 +125,39 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 
 
 
-## wp post to ssml
-* Description: Converts a Wordpress post to an SSML file to be used in a text-to-speech program or service.  This is useful for coverting web-novels to audio.
-* Requirements
-	* python
-* [more details](https://github.com/zymos/audiobook_tools/tree/master/wp_post_to_ssml)
+## web-novel-to-text
+* Description: Extracts web-novels to a TXT or SSML file to be used in a text-to-speech program or service.
+* Usage
+<pre>
+usage: web-novel-to-text [-h] [--format {txt,ssml,json}] [-a] [-q]
+                         [--dont-emphasize] [--output-format OUTPUT_FORMAT]
+                         INPUT
 
+Converts a post to a txt or ssml file.
 
+positional arguments:
+  INPUT                 URL of post or file with list of URLs
 
-# youtube-dl: Convert Youtube audiobooks to mp3 files (external tool)
+optional arguments:
+  -h, --help            show this help message and exit
+  --format {txt,ssml,json}
+                        Format to output (json stores metadata)
+  -a, --speak-asterisk  Speaks out asterisk[*] (off by default)
+  -q, --dont-remove-quotes
+                        Leave quotes in place and may or may not be spoken (off by
+                        default)
+  --dont-emphasize      Don't use emphasize tag in ssml
+  --output-format OUTPUT_FORMAT
+                        filename to output
+</pre>
+
+# External: Calibre - Ebook tools
+* ebook reader/converter (GUI and CLI)
+* <https://calibre-ebook.com/>
+	* Ebook to txt (CLI): 'ebook-convert Book.epub Book.txt'
+	* Extract cover art(CLI): ebook-meta --get-cover=cover.jpg
+
+# External: youtube-dl: Convert Youtube audiobooks to mp3 files
 * Description: There are many audiobooks on youtube.  Mostly web-novels and light-novels read by computers, that will likely never be produced in studios.
 * Downloads single file
 	* youtube-dl --extract-audio --embed-thumbnail --add-metadata --audio-format mp3 "[URL_GOES_HERE]"
@@ -78,6 +167,10 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 	* youtube-dl --get-thumbnail "[URL_GOES_HERE]" | xargs wget -O cover.jpg
 * Download: <https://youtube-dl.org/>
 * Git: <https://github.com/ytdl-org/youtube-dl>
+
+# External: Mycroft Mimic
+* Description:
+	* <https://mycroft-ai.gitbook.io/docs/mycroft-technologies/mimic-overview>
 
 
 # Audible.com (very-unofficial) tools
