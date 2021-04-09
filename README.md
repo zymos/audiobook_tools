@@ -1,31 +1,26 @@
 # Audiobook Tools
 
-* Description: A set of CLI tools for creating and optimizing audiobooks
-	* Tools:
-		* audiobook-reencoder (needs fixing)
-			* re-encoding your audiobooks to a standard format
-		* online-tts
-			* converting text-to-speech using online/cloud TTS services
-		* web-novel-to-text
-			* extracting web-novel chapters from websites and saving to TXT or SSML
-		* aaxconverter
-			* convert AAX files to MP3 or M4B, removing DRM
-	* Requirements:
-		* python
-			* programing environment
-		* ffmpeg
-			* tool for re-encoding audiobooks
-	* Recomended external tools:
-		* Calibre
-			* Contains CLI tools for converting ebooks to text
-		* youtube-dl
-			* Can extract youtube audiobooks and convert to MP3
-		* Mycroft - Mimic
-			* FOSS CLI off-line text-to-speech tool, not as good as commercial or online services
+Description: A set of CLI tools for creating and optimizing audiobooks
+
+audiobook-reencoder (not working)
+* re-encoding your audiobooks to a standard format
+
+online-tts
+* converting text-to-speech using online/cloud TTS services
+
+web-novel-to-text
+* extracting web-novel chapters from websites and saving to TXT or SSML
+
+aaxconverter
+* convert AAX files to MP3 or M4B, removing DRM
+
+
+* Requirements:
+	* python
+	* ffmpeg
 
 
 
-These are some scripts to create and convert audiobooks.
 
 Download tools: [zip file](https://github.com/zymos/audiobook_tools/archive/master.zip)
 
@@ -34,7 +29,7 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 
 
 
-## audiobook_reencoder (needs fixing)
+## audiobook_reencoder (not working)
 * Description: Re-encodes all MP3/M4B files in a directory, recursivly.
 * Features:
 	* Encodes using ffmpeg
@@ -58,7 +53,6 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 
 ## online-tts
 * Description
-* Usage:
 <pre>
 usage: online-tts [-h] [--bitrate {32k,48k,64k,96k,128k,196k}]
                   [--samplerate {16000,22050,44100,48000}] [--format {mp3,wav,ogg}]
@@ -103,31 +97,11 @@ optional arguments:
                         removed
   --dont_remove_quotes  Some TTS servers speak out "quote", by default they are
                         removed
-
 </pre>
-
-
-## google-cloud-tts.sh
-* Description: Creates audiobooks from ebooks using Google voice (text-to-speech)
-*	Requirements:
-	* ffmpeg
-	* Google Cloud SDK
-* [more details](https://github.com/zymos/audiobook_tools/tree/master/google_cloud_tts)
-
-
-
-## m4b split
-* Desciption: Splits m4b files to chaptered mp3 files
-* Requirements
-	* ffmpeg
-	* libmp4v2
-* [more details](https://github.com/zymos/audiobook_tools/tree/master/m4b_split)
-
 
 
 ## web-novel-to-text
 * Description: Extracts web-novels to a TXT or SSML file to be used in a text-to-speech program or service.
-* Usage
 <pre>
 usage: web-novel-to-text [-h] [--format {txt,ssml,json}] [-a] [-q]
                          [--dont-emphasize] [--output-format OUTPUT_FORMAT]
@@ -149,15 +123,43 @@ optional arguments:
   --dont-emphasize      Don't use emphasize tag in ssml
   --output-format OUTPUT_FORMAT
                         filename to output
+
 </pre>
 
-# External: Calibre - Ebook tools
+## aaxconverter (opus, ogg may not work)
+<pre>
+Usage: aaxconverter [--flac] [--aac] [--opus ] [--single] [--chaptered]
+[-e:mp3] [-e:m4a] [-e:m4b] [--authcode <AUTHCODE>] [--no-clobber]
+[--target_dir <PATH>] [--complete_dir <PATH>] [--validate]
+{FILES}
+</pre>
+
+## Other tools
+## google-cloud-tts.sh
+* Description: Creates audiobooks from ebooks using Google voice (text-to-speech)
+*	Requirements:
+	* ffmpeg
+	* Google Cloud SDK
+* [more details](https://github.com/zymos/audiobook_tools/tree/master/google_cloud_tts)
+
+
+
+## m4b split
+* Desciption: Splits m4b files to chaptered mp3 files
+* Requirements
+	* ffmpeg
+	* libmp4v2
+* [more details](https://github.com/zymos/audiobook_tools/tree/master/m4b_split)
+
+# Recomneded External Programs
+
+## External: Calibre
 * ebook reader/converter (GUI and CLI)
 * <https://calibre-ebook.com/>
-	* Ebook to txt (CLI): 'ebook-convert Book.epub Book.txt'
-	* Extract cover art(CLI): ebook-meta --get-cover=cover.jpg
+		* Ebook to txt: 'ebook-convert Book.epub Book.txt'
+		* Extract cover art: ebook-meta --get-cover=cover.jpg
 
-# External: youtube-dl: Convert Youtube audiobooks to mp3 files
+## External: youtube-dl: Convert Youtube audiobooks to mp3 files
 * Description: There are many audiobooks on youtube.  Mostly web-novels and light-novels read by computers, that will likely never be produced in studios.
 * Downloads single file
 	* youtube-dl --extract-audio --embed-thumbnail --add-metadata --audio-format mp3 "[URL_GOES_HERE]"
@@ -168,12 +170,10 @@ optional arguments:
 * Download: <https://youtube-dl.org/>
 * Git: <https://github.com/ytdl-org/youtube-dl>
 
-# External: Mycroft Mimic
+## External: Mycroft Mimic
 * Description:
 	* <https://mycroft-ai.gitbook.io/docs/mycroft-technologies/mimic-overview>
 
-
-# Audible.com (very-unofficial) tools
 
 ## inAudible-NG/audible-activator: Extract your Audible authorization code
 * Description: Find your Audible 'activation byte', aka 'auth code', which is required for listening or converting your Audible audiobooks

@@ -7,32 +7,36 @@ import sys
 import pprint
 
 
-project_dir = "/home/zymos/Documents/Projects/audiobook_tools/online-tts"
-prog = os.path.join(project_dir, "online-tts.py")
+#  project_dir = "/home/zymos/Documents/Projects/audiobook_tools/online-tts"
+#  prog = os.path.join(project_dir, "online-tts.py")
 
 workingin_dir = "tmp/"
 
 if __name__ == "__main__":
 
+    print(os.getcwd())
+    sys.path.insert(0, os.getcwd())
+    #  exit()
     try:
         # python 3.4+ should use builtin unittest.mock not mock package
         from unittest.mock import patch
     except ImportError:
         from mock import patch
 
-    from audiobook_tools.web_novel_to_text import web_novel_to_text
+    from audiobook_tools.online_tts import online_tts
      
-
-    print('a') 
     os.chdir(workingin_dir)
-
+    print("TESTING cwd:", os.getcwd())
+    sys.path.insert(0, os.path.dirname(__file__))
+    
+    print('TESTING sys.path:', sys.path[0], sys.path)
     # Command line args
-    testargs = ['web-novel-to-text', '--debug', 'https://wanderinginn.com/2019/03/02/interlude-5/']
-
+    testargs = ['online-tts', '--debug', '2019-03-02 - Interlude.ssml']
+    #  exit()
     # emulate CLI args
     with patch.object(sys, 'argv', testargs):
         # Run the prog
-        web_novel_to_text.main()
+        online_tts.main()
     
     exit()
     #

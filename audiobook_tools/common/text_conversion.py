@@ -31,7 +31,7 @@ def remove_nonstandard_chars(text):
     # remove non-printable chars
     text.translate(NOPRINT_TRANS_TABLE)
 
-    return text
+    return str(text)
 # End: remove_nonstandard_chars()
 
 
@@ -69,11 +69,20 @@ def ssml2text(ssml_text):
 #############################################################################
 # Clean Text
 #
-def clean_text(text, dont_remove_asterisk, dont_remove_quotes, input_format):
+def clean_text(text, config):
     """
     Cleans up text to avoid weird noises
+
+    dont_remove_asterisk, dont_remove_quotes, input_format
+
+
     """
     
+    dont_remove_asterisk = config['ARGS']['dont_remove_asterisk']
+    input_format = config['preferred']['input_format']
+    dont_remove_quotes = config['ARGS']['dont_remove_quotes']
+    remove_problematic_chars = config['preferred']['remove_problematic_chars']
+
     import re
     # strip leading/trailing whitespace
     text = text.strip()
@@ -86,15 +95,18 @@ def clean_text(text, dont_remove_asterisk, dont_remove_quotes, input_format):
     #  ssml_text = unescape(ssml_text)
 
     # remove spoken asterisk
-    if not dont_remove_asterisk:
+    if (not dont_remove_asterisk) or remove_problematic_chars:
         text = re.sub(r'\*', '', text)
 
     # remove spoken quotes   FIXME!!!!!!! dont remove quotes in tags
     if not input_format == 'ssml':
-        if not dont_remove_quotes:
+        if (not dont_remove_quotes) or remove_problematic_chars:
             text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '', text)
         else:
             text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '"', text)
+        # Remove other non-standard chars
+        if remove_problematic_chars:
+            text = re.sub(r'[\/]', '', text)
         # ssml_text = re.sub("['\''’‚‘´\`]", "’", ssml_text)
         
         # sed 's/['\''’‚‘´\`]/’/g' |\
@@ -103,6 +115,9 @@ def clean_text(text, dont_remove_asterisk, dont_remove_quotes, input_format):
         # sed 's/[–]/-/g'  `</speak>"
     # —
 
+    # Remove other non-standard chars TODO add more problem chars
+    if remove_problematic_chars:
+        text = re.sub(r'[\\]', '', text)
 
     # 2+ white space
     text = re.sub(r"[ \t][ \t]*", " ", text)
@@ -164,11 +179,11 @@ def clean_ssml(ssml_text, voice, speaking_rate):
     
     # fixes breaks with out closing char "/"
     ssml_text = re.sub("<break time=\"([a-zA-Z0-9]*)\">", 
-                       r'<break time="\1"/>', ssml_text)
+                       r'<break time="\1" />', ssml_text)
     
     # fix problem with multiplu delays
     ssml_text = re.sub(r"(<break time=\"[a-zA-Z0-9]*\"[ ]?\/?>\s){2,}", 
-                       "<break time=\"1s\"/>", ssml_text)
+                       "<break time=\"1s\" />", ssml_text)
     
     # replace '\x02/p>' not sure is this is a one off or a bug
     # 2018-07-21\ -\ 5.03.ssml
@@ -232,11 +247,11 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     ssml_text = re.sub(r"\\n", r"\n", ssml_text)
 
     # remove spoken asterisk
-    if config['GENERAL']['speak_asterisk'].lower() != 'true' or config['GENERAL']['speak_asterisk'].lower() != '1':
+    if config['GENERAL']['speak_asterisk']:
         ssml_text = re.sub(r'\*', '', ssml_text)
 
     # remove spoken quotes
-    if config['GENERAL']['dont_remove_quotes'].lower() != 'true' or config['GENERAL']['dont_remove_quotes'].lower() != '1':
+    if config['GENERAL']['dont_remove_quotes']:
         ssml_text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '', ssml_text)
     else:
         ssml_text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '"', ssml_text)
@@ -278,8 +293,8 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     #   emphasise sounds horible for ms_azure i think its slowwer rate
     #   so only increase volume, recomend disable by default
     #   needs testing
-    if config['GENERAL']['dont_emphasize'].lower() != 'true' or config['GENERAL']['dont_emphasize'].lower() != '1':
-        emph_tag = "˫@!@!@!@!prosody volume=\"+10%\"˧!@!@!@!@"
+    if config['GENERAL']['dont_emphasize']:
+        emph_tag = "˫@!@!@!@!prosody volume=\"10%\"˧!@!@!@!@"
         emph_tag_end = r"˫@!@!@!@!/prosody˧!@!@!@!@"
         ssml_text = re.sub('<strong>', emph_tag, ssml_text)
         ssml_text = re.sub('</strong>', emph_tag_end, ssml_text)
@@ -295,16 +310,16 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     
     # Add pauses
     # ': ', '…', '—' '—-' '—' '&nbsp;'
-    ssml_text = re.sub('—-', "˫@!@!@!@!break time=\"200ms\"/˧!@!@!@!@ ", ssml_text)
-    ssml_text = re.sub('—', "˫@!@!@!@!break time=\"200ms\"/˧!@!@!@!@ ", ssml_text)
-    ssml_text = re.sub('…', "˫@!@!@!@!break time=\"200ms\"/˧!@!@!@!@ ", ssml_text)
+    ssml_text = re.sub('—-', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@ ", ssml_text)
+    ssml_text = re.sub('—', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@ ", ssml_text)
+    ssml_text = re.sub('…', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@ ", ssml_text)
     # nbsp space
-    ssml_text = re.sub('&nbsp;', "˫@!@!@!@!break time=\"200ms\"/˧!@!@!@!@  ", ssml_text)
+    ssml_text = re.sub('&nbsp;', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@  ", ssml_text)
     # line breaks
-    ssml_text = re.sub(r'<br ?[\/]?>', "˫@!@!@!@!break time=\"400ms\"/˧!@!@!@!@\n", ssml_text)
+    ssml_text = re.sub(r'<br ?[\/]?>', "˫@!@!@!@!break time=\"400ms\" /˧!@!@!@!@\n", ssml_text)
     # add pause for colon "Speaking: Words"
     if re.search('[a-zA-Z]: [a-zA-Z]', ssml_text): 
-        ssml_text = re.sub(': ', "˫@!@!@!@!break time=\"200ms\"/˧!@!@!@!@ ", ssml_text)
+        ssml_text = re.sub(': ', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@ ", ssml_text)
     
 
     # Removes Previous Chapter Next Chapter text sometimes used in article
@@ -323,8 +338,8 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     ssml_text = re.sub("[\n][\n]*", r"\n", ssml_text)
 
     # fix problem with multiplu delays
-    ssml_text = re.sub("(<break time=\"[0-9]*ms\"/>\n){3,}", "<break time=\"1s\">\n", ssml_text)
-    ssml_text = re.sub("(<break time=\"[0-9]*ms\"/>\n){2,}", "<break time=\"500ms\">\n", ssml_text)
+    ssml_text = re.sub("(<break time=\"[0-9]*ms\"/>\n){3,}", "<break time=\"1s\" />\n", ssml_text)
+    ssml_text = re.sub("(<break time=\"[0-9]*ms\"/>\n){2,}", "<break time=\"500ms\" />\n", ssml_text)
 
     # Re-Add <speak> tags
     ssml_text = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="string">\n' + ssml_text + "\n</speak>"

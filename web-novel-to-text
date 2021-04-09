@@ -6,6 +6,7 @@ Main program for web-novel-to-text
 calls the functions in audiobook_tools/web_novel_to_text/web_novel_to_text.py
 """
 
-if __name__ == "__main__" :
+
+if __name__ == "__main__":
     from audiobook_tools.web_novel_to_text import web_novel_to_text
-    web_novel_to_text.main()   
+    web_novel_to_text.main()

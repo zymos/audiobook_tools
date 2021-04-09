@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# pylint: disable=W
+
 
 ###########################################################################
 #
@@ -79,15 +81,14 @@
 
 
 
-
 ############################################################################
 # Configure
 # 
 #  global DEBUG
 #  global TEST
 
-DEBUG=1
-TEST=0
+#DEBUG=1
+#TEST=0
 
 # number of char to send to service (smaller has less errors)
 #  POST_CHAR_LIMIT = 1500
@@ -186,8 +187,11 @@ def parse_args():
     parser.add_argument('--tts-service', type=str, help='tts service to use. ie google_translate_tts, voicerss, google_cloud_tts(unimplemented), amazone_polly(unimplemented')
     #  parser.add_argument('--config-file', type=str, help='config file location')
     parser.add_argument('--profile', type=str, help='profile to use, set in config file')
-    parser.add_argument('--dont_remove_asterisk', help='Some TTS servers speak out "asterisk", by default they are removed', action="store_true")
-    parser.add_argument('--dont_remove_quotes', help='Some TTS servers speak out "quote", by default they are removed', action="store_true")
+    parser.add_argument('--dont-remove-asterisk', help='Some TTS servers speak out "asterisk", by default they are removed', action="store_true")
+    parser.add_argument('--dont-remove-quotes', help='Some TTS servers speak out "quote", by default they are removed', action="store_true")
+    parser.add_argument('--remove-problematic-chars', help=r'removes problematic charactors, that are often spoken [\"\\\/*]', action="store_true")
+    parser.add_argument('--debug', help='debug mode, more output', action="store_true")
+    parser.add_argument('--test', help='test mode, no writing data', action="store_true")
     #  parser.add_argument('--', type=str, help='', choices=[""], default="")
 
     #  parser.add_argument('-a', '--speak-asterisk', help='Speaks out asterisk[*] (off by default)', action="store_true")
@@ -225,8 +229,10 @@ def get_file_list(list_in):
         elif not os.path.isfile(filename):
             print("Warning (file not found): ", filename)
             continue
-        elif( is_binary(filename) ): #ignore binary files
-            print("  File is binary, ignoring.")
+        elif is_binary(filename) : #ignore binary files
+            if DEBUG:
+                print("  File", filename)
+                print("     is binary, ignoring.")
             continue
         # add the file to list
         file_list.append(filename)
@@ -289,7 +295,7 @@ def open_text_file(filename):
     """
     Open a file
     """
-    print("  Filename:", filename)
+    print("Converting filename:", filename)
 
     # Open file
     try:
@@ -332,7 +338,7 @@ def split_file_into_text_chunks(filename):
         content = open_text_file(filename).splitlines()
             
         # debug
-        #if config['DEBUG']['debug']:
+        #if config['ARGS']['debug']:
         #    print("-------------------------------------------------")
         
         #print(content)
@@ -352,7 +358,7 @@ def split_file_into_text_chunks(filename):
 
             #counts chars for post, splits into chunks, increment
             if (char_cnt + len(ebook_txt_line) ) >  float(config['preferred']['max_charactors']) * 0.95:
-                if config['DEBUG']['debug']:
+                if config['ARGS']['debug']:
                     print("  > chunk:",chunk_cnt,", char count:",char_cnt) 
                 ebook_txt_chunks.append('')
                 chunk_cnt = chunk_cnt + 1
@@ -369,7 +375,7 @@ def split_file_into_text_chunks(filename):
 
 
         # debug
-        #if config['DEBUG']['debug']:
+        #if config['ARGS']['debug']:
         #    print("-------------------------------------------------")
 
         # close file
@@ -383,7 +389,7 @@ def split_file_into_text_chunks(filename):
                 from audiobook_tools.common.text_conversion import clean_text
             except:
                 print("error loading audiobook_tools python files")
-            ebook_txt_chunks[x] = clean_text(chunk, args.dont_remove_asterisk, args.dont_remove_quotes, config['preferred']['input_format'])
+            ebook_txt_chunks[x] = clean_text(chunk, config)
             x +=1
 
         # add <speak> tag to each chunk for ssml
@@ -577,7 +583,7 @@ def process_file(filename):
         (ebook_txt_chunks, total_char_cnt, chunk_cnt) = split_file_into_text_chunks(filename)
 
         # Sends chunks of text to audio and merging
-        print("  Coverting to audio:", str(total_char_cnt) , " charators, seperated in", str(chunk_cnt), "chunks.")
+        print("   Processing:", str(total_char_cnt) , "chars, in", str(chunk_cnt), "chunks.")
         filename_tmp_audio = process_chunks(ebook_txt_chunks)
 
         # re-encode broken audiofile
@@ -585,6 +591,19 @@ def process_file(filename):
 # End: process_file()
 
 
+########################################
+# Clean up 
+#
+def clean_up():
+    """
+    Clean up temp files
+    """
+    if config['preferred']['debug']:
+        print("Not deleting tmp folder", config['TMP']['tmp_dir'])
+    else:
+        print("Removing temp files")
+        os.rmdir(config['TMP']['tmp_dir'])
+# End: clean_up())
 
 
 
@@ -611,7 +630,19 @@ def main():
     # generate config settings
     global config
     from audiobook_tools.common.load_config import load_config
-    config = load_config("online-tts.conf", args, tmp_dir, DEBUG, TEST)
+    config = load_config("online-tts.conf", args, tmp_dir)
+
+    # enable DEBUG (to be reimplemented)
+    global DEBUG
+    global TEST
+    if config['preferred']['debug']:
+        DEBUG = 1
+    else:
+        DEBUG = 0
+    if config['preferred']['test']:
+        TEST = 1
+    else:
+        TEST = 0
 
     # get list of files inputed
     file_list = get_file_list(args.EBOOK)
@@ -627,7 +658,10 @@ def main():
     # Run for each file inputed
     for filename in file_list:
         process_file(filename)
-        
+    
+    # remove temp files
+    clean_up()
+
     print("done.")
     exit()
     # End for each file
