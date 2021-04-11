@@ -10,7 +10,7 @@ import pprint
 #  project_dir = "/home/zymos/Documents/Projects/audiobook_tools/online-tts"
 #  prog = os.path.join(project_dir, "online-tts.py")
 
-workingin_dir = "tmp/"
+workingin_dir = "tests/tmp/"
 
 if __name__ == "__main__":
 

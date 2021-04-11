@@ -187,9 +187,9 @@ def parse_args():
     parser.add_argument('--tts-service', type=str, help='tts service to use. ie google_translate_tts, voicerss, google_cloud_tts(unimplemented), amazone_polly(unimplemented')
     #  parser.add_argument('--config-file', type=str, help='config file location')
     parser.add_argument('--profile', type=str, help='profile to use, set in config file')
-    parser.add_argument('--dont-remove-asterisk', help='Some TTS servers speak out "asterisk", by default they are removed', action="store_true")
-    parser.add_argument('--dont-remove-quotes', help='Some TTS servers speak out "quote", by default they are removed', action="store_true")
-    parser.add_argument('--remove-problematic-chars', help=r'removes problematic charactors, that are often spoken [\"\\\/*]', action="store_true")
+    parser.add_argument('--keep-asterisk', help='Some TTS servers speak out "asterisk", by default they are removed', action="store_true")
+    parser.add_argument('--keep-quotes', help='Some TTS servers speak out "quote", by default they are removed', action="store_true")
+    parser.add_argument('--keep-problematic-chars', help=r'don\'t remove problematic charactors, that are often spoken [\"\\\/*]', action="store_true")
     parser.add_argument('--debug', help='debug mode, more output', action="store_true")
     parser.add_argument('--test', help='test mode, no writing data', action="store_true")
     #  parser.add_argument('--', type=str, help='', choices=[""], default="")
@@ -389,6 +389,7 @@ def split_file_into_text_chunks(filename):
                 from audiobook_tools.common.text_conversion import clean_text
             except:
                 print("error loading audiobook_tools python files")
+                exit(1)
             ebook_txt_chunks[x] = clean_text(chunk, config)
             x +=1
 
@@ -460,10 +461,8 @@ def process_chunks(ebook_txt_chunks):
             if (not re.search('[a-zA-Z0-9]', chunk)): continue      
 
             cnt = cnt + 1
-            print("         >Chunk:", cnt) # print a dot showing progress
-
-            # to avoid clobbering servers
-            #  time.sleep(3) 
+            #  print("         >Chunk:", cnt) # print a dot showing progress
+            print("*", end="", flush=True)
 
             if DEBUG:
                 filename_tmp = os.path.join(config['TMP']['tmp_dir'], str(cnt) 
@@ -537,7 +536,7 @@ def ffmpeg_reencode(filename_orig, filename_tmp_audio):
             pprint.pprint(ffmpeg_cmd)
 
         # Run ffmpeg command
-        print("  Joining audio chunks.")
+        print("\n  Joining audio chunks.")
         if(not TEST):
             proc = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -545,7 +544,7 @@ def ffmpeg_reencode(filename_orig, filename_tmp_audio):
             ffmpeg_out = proc.communicate()
             if DEBUG: print( ffmpeg_out)
 
-        print("Output file: ", filename_output_audio)
+        print("Output file: ", filename_output_audio, '\n')
 # End: ffmpeg_reencode()
 
 
@@ -598,11 +597,18 @@ def clean_up():
     """
     Clean up temp files
     """
-    if config['preferred']['debug']:
-        print("Not deleting tmp folder", config['TMP']['tmp_dir'])
-    else:
-        print("Removing temp files")
-        os.rmdir(config['TMP']['tmp_dir'])
+    #  if config['preferred']['debug']:
+    #      print("Not deleting tmp folder", config['TMP']['tmp_dir'])
+    #  else:
+    #      print("Removing temp files")
+    #      os.rmdir(config['TMP']['tmp_dir'])
+
+    import shutil
+
+    if DEBUG: print("Deleting tmp dir")
+    if os.path.isdir(config['TMP']['tmp_dir']):
+        shutil.rmtree(config['TMP']['tmp_dir'])
+
 # End: clean_up())
 
 

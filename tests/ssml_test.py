@@ -10,10 +10,13 @@ import pprint
 project_dir = "/home/zymos/Documents/Projects/audiobook_tools/online-tts"
 prog = os.path.join(project_dir, "online-tts.py")
 
-workingin_dir = "tmp/"
+workingin_dir = "tests/tmp/"
 
 if __name__ == "__main__":
 
+    print(os.getcwd())
+    sys.path.insert(0, os.getcwd())
+    print(sys.path) 
     try:
         # python 3.4+ should use builtin unittest.mock not mock package
         from unittest.mock import patch
@@ -23,7 +26,6 @@ if __name__ == "__main__":
     from audiobook_tools.web_novel_to_text import web_novel_to_text
      
 
-    print('a') 
     os.chdir(workingin_dir)
 
     # Command line args

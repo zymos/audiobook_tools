@@ -136,10 +136,10 @@ Output filename can be dynamic, using variables extracted from webpage. \n\
     parser.add_argument('INPUT', type=str, help='URL of post or file with list of URLs')
 
     #  parser.add_argument('-f', '--file', help='Use a file with list of URLs, instead of URL in CLI', action="store_true")
-    parser.add_argument('-a', '--speak-asterisk', help='Speaks out asterisk[*] (off by default)', action="store_true")
-    parser.add_argument('-q', '--dont-remove-quotes', help='Leave quotes in place and may or may not be spoken (off by default)', action="store_true")
-    parser.add_argument('--remove-problematic-chars', help=r'removes problematic charactors, that are often spoken [\"\\\/*]', action="store_true")
-    parser.add_argument('--dont-emphasize', help='Don\'t emphasize some text in ssml', action="store_true")
+    parser.add_argument('-a', '--keep-asterisk', help='Speaks out asterisk[*] (off by default)', action="store_true")
+    parser.add_argument('-q', '--keep-quotes', help='leave double quotes in place and may or may not be spoken (off by default)', action="store_true")
+    parser.add_argument('--keep-problematic-chars', help=r'don\'t removes problematic charactors, that are often spoken [\"\\\/*]', action="store_true")
+    parser.add_argument('--disable-emphasize', help='don\'t emphasize some text in ssml', action="store_true")
     parser.add_argument('--debug', help='debug mode, more output', action="store_true")
     parser.add_argument('--test', help='test mode, no writing data', action="store_true")
     parser.add_argument('--format', type=str, help='Format to output (json stores metadata, txt and ssml)', choices=["txt", "ssml", "json"])
@@ -726,19 +726,24 @@ def process_url(url):
 
     # process each line for basic correction to make tts better with less
     # incorrect speach
-    try:
-        from audiobook_tools.common.text_conversion import html_article2ssml
-    except:
-        print("error loading audiobook_tools python files")
-        exit(1)
+    import sys
+    #  print(sys.path)
+
+    from audiobook_tools.common.text_conversion import html_article2ssml,ssml2text
+    #  try:
+        #  from audiobook_tools.common.text_conversion import html_article2ssml
+    #      from common.text_conversion import html_article2ssml
+    #  except:
+    #      print("error loading audiobook_tools(html_article2ssml) python files")
+    #      exit(1)
     article_ssml = html_article2ssml(article_html, config, args)
 
     # Convert ssml to text
-    try:
-        from audiobook_tools.common.text_conversion import ssml2text
-    except:
-        print("error loading audiobook_tools python files")
-        exit(1)
+    #  try:
+    #      from audiobook_tools.common.text_conversion import ssml2text
+    #  except:
+    #      print("error loading audiobook_tools(ssml2text) python files")
+    #      exit(1)
     #article_text  = re.sub('<[^>]+>', '', article_ssml) # remove any tags
     article_text = ssml2text(article_ssml)
 

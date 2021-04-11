@@ -72,40 +72,61 @@ def ssml2text(ssml_text):
 def clean_text(text, config):
     """
     Cleans up text to avoid weird noises
-
     dont_remove_asterisk, dont_remove_quotes, input_format
-
-
     """
     
-    dont_remove_asterisk = config['ARGS']['dont_remove_asterisk']
-    input_format = config['preferred']['input_format']
-    dont_remove_quotes = config['ARGS']['dont_remove_quotes']
-    remove_problematic_chars = config['preferred']['remove_problematic_chars']
-
     import re
+    from html import unescape 
+  
+    # Creating vars
+    if "dont_remove_asterisk" in config['ARGS']:
+        dont_remove_asterisk = config['ARGS']['keep_asterisk']
+    else:
+        dont_remove_asterisk = 0
+    if "input_format" in config['preferred']:
+        input_format = config['preferred']['input_format']
+    elif "format" in config['preferred']:
+        input_format = config['preferred']['format']
+    else:
+        input_format = 'txt'
+    if "dont_remove_quotes" in config['ARGS']:
+        dont_remove_quotes = config['ARGS']['keep_quotes']
+    else:
+        dont_remove_quotes = 0
+    if "keep_problematic_chars" in config['preferred']: 
+        keep_problematic_chars = config['preferred']['keep_problematic_chars']
+    else:
+        keep_problematic_chars = 0
+
     # strip leading/trailing whitespace
     text = text.strip()
-    #print("ddddd")
     
-    # remove all non-standard chars
+    # convert html escape code to Unicode/ASCII
+    text = unescape(text)
+ 
+    # Non-Standard Chars: remove all non-standard chars
     text = remove_nonstandard_chars(text)
+   
 
-    # convert html escape code
-    #  ssml_text = unescape(ssml_text)
-
-    # remove spoken asterisk
-    if (not dont_remove_asterisk) or remove_problematic_chars:
+    # Asterisk
+    if (not dont_remove_asterisk) and not keep_problematic_chars:
         text = re.sub(r'\*', '', text)
+   
+    # Single Quotes
+    text = re.sub(r"['\''’‚‘´\`']", "’", text)
+    # 2+ single quote
+    text = re.sub("[’][’]*", "’", text)
+    text = text.replace('’’', '') # is this correct?
 
-    # remove spoken quotes   FIXME!!!!!!! dont remove quotes in tags
+
+    # Double Quote: remove spoken quotes   FIXME!!!!!!! dont remove quotes in tags
     if not input_format == 'ssml':
-        if (not dont_remove_quotes) or remove_problematic_chars:
+        if not (dont_remove_quotes or keep_problematic_chars):
             text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '', text)
         else:
             text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '"', text)
         # Remove other non-standard chars
-        if remove_problematic_chars:
+        if not keep_problematic_chars:
             text = re.sub(r'[\/]', '', text)
         # ssml_text = re.sub("['\''’‚‘´\`]", "’", ssml_text)
         
@@ -115,31 +136,19 @@ def clean_text(text, config):
         # sed 's/[–]/-/g'  `</speak>"
     # —
 
-    # Remove other non-standard chars TODO add more problem chars
-    if remove_problematic_chars:
+    # Problem chars: Remove other non-standard chars TODO add more problem chars
+    if not keep_problematic_chars:
         text = re.sub(r'[\\]', '', text)
 
-    # 2+ white space
+    # White Space: 2+ white space
     text = re.sub(r"[ \t][ \t]*", " ", text)
-    
-    # fix single quotes
-    text = re.sub(r"['\''’‚‘´\`']", "’", text)
-
-
     # white space + newline
     text = re.sub("[ \t]*\n", "\n", text)
-
     # 2+ new line
     text = re.sub("[\n][\n]*", "\n", text)
 
-
-    # 2+ single quote
-    text = re.sub("[’][’]*", "’", text)
-    text = text.replace('’’', '')
-    
     return text
 # End: clean_text()
-
 
 
 
@@ -190,7 +199,8 @@ def clean_ssml(ssml_text, voice, speaking_rate):
     ssml_text = re.sub(r"\\x02/p>", r"</s>", ssml_text) 
     
     # fix non-matched <p></p> (havnt really tested this)
-    if (re.search(r"<p>", ssml_text) and not re.search(r"<\/p>", ssml_text)) or (not re.search(r"<p>", ssml_text) and re.search(r"<\/p>", ssml_text)):
+    if (re.search(r"<p>", ssml_text) and not re.search(r"<\/p>", ssml_text)) \
+            or (not re.search(r"<p>", ssml_text) and re.search(r"<\/p>", ssml_text)):
         ssml_text = re.sub(r'<\/p>', '', ssml_text)
         ssml_text = re.sub(r'<p>', '', ssml_text)        
         
@@ -217,7 +227,6 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     not full website just the html for a post
     """
     import re
-    from html import unescape 
     # to unescape html code
 
     # article_write = 0
@@ -233,54 +242,64 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     # print(ssml_text)
     # print(type(ssml_text))
     # print("---------------------ssml_text (end)-------------------------") 
+
     # for some reason it is a string with byte type chars around it b'gdsdfsdf-text-sdfsdfgds' so we remove it
     ssml_text = re.sub(r"^b'", r"", ssml_text) 
     ssml_text = re.sub(r"'$", r"", ssml_text)
-
-    # convert html escape code
-    ssml_text = unescape(ssml_text)
-
+    
     # remove non-tab tabs (no need to real tabs ether)
-    ssml_text = re.sub(r"\\t", r"", ssml_text) 
-
+    ssml_text = re.sub(r"\\t", r" ", ssml_text)
     # corrent the newlines that are not-new-lines
     ssml_text = re.sub(r"\\n", r"\n", ssml_text)
-
-    # remove spoken asterisk
-    if config['GENERAL']['speak_asterisk']:
-        ssml_text = re.sub(r'\*', '', ssml_text)
-
-    # remove spoken quotes
-    if config['GENERAL']['dont_remove_quotes']:
-        ssml_text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '', ssml_text)
-    else:
-        ssml_text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '"', ssml_text)
-        # ssml_text = re.sub("['\''’‚‘´\`]", "’", ssml_text)
-        
-        # sed 's/['\''’‚‘´\`]/’/g' |\
-        # sed 's/[“”„“‟”"❝❞⹂〝〞〟＂]/"/g' |\
-        # sed 's/…/\.\.\. /g' |\
-        # sed 's/[–]/-/g'  `</speak>"
-    # —
-
+   
+    ssml_text = clean_text(ssml_text, config)
+    #
+    #  # convert html escape code
+    #  ssml_text = unescape(ssml_text)
+    #
+    #  # remove non-tab tabs (no need to real tabs ether)
+    #  ssml_text = re.sub(r"\\t", r"", ssml_text)
+    #
+    #  # corrent the newlines that are not-new-lines
+    #  ssml_text = re.sub(r"\\n", r"\n", ssml_text)
+    #
+    #  # remove spoken asterisk
+    #  if config['GENERAL']['speak_asterisk']:
+    #      ssml_text = re.sub(r'\*', '', ssml_text)
+    #
+    #  # remove spoken quotes
+    #  if config['GENERAL']['dont_remove_quotes']:
+    #      ssml_text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '', ssml_text)
+    #  else:
+    #      ssml_text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '"', ssml_text)
+    #      # ssml_text = re.sub("['\''’‚‘´\`]", "’", ssml_text)
+    #
+    #      # sed 's/['\''’‚‘´\`]/’/g' |\
+    #      # sed 's/[“”„“‟”"❝❞⹂〝〞〟＂]/"/g' |\
+    #      # sed 's/…/\.\.\. /g' |\
+    #      # sed 's/[–]/-/g'  `</speak>"
+    #  # —
+    #
     # replace '\x02/p>' not sure is this is a one off or a bug
     # 2018-07-21\ -\ 5.03.ssml
     ssml_text = re.sub(r"\x02/p>", r"</p>", ssml_text)
 
-    # fix single quotes
-    ssml_text = re.sub(r"['\''’‚‘´\`']", "’", ssml_text)
+#
+    #  # fix single quotes
+    #  ssml_text = re.sub(r"['\''’‚‘´\`']", "’", ssml_text)
+    #
+    #  # 2+ white space
+    #  ssml_text = re.sub(r"[ \t][ \t]*", " ", ssml_text)
+    #
+    #  # fix single quotes
+    #  ssml_text = re.sub(r"['\''’‚‘´\`']", "’", ssml_text)
+    #
+    #
+    #  # 2+ single quote
+    #  ssml_text = re.sub(r"[’][’]*", "’", ssml_text)
+    #  ssml_text = ssml_text.replace('’’', '')
+    #
 
-    # 2+ white space
-    ssml_text = re.sub(r"[ \t][ \t]*", " ", ssml_text)
-
-    # fix single quotes
-    ssml_text = re.sub(r"['\''’‚‘´\`']", "’", ssml_text)
-
-
-    # 2+ single quote
-    ssml_text = re.sub(r"[’][’]*", "’", ssml_text)
-    ssml_text = ssml_text.replace('’’', '')
-    
     # remove empty <p>paragraphs FIXME!! still isnt catching all
     ssml_text = re.sub(r'<p>\s*</p>', '', ssml_text)
 
