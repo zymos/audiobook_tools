@@ -1,17 +1,17 @@
 # Audiobook Tools
 
-Description: A set of CLI tools for creating and optimizing audiobooks
+Description: A set of command line tools for creating, re-encoding and optimizing audiobooks
 
-audiobook-reencoder
-* re-encoding your audiobooks to the same format, and options
+_________**audiobook-reencoder**____
+* Scans your audiobook folder, re-encoding your audiobooks to the same uniform format, clean up directories, embed cover art, etc.
 
-online-tts
-* converting text-to-speech using online/cloud TTS services
+____**online-tts_**____*******__
+* converting text-to-speech using online/cloud TTS services, accepts SSML or TXT.  Supports Microsoft Azure TTS, VoiceRSS TTS, Google translate TTS, and can easily add more TTS servies.
 
-web-novel-to-text
-* extracting web-novel chapters from websites and saving to TXT or SSML
+__**web-novel-to-text**__
+* extracts the web-novel's articles/chapters' text from it's websites and saving to TXT or SSML.
 
-aaxconverter
+__**aaxconverter**__
 * convert AAX files to MP3 or M4B, removing DRM
 
 
@@ -49,91 +49,31 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 * Requirments
 	* ffmpeg and ffprobe
 	* python
-* [more details](https://github.com/zymos/audiobook_tools/tree/master/audiobook_reencoder)
+* [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/audiobook_reencoder.md)
 
 
 # online-tts
-* Description
-<pre>
-usage: online-tts [-h] [--bitrate {32k,48k,64k,96k,128k,196k}]
-                  [--samplerate {16000,22050,44100,48000}] [--format {mp3,wav,ogg}]
-                  [--input-format {txt,ssml,json-txt,json-ssml}] [--key KEY]
-                  [--locale LOCALE] [--voice VOICE] [--gender GENDER]
-                  [--url_parameters URL_PARAMETERS]
-                  [--audio_settings AUDIO_SETTINGS] [--gtts-lang GTTS_LANG]
-                  [--gtts-tld GTTS_TLD] [--tts-service TTS_SERVICE]
-                  [--profile PROFILE] [--dont_remove_asterisk]
-                  [--dont_remove_quotes]
-                  EBOOK [EBOOK ...]
+* Description: Text-to-Speech program using online/cloud TTS services.
+* Supported service
+  * Microsoft Azure TTS
+  * VoiceRSS TTS
+  * Google translate TTS (not Google cloud TTS)
+  * Easy to add other TTS APIs
+* [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/online_tts.md)
 
-positional arguments:
-  EBOOK                 ebook txt file
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --bitrate {32k,48k,64k,96k,128k,196k}
-                        audio encoding bitrate
-  --samplerate {16000,22050,44100,48000}
-                        audio encoding samplerate
-  --format {mp3,wav,ogg}
-                        audio encoding format
-  --input-format {txt,ssml,json-txt,json-ssml}
-                        format sent to TTS service
-  --key KEY             key, auth code, auth file
-  --locale LOCALE       example: en-us, en-au,
-  --voice VOICE         voice
-  --gender GENDER
-  --url_parameters URL_PARAMETERS
-                        this will be attached to url after question mark
-  --audio_settings AUDIO_SETTINGS
-  --gtts-lang GTTS_LANG
-                        language for google-translate-tts
-  --gtts-tld GTTS_TLD   top-level-domain for google-tanslate-tts accents
-  --tts-service TTS_SERVICE
-                        tts service to use. ie google_translate_tts, voicerss,
-                        google_cloud_tts(unimplemented), amazone_polly(unimplemented
-  --profile PROFILE     profile to use, set in config file
-  --dont_remove_asterisk
-                        Some TTS servers speak out "asterisk", by default they are
-                        removed
-  --dont_remove_quotes  Some TTS servers speak out "quote", by default they are
-                        removed
-</pre>
 
 
 # web-novel-to-text
-* Description: Extracts web-novels to a TXT or SSML file to be used in a text-to-speech program or service.
-<pre>
-usage: web-novel-to-text [-h] [--format {txt,ssml,json}] [-a] [-q]
-                         [--dont-emphasize] [--output-format OUTPUT_FORMAT]
-                         INPUT
-
-Converts a post to a txt or ssml file.
-
-positional arguments:
-  INPUT                 URL of post or file with list of URLs
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --format {txt,ssml,json}
-                        Format to output (json stores metadata)
-  -a, --speak-asterisk  Speaks out asterisk[*] (off by default)
-  -q, --dont-remove-quotes
-                        Leave quotes in place and may or may not be spoken (off by
-                        default)
-  --dont-emphasize      Don't use emphasize tag in ssml
-  --output-format OUTPUT_FORMAT
-                        filename to output
-
-</pre>
+* Description: Extracts the text of web-novels articles/chapters to a TXT or SSML file to be used in a text-to-speech program or service.
+* Supported Sites
+  * Royal Road
+  * WordPress sites
+  * to add more
+* [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/web_novel_to_text.md)
 
 # aaxconverter (opus, ogg may not work)
-<pre>
-Usage: aaxconverter [--flac] [--aac] [--opus ] [--single] [--chaptered]
-[-e:mp3] [-e:m4a] [-e:m4b] [--authcode <AUTHCODE>] [--no-clobber]
-[--target_dir <PATH>] [--complete_dir <PATH>] [--validate]
-{FILES}
-</pre>
+* Description: convert AAX(Audible) files to mp3, m4b, single or chapter files, removing DRM.  This almost a copy of KrumpetPirate's [AAXtoMP3](https://github.com/KrumpetPirate/AAXtoMP3)
+* [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/aaxconverter.md)
 
 # Other tools
 ## google-cloud-tts.sh
@@ -141,15 +81,14 @@ Usage: aaxconverter [--flac] [--aac] [--opus ] [--single] [--chaptered]
 *	Requirements:
 	* ffmpeg
 	* Google Cloud SDK
-* [more details](https://github.com/zymos/audiobook_tools/tree/master/google_cloud_tts)
-
+* [more details](https://github.com/zymos/audiobook_tools/tree/master/audiobook_tools/google_cloud_tts)
 
 ## m4b split
 * Desciption: Splits m4b files to chaptered mp3 files
 * Requirements
 	* ffmpeg
 	* libmp4v2
-* [more details](https://github.com/zymos/audiobook_tools/tree/master/m4b_split)
+* [more details](https://github.com/zymos/audiobook_tools/tree/master/audiobook_tools/m4bsplit)
 
 
 
@@ -187,8 +126,6 @@ Usage: aaxconverter [--flac] [--aac] [--opus ] [--single] [--chaptered]
 * Download: <https://github.com/KrumpetPirate/AAXtoMP3>
 * Usage: AAXtoMP3 --authcode [YOUR_AUTH_CODE] [YOUR_AUDIBLE_FILE]
 * Notes: If you want to use ffmpeg or avconv instead of AAXtoMP3, just use 'ffmpeg -activation_bytes [YOUR_AUTH_CODE] .....'
-
-
 
 # Other useful tools (external)
 * Audible-activator - extract your Audible authorization code (CLI)
