@@ -45,6 +45,7 @@
 #                           
 #   TODO
 #       add force reencode
+#       add input flac
 #####################################################################
 
 
@@ -372,7 +373,7 @@ def error_checking():
     # check if input is an audio file
     if os.path.isfile(path):
         (filename, ext) = os.path.splitext(path)
-        if not ( re.search('\.mp3', path, re.IGNORECASE) or re.search('\.m4[ba]', path, re.IGNORECASE) ):
+        if not ( re.search(r'\.mp3', path, re.IGNORECASE) or re.search(r'\.m4[ba]', path, re.IGNORECASE) ):
             print("Error: \"" + path + "\" is not an audiofile (mp3/m4b/m4a)")
             print("Input must be an audiofile (mp3/m4b/m4a) or directory with audio files in it.")
             error_found = True
@@ -646,7 +647,7 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
     else:
         samplerate = samplerate_default
     cover_art_same = False
-    ffmpeg_output = os.path.join(temp_root_dir, re.sub('\.[a-zA-Z0-9]{3,4}$', '.' + config['preferred']['audio_output_format'], ffmpeg_input))
+    ffmpeg_output = os.path.join(temp_root_dir, re.sub(r'\.[a-zA-Z0-9]{3,4}$', '.' + config['preferred']['audio_output_format'], ffmpeg_input))
 
     # Deciding to skip encoding
     chapter_it = False
@@ -791,7 +792,7 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
 
             # Create dir to put chapter files (remove invalid chars)
             input_files_dir = os.path.dirname(ffmpeg_input)
-            ffmpeg_output_subdir = re.sub("[<>:;\"'|?*\\\/]", "", audio_file_data['title'])
+            ffmpeg_output_subdir = re.sub(r"[<>:;\"'|?*\\\/]", "", audio_file_data['title'])
             ffmpeg_output_chap_temp_dirname = os.path.join(temp_root_dir, ffmpeg_output_subdir)
 
             # Remove chapter data from single file
@@ -985,10 +986,10 @@ def reencode_audio_file_ffmpeg(logger, ffmpeg_cmd, ffmpeg_input, ffmpeg_output, 
             # print error
             if debug:
                 logger.debug("Error: encoding failed!\nffmpeg command:\n>" + ffmpeg_cmd)
-                logger.debug("ffmpeg error: " + err)
+                logger.debug("ffmpeg error: " + str(err))
             else:
                 logger.debug("Error: encoding failed!\nffmpeg command:\n>" + ffmpeg_cmd)
-                logger.debug("ffmpeg error:\n>" + err)
+                logger.debug("ffmpeg error:\n>" + str(err))
 
             # Ignore the error, put file in original state, delete file with error
             if config['preferred']['ignore_errors']:
@@ -1070,7 +1071,7 @@ def extract_cover_art(logger, dirpath, audio_files, audio_file_data, single_file
 
 
     cover_art = ''
-
+    dir_cover_art = ''
 
     # See if we can fing cover art in dir
     if True:
@@ -1094,7 +1095,7 @@ def extract_cover_art(logger, dirpath, audio_files, audio_file_data, single_file
             # logger.debug("-   > Images exists: " # + str(cover_art_list))
             for image in cover_art_list:
                 # cover.jpg or cover.png is the most likly
-                if( re.search('cover\.jpg$', image, re.IGNORECASE) or re.search('cover\.png$', image, re.IGNORECASE) ):
+                if( re.search(r'cover\.jpg$', image, re.IGNORECASE) or re.search(r'cover\.png$', image, re.IGNORECASE) ):
                     dir_cover_art = image
                     break
                 elif( re.search('cover', image, re.IGNORECASE) ): 

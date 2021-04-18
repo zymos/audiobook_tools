@@ -180,17 +180,16 @@ def parse_args():
     parser.add_argument('--locale', type=str, help='example: en-us, en-au,')
     parser.add_argument('--voice', type=str, help='voice')
     parser.add_argument('--gender', type=str, help='')
-    parser.add_argument('--url_parameters', type=str, help='this will be attached to url after question mark')
+    parser.add_argument('--url_parameters', type=str, help='this will be attached to url after question mark') # remove
     parser.add_argument('--audio_settings', type=str, help='')
-    parser.add_argument('--gtts-lang', type=str, help='language for google-translate-tts')
-    parser.add_argument('--gtts-tld', type=str, help='top-level-domain for google-tanslate-tts accents')
+    parser.add_argument('--gtts-lang', type=str, help='language for google-translate-tts') # remove
+    parser.add_argument('--gtts-tld', type=str, help='top-level-domain for google-tanslate-tts accents') # remove
     parser.add_argument('--tts-service', type=str, help='tts service to use. ie google_translate_tts, voicerss, google_cloud_tts(unimplemented), amazone_polly(unimplemented')
     #  parser.add_argument('--config-file', type=str, help='config file location')
     parser.add_argument('--profile', type=str, help='profile to use, set in config file')
-    parser.add_argument('--keep-asterisk', help='Some TTS servers speak out "asterisk", by default they are removed', action="store_true")
-    parser.add_argument('--keep-quotes', help='Some TTS servers speak out "quote", by default they are removed', action="store_true")
-    parser.add_argument('--keep-problematic-chars', help=r'don\'t remove problematic charactors, that are often spoken [\"\\\/*]', action="store_true")
     parser.add_argument('--debug', help='debug mode, more output', action="store_true")
+    parser.add_argument('--remove_all_bad_chars', help=r'remove problematic charactors, that can change speech. [, ], (, ), *, /, \, "', action="store_true")
+    parser.add_argument('--remove-bad-char', type=str, help=r'remove problematic charactors, that can change speech, comman seperated. b=brackets, q=double_quotes, p=parentheses, a=asterisks, s=forward/back_slashs. example --remove-bad-char="b,a,q"')
     parser.add_argument('--test', help='test mode, no writing data', action="store_true")
     #  parser.add_argument('--', type=str, help='', choices=[""], default="")
 
@@ -385,11 +384,8 @@ def split_file_into_text_chunks(filename):
         x = 0
         for chunk in ebook_txt_chunks:
             #print(chunk)
-            try:
-                from audiobook_tools.common.text_conversion import clean_text
-            except:
-                print("error loading audiobook_tools python files")
-                exit(1)
+            from audiobook_tools.common.text_conversion import clean_text
+            
             ebook_txt_chunks[x] = clean_text(chunk, config)
             x +=1
 
@@ -462,7 +458,7 @@ def process_chunks(ebook_txt_chunks):
 
             cnt = cnt + 1
             #  print("         >Chunk:", cnt) # print a dot showing progress
-            print("*", end="", flush=True)
+            print(".", end="", flush=True)
 
             if DEBUG:
                 filename_tmp = os.path.join(config['TMP']['tmp_dir'], str(cnt) 
@@ -494,6 +490,7 @@ def process_chunks(ebook_txt_chunks):
         # Write TMP mp3 file of joined chunks 
         #   TODO: ideally i would keep this as binary str and pipe to ffmpeg
         filename_tmp_audio = os.path.join(tmp_dir, 'joined-out.mp3')
+        print("")
         if(not TEST):
             f = open(filename_tmp_audio, 'wb')
             f.write(audio_data)
@@ -532,11 +529,11 @@ def ffmpeg_reencode(filename_orig, filename_tmp_audio):
                 filename_output_audio]
 
         if DEBUG:
-            print(" Temp audio file: " + filename_tmp_audio)
+            print("\tTemp audio file: " + filename_tmp_audio)
             pprint.pprint(ffmpeg_cmd)
 
         # Run ffmpeg command
-        print("\n  Joining audio chunks.")
+        print("\tJoining audio chunks.")
         if(not TEST):
             proc = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -544,7 +541,7 @@ def ffmpeg_reencode(filename_orig, filename_tmp_audio):
             ffmpeg_out = proc.communicate()
             if DEBUG: print( ffmpeg_out)
 
-        print("Output file: ", filename_output_audio, '\n')
+        print("\n\tOutput file: ", filename_output_audio, '\n')
 # End: ffmpeg_reencode()
 
 
@@ -582,12 +579,14 @@ def process_file(filename):
         (ebook_txt_chunks, total_char_cnt, chunk_cnt) = split_file_into_text_chunks(filename)
 
         # Sends chunks of text to audio and merging
-        print("   Processing:", str(total_char_cnt) , "chars, in", str(chunk_cnt), "chunks.")
+        print("\tProcessing:", str(total_char_cnt) , "chars, in", str(chunk_cnt), "chunks.", end="", flush=True)
         filename_tmp_audio = process_chunks(ebook_txt_chunks)
 
         # re-encode broken audiofile
         ffmpeg_reencode(filename, filename_tmp_audio)
 # End: process_file()
+
+   
 
 
 ########################################
@@ -623,7 +622,7 @@ def main():
     """
     Main function for online-tts.py
     """
-    print("main")
+    #  print("main")
     # Get CLI args
     # make args global for easy
     global args

@@ -77,26 +77,51 @@ def clean_text(text, config):
     
     import re
     from html import unescape 
-  
+
+    # enable removal of bad chars
+    bad_chars = ()
+    remove_char = {'double_quote': False,
+                   'paren': False, 
+                   'bracket': False,
+                   'asterisk': False,
+                   'slash': False,
+                   'underscore': False}
+    if 'remove_bad_char' in config['preferred'].keys():
+        bad_chars = config['preferred']['remove_bad_char'].split(',')
+        for char in bad_chars:
+            if char.lower() == 'q' or config['preferred']['remove_all_bad_chars']:
+                remove_char['double_quote'] = True 
+            if char.lower() == 'p' or config['preferred']['remove_all_bad_chars']:
+                remove_char['paren'] = True 
+            if char.lower() == 'b' or config['preferred']['remove_all_bad_chars']:
+                remove_char['bracket'] = True 
+            if char.lower() == 'a' or config['preferred']['remove_all_bad_chars']:
+                remove_char['asterisk'] = True 
+            if char.lower() == 's' or config['preferred']['remove_all_bad_chars']:
+                remove_char['slash'] = True 
+            if char.lower() == 'u' or config['preferred']['remove_all_bad_chars']:
+                remove_char['underscore'] = True 
+
+
     # Creating vars
-    if "dont_remove_asterisk" in config['ARGS']:
-        dont_remove_asterisk = config['ARGS']['keep_asterisk']
-    else:
-        dont_remove_asterisk = 0
+    #  if "dont_remove_asterisk" in config['ARGS']:
+        #  dont_remove_asterisk = config['ARGS']['keep_asterisk']
+    #  else:
+        #  dont_remove_asterisk = 0
     if "input_format" in config['preferred']:
         input_format = config['preferred']['input_format']
     elif "format" in config['preferred']:
         input_format = config['preferred']['format']
     else:
         input_format = 'txt'
-    if "dont_remove_quotes" in config['ARGS']:
-        dont_remove_quotes = config['ARGS']['keep_quotes']
-    else:
-        dont_remove_quotes = 0
-    if "keep_problematic_chars" in config['preferred']: 
-        keep_problematic_chars = config['preferred']['keep_problematic_chars']
-    else:
-        keep_problematic_chars = 0
+    #  if "dont_remove_quotes" in config['ARGS']:
+        #  dont_remove_quotes = config['ARGS']['keep_quotes']
+    #  else:
+        #  dont_remove_quotes = 0
+    #  if "keep_bad_chars" in config['preferred']:
+        #  keep_bad_chars = config['preferred']['keep_bad_chars']
+    #  else:
+        #  keep_bad_chars = 0
 
     # strip leading/trailing whitespace
     text = text.strip()
@@ -106,40 +131,47 @@ def clean_text(text, config):
  
     # Non-Standard Chars: remove all non-standard chars
     text = remove_nonstandard_chars(text)
-   
 
-    # Asterisk
-    if (not dont_remove_asterisk) and not keep_problematic_chars:
-        text = re.sub(r'\*', '', text)
-   
-    # Single Quotes
+    textold = text
+    # Fix Single Quotes
     text = re.sub(r"['\''’‚‘´\`']", "’", text)
-    # 2+ single quote
+    
+    # Remove 2+ single quote
     text = re.sub("[’][’]*", "’", text)
     text = text.replace('’’', '') # is this correct?
 
+    # Remove Double Quote: remove spoken quotes   FIXME!!!!!!! dont remove quotes in tags
+    if remove_char['double_quote'] and not input_format == 'ssml':
+        text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '', text)
+    else:
+        text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '"', text)
 
-    # Double Quote: remove spoken quotes   FIXME!!!!!!! dont remove quotes in tags
-    if not input_format == 'ssml':
-        if not (dont_remove_quotes or keep_problematic_chars):
-            text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '', text)
-        else:
-            text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '"', text)
-        # Remove other non-standard chars
-        if not keep_problematic_chars:
-            text = re.sub(r'[\/]', '', text)
-        # ssml_text = re.sub("['\''’‚‘´\`]", "’", ssml_text)
-        
-        # sed 's/['\''’‚‘´\`]/’/g' |\
-        # sed 's/[“”„“‟”"❝❞⹂〝〞〟＂]/"/g' |\
-        # sed 's/…/\.\.\. /g' |\
-        # sed 's/[–]/-/g'  `</speak>"
-    # —
+    # Remove 3+ quotes in a row
+    text = re.sub(r'"{3,}', '', text)
 
-    # Problem chars: Remove other non-standard chars TODO add more problem chars
-    if not keep_problematic_chars:
+    # Remove paren
+    if remove_char['paren']:
+        text = re.sub(r'[\(\)]', '', text)
+ 
+    # Remove brackets
+    if remove_char['bracket']:
+        text = re.sub(r'[\[\]]', '', text)
+ 
+    # Remove Asterisk
+    if remove_char['asterisk']:
+        text = re.sub(r'\*', '', text)
+  
+    # Remove slashes
+    if remove_char['slash']:
         text = re.sub(r'[\\]', '', text)
-
+    if remove_char['slash'] and not input_format == 'ssml': # FIXME
+        text = re.sub(r'[\/]', '', text)
+ 
+    # Remove Asterisk
+    if remove_char['underscore']:
+        text = re.sub(r'\_', ' ', text)
+    
+    # Remove whitespace
     # White Space: 2+ white space
     text = re.sub(r"[ \t][ \t]*", " ", text)
     # white space + newline
@@ -147,6 +179,12 @@ def clean_text(text, config):
     # 2+ new line
     text = re.sub("[\n][\n]*", "\n", text)
 
+    #  text = 'a'
+    #  import difflib
+
+    #  differences = difflib.ndiff(textold, text)
+    #  for difference in differences:
+        #  print(difference, "")
     return text
 # End: clean_text()
 
@@ -177,12 +215,12 @@ def clean_ssml(ssml_text, voice, speaking_rate):
     #print(ssml_text)
     
     # add <prosody ...> tag if needed, otherwise assume corrent
-    if not re.search('<prosody ', ssml_text):
+    if not re.search('<prosody ', ssml_text) and not speaking_rate == '':
         if DEBUG: print("    Adding <prosody> tag.")
         ssml_text = '<prosody rate="' + speaking_rate + '">' + ssml_text + '</prosody>'
 
     # add <voice ...> tag if needed, otherwise assume corrent
-    if not re.search('<voice ', ssml_text):
+    if not re.search(r'<voice ', ssml_text) and not voice == '':
         if DEBUG: print("    Adding <voice> tag")
         ssml_text = '<voice name="' + voice + '">' + ssml_text + '</voice>'
     
@@ -204,7 +242,9 @@ def clean_ssml(ssml_text, voice, speaking_rate):
         ssml_text = re.sub(r'<\/p>', '', ssml_text)
         ssml_text = re.sub(r'<p>', '', ssml_text)        
         
-    
+    # remove blank sentences
+    ssml_text = re.sub(r'<s>\s</s>', '', ssml_text)        
+
     # adding the <speak> tag
     ssml_text = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="string">' + ssml_text + '</speak>'
     
@@ -227,32 +267,31 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     not full website just the html for a post
     """
     import re
-    # to unescape html code
 
     # article_write = 0
     # line_cnt=0
 
-    # print("----------------------html_text-------------------------------")
-    # print(html_article)
+    print("----------------------html_text-------------------------------")
+    print(html_article)
     # print(type(html_article))
-    # print("---------------------html_text (end)-------------------------")    
-    # remore all non-standard chars, non-unicode, non-printable, etc
-    ssml_text = str(remove_nonstandard_chars(html_article))
-    # print("----------------------ssml_text-------------------------------")
-    # print(ssml_text)
-    # print(type(ssml_text))
-    # print("---------------------ssml_text (end)-------------------------") 
+    print("---------------------html_text (end)-------------------------")
 
-    # for some reason it is a string with byte type chars around it b'gdsdfsdf-text-sdfsdfgds' so we remove it
+    # Clean the text up
+    ssml_text = clean_text(html_article, config)
+
+    # Remove Byte type text left overs
+    #  for some reason it is a string with byte type chars around it b'gdsdfsdf-text-sdfsdfgds' so we remove it
     ssml_text = re.sub(r"^b'", r"", ssml_text) 
     ssml_text = re.sub(r"'$", r"", ssml_text)
-    
     # remove non-tab tabs (no need to real tabs ether)
-    ssml_text = re.sub(r"\\t", r" ", ssml_text)
+    ssml_text = re.sub(r"\\t", " ", ssml_text)
     # corrent the newlines that are not-new-lines
-    ssml_text = re.sub(r"\\n", r"\n", ssml_text)
-   
-    ssml_text = clean_text(ssml_text, config)
+    ssml_text = re.sub(r"\\n", "\n", ssml_text)
+    # replace '\x02/p>' not sure is this is a one off or a bug
+    # 2018-07-21\ -\ 5.03.ssml
+    ssml_text = re.sub(r"\x02/p>", r"</p>", ssml_text) 
+    
+
     #
     #  # convert html escape code
     #  ssml_text = unescape(ssml_text)
@@ -279,12 +318,10 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     #      # sed 's/…/\.\.\. /g' |\
     #      # sed 's/[–]/-/g'  `</speak>"
     #  # —
-    #
-    # replace '\x02/p>' not sure is this is a one off or a bug
-    # 2018-07-21\ -\ 5.03.ssml
-    ssml_text = re.sub(r"\x02/p>", r"</p>", ssml_text)
 
-#
+
+
+    #
     #  # fix single quotes
     #  ssml_text = re.sub(r"['\''’‚‘´\`']", "’", ssml_text)
     #
@@ -300,6 +337,9 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     #  ssml_text = ssml_text.replace('’’', '')
     #
 
+
+    #  ssml_text =  ': , …, —, —-, —, &nbsp;, ___,    <s>—-</s><s>—-</s>'
+
     # remove empty <p>paragraphs FIXME!! still isnt catching all
     ssml_text = re.sub(r'<p>\s*</p>', '', ssml_text)
 
@@ -312,7 +352,7 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     #   emphasise sounds horible for ms_azure i think its slowwer rate
     #   so only increase volume, recomend disable by default
     #   needs testing
-    if config['GENERAL']['dont_emphasize']:
+    if config['GENERAL']['no_emphasis']:
         emph_tag = "˫@!@!@!@!prosody volume=\"10%\"˧!@!@!@!@"
         emph_tag_end = r"˫@!@!@!@!/prosody˧!@!@!@!@"
         ssml_text = re.sub('<strong>', emph_tag, ssml_text)
@@ -328,10 +368,10 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     ssml_text = re.sub('<[^>]+>', '', ssml_text) 
     
     # Add pauses
-    # ': ', '…', '—' '—-' '—' '&nbsp;'
-    ssml_text = re.sub('—-', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@ ", ssml_text)
-    ssml_text = re.sub('—', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@ ", ssml_text)
-    ssml_text = re.sub('…', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@ ", ssml_text)
+    # ': ', '…', '—' '—-' '—' '&nbsp;' '___'    <s>—-</<s>—-</s>
+    ssml_text = re.sub(r'—-', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@ ", ssml_text)
+    ssml_text = re.sub(r'—', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@ ", ssml_text)
+    ssml_text = re.sub(r'…', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@ ", ssml_text)
     # nbsp space
     ssml_text = re.sub('&nbsp;', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@  ", ssml_text)
     # line breaks
@@ -339,7 +379,9 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     # add pause for colon "Speaking: Words"
     if re.search('[a-zA-Z]: [a-zA-Z]', ssml_text): 
         ssml_text = re.sub(': ', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@ ", ssml_text)
-    
+    # Multiple underscores
+    ssml_text = re.sub(r'\_{3,}', "˫@!@!@!@!break time=\"500ms\" /˧!@!@!@!@ ", ssml_text)
+
 
     # Removes Previous Chapter Next Chapter text sometimes used in article
     ssml_text = re.sub(r'Previous Chapter\s*Next Chapter', '', ssml_text)
@@ -360,8 +402,16 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     ssml_text = re.sub("(<break time=\"[0-9]*ms\"/>\n){3,}", "<break time=\"1s\" />\n", ssml_text)
     ssml_text = re.sub("(<break time=\"[0-9]*ms\"/>\n){2,}", "<break time=\"500ms\" />\n", ssml_text)
 
+
+
+    # clean up text
+    ssml_text = clean_text(ssml_text, config)
+   
+    # clean up the ssml code
+    #  ssml_text = clean_ssml(ssml_text, "", "")
+
     # Re-Add <speak> tags
-    ssml_text = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="string">\n' + ssml_text + "\n</speak>"
+    #  ssml_text = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="string">\n' + ssml_text + "\n</speak>"
 
     #  ssml_text = re.sub("<break time=\"[0-9]*ms\"/>\n<break time=\"[0-9]*ms\"/>\n", "<break time=\"1s\">\n", ssml_text)
     # print("----------------------ssml_text-------------------------------")

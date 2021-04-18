@@ -136,15 +136,17 @@ Output filename can be dynamic, using variables extracted from webpage. \n\
     parser.add_argument('INPUT', type=str, help='URL of post or file with list of URLs')
 
     #  parser.add_argument('-f', '--file', help='Use a file with list of URLs, instead of URL in CLI', action="store_true")
-    parser.add_argument('-a', '--keep-asterisk', help='Speaks out asterisk[*] (off by default)', action="store_true")
-    parser.add_argument('-q', '--keep-quotes', help='leave double quotes in place and may or may not be spoken (off by default)', action="store_true")
-    parser.add_argument('--keep-problematic-chars', help=r'don\'t removes problematic charactors, that are often spoken [\"\\\/*]', action="store_true")
-    parser.add_argument('--disable-emphasize', help='don\'t emphasize some text in ssml', action="store_true")
+    #  parser.add_argument('-a', '--keep-asterisk', help='Speaks out asterisk[*] (off by default)', action="store_true")
+    #  parser.add_argument('-q', '--keep-quotes', help='leave double quotes in place and may or may not be spoken (off by default)', action="store_true")
+    #  parser.add_argument('--keep-problematic-chars', help=r'don\'t removes problematic charactors, that are often spoken [\"\\\/*]', action="store_true")
+    parser.add_argument('--no-emphasis', help='don\'t emphasize some text in ssml', action="store_true")
     parser.add_argument('--debug', help='debug mode, more output', action="store_true")
     parser.add_argument('--test', help='test mode, no writing data', action="store_true")
     parser.add_argument('--format', type=str, help='Format to output (json stores metadata, txt and ssml)', choices=["txt", "ssml", "json"])
     parser.add_argument('--first-file-number', type=int, help='number for first output file\'s name, each additional file will increment this number, useful for keeping output files in order', default=1)
     parser.add_argument('--output-filename', type=str, help=r'filename to output, can be dynamic, see below')
+    parser.add_argument('--remove_all_bad_chars', help=r'remove problematic charactors, that can change speech [, ], (, ), *, /, \, "', action="store_true")
+    parser.add_argument('--remove-bad-char', type=str, help=r'remove problematic charactors, that can change speech, comman seperated. b=brackets, q=double_quotes, p=parentheses, a=asterisks, s=forward/back_slashs, u=underscore. example --remove-bad-char="b,a,q"')
 
     args = parser.parse_args()
 
@@ -400,6 +402,11 @@ def extract_txt_royalroad(site_code):
     # extracts article contents
     # pages contents (found between <div class="chapter-inner chapter-content">
     content = tree.xpath('//div[@class="chapter-inner chapter-content"]')
+ 
+    # convert to string
+    article_html = ''
+    for line in content:
+        article_html += str(tree.tostring(line).decode('utf-8'))
 
     # extracts publication date
     # <time datetime="2020-08-10T18:13:21.0000000Z" format="U" >
@@ -436,7 +443,7 @@ def extract_txt_royalroad(site_code):
     #  pprint.pprint(meta)
 
     # returns the string of articles txt, with tags and a decent filename to use
-    return (content, meta)
+    return (article_html, meta)
 # END: extract_txt_royalroad(site_code):
 
 
@@ -529,8 +536,11 @@ def extract_txt_wordpress(site_code):
     # extracts article contents
     # pages contents (found between <div class="entry-content">
     content = tree.xpath('//div[@class="entry-content"]')
-
-
+    
+    # convert to string
+    article_html = ''
+    for line in content:
+        article_html += str(etree.tostring(line).decode('utf-8'))
 
     meta = { 'author': author,
             'book_title': book_title,
@@ -567,9 +577,26 @@ def extract_txt_wordpress(site_code):
         pprint.pprint(meta)
         print('-----------meta (end)--------------')
 
-    return (content, meta)
+    return (article_html, meta)
 # END: wordpress()
 
+
+
+#########################################
+# Generate a 3 digit string
+#
+def make_3_digit_number_string(number):
+    """
+    takes a number and returns a string with leading zeros (3 digits)
+    """
+    num = str(number)
+
+    if len(num) == 1:
+        num = '00' + num
+    elif len(num) == 2:
+        num = '0' + num
+    return num
+# End make_3_digit_number_string())
 
 
 
@@ -591,12 +618,14 @@ def get_chap_number(chap_title):
     chap_number = re.sub(r'[^0-9\.:][^0-9\.:][^0-9\.:].*', '', chap_title)
     chap_number = re.sub(r'[^0-9\.:]', '', chap_title)
     # create chapter number with leading zeros
-    if len(chap_number) == 1:
-        chap_num_3_dig = '00' + chap_number
-    elif len(chap_number) == 2:
-        chap_num_3_dig = '0' + chap_number
-    else:
-        chap_num_3_dig = chap_number
+    chap_num_3_dig = make_3_digit_number_string(chap_number)
+
+    #  if len(chap_number) == 1:
+        #  chap_num_3_dig = '00' + chap_number
+    #  elif len(chap_number) == 2:
+        #  chap_num_3_dig = '0' + chap_number
+    #  else:
+        #  chap_num_3_dig = chap_number
 
     # return both chapter number formats
     return (chap_number, chap_num_3_dig)
@@ -646,7 +675,7 @@ def create_filename(meta):
     # print(filename_out)
     filename_out = re.sub(r'%N', meta['chap_num_3_dig'], filename_out)
     # print(filename_out)
-    filename_out = re.sub(r'%c', str(meta['file_number']), filename_out)
+    filename_out = re.sub(r'%c', make_3_digit_number_string(meta['file_number']), filename_out)
     # print(filename_out)
     filename_out = re.sub(r'%F', meta['date'], filename_out)
     # print(filename_out)
@@ -715,9 +744,7 @@ def process_url(url):
         return
 
     # Convert to single string from etree
-    article_html = ''
-    for line in content:
-        article_html += str(etree.tostring(line)).strip()
+    article_html = content
 
     # print("@@@@@@@@@@@@@@@@@@@@ article_html @@@@@@@@@@@@@@@@@@@@@@@@@@")
     # print(article_html)
@@ -804,14 +831,10 @@ def main():
     # enable DEBUG TODO (to be reimplemented)
     global DEBUG
     global TEST
-    if config['preferred']['debug']:
-        DEBUG = 1
-    else:
-        DEBUG = 0
-    if config['preferred']['test']:
-        TEST = 1
-    else:
-        TEST = 0
+    if config['preferred']['debug']: DEBUG = 1
+    else: DEBUG = 0
+    if config['preferred']['test']: TEST = 1
+    else: TEST = 0
 
     # Get url(s) from input or file
     urls = []
@@ -833,7 +856,7 @@ def main():
         print("  File:", file)
         # increments the file number for output filenames
         config['VARS']['file_number'] += 1
-
+    
     print("done.")
 # END: def main()
 

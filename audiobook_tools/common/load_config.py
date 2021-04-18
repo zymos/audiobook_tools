@@ -111,7 +111,7 @@ def load_config(config_filename, args, tmp_dir):
     # web-novel-to-text.py config
     if config_filename == "web-novel-to-text.conf":
         preferred_vars = ('delay_between_requests', 'format', 'speak_asterisk', 'dont_remove_quotes', 'dont_emphasize',
-                'dont_remove_asterisk', 'filename_format', 'debug', 'output_filename', 'test', 'remove_problematic_chars')
+                'dont_remove_asterisk', 'filename_format', 'debug', 'output_filename', 'test', 'remove_all_bad_chars', 'remove_bad_char')
         # go through each setting
         for setting in preferred_vars:
             config['preferred'].update({setting: ''})
@@ -128,7 +128,12 @@ def load_config(config_filename, args, tmp_dir):
 
     # audiobook_reencoder config
     elif config_filename == "audiobook-reencoder.conf":
-        preferred_vars = ('disable_extract_cover_art', 'disable_embed_cover_art', 'only_extract_cover_art', 'disable_reencode', 'only_reencode', 'disable_split_chapters', 'disable_delete_unneeded_files', 'only_delete_unneeded_files', 'disable_add_id3_genre', 'only_add_id3_genre', 'force_add_cover_art', 'delete_image_file_after_adding', 'audio_output_format', 'bitrate', 'samplerate', 'threads', 'keep_original_files', 'test', 'disable_normalize', 'disable_add_id3_encoded_by', 'ignore_errors', 'disable_id3_change', 'force_normalization', 'delete_non_audio_files', 'delete_non_audio_image_files', 'debug')
+        preferred_vars = ('disable_extract_cover_art', 'disable_embed_cover_art', 'only_extract_cover_art', 'disable_reencode', 
+                          'only_reencode', 'disable_split_chapters', 'disable_delete_unneeded_files', 'only_delete_unneeded_files', 
+                          'disable_add_id3_genre', 'only_add_id3_genre', 'force_add_cover_art', 'delete_image_file_after_adding', 
+                          'audio_output_format', 'bitrate', 'samplerate', 'threads', 'keep_original_files', 'test', 'disable_normalize', 
+                          'disable_add_id3_encoded_by', 'ignore_errors', 'disable_id3_change', 'force_normalization', 
+                          'delete_non_audio_files', 'delete_non_audio_image_files', 'debug')
         # go through each setting
         for setting in preferred_vars:
             config['preferred'].update({setting: ''})
@@ -143,7 +148,9 @@ def load_config(config_filename, args, tmp_dir):
 
     # online-tts.py programs config
     elif config_filename == "online-tts.conf":
-        preferred_vars = ('voice', 'profile', 'locale', 'gender', 'key', 'input_format', 'audio_format', 'audio_settings', 'gtts_lang', 'gtts_tld', 'url_parameters', 'delay_between_requests', 'max_charactors','speaking_rate', 'debug', 'test', 'remove_problematic_chars')
+        preferred_vars = ('voice', 'profile', 'locale', 'gender', 'key', 'input_format', 'audio_format', 'audio_settings', 'gtts_lang', 
+                          'gtts_tld', 'url_parameters', 'delay_between_requests', 'max_charactors','speaking_rate', 'debug', 'test', 
+                          'remove_all_bad_chars', 'remove_bad_chars')
 
         if config.get(config['GENERAL']['tts_service']) is None :
             print("Error: tts serivce \"" + config['GENERAL']['tts_service'] +
@@ -174,7 +181,7 @@ def load_config(config_filename, args, tmp_dir):
 
         # set some hard defaults
         if config['preferred']['max_charactors'] == '':
-            config['preferred']['max_charactors'] = 1000
+            config['preferred']['max_charactors'] = int(1000)
 
     # TODO: add audiobook-tools
 
@@ -205,9 +212,9 @@ def load_config(config_filename, args, tmp_dir):
                 config[section][param] = re.sub(r"[\"']$", '', config[section][param])
                 # covert true to 1
                 if config[section][param].lower() == 'true' or config[section][param] == '1':
-                    config[section][param] = 1 
+                    config[section][param] = True 
                 elif  config[section][param].lower() == 'false' or config[section][param] == '0':
-                    config[section][param] = 0 
+                    config[section][param] = False 
 
                 #  config[section][param] = int(re.sub(r"true", '1', config[section][param], flags=re.IGNORECASE))
                 # covert true to 0
