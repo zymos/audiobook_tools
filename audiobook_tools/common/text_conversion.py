@@ -60,6 +60,10 @@ def ssml2text(ssml_text):
     """
     import re
     text = re.sub('<[^>]+>', '', ssml_text)
+
+    # remove blank lines
+    text = re.sub(r'\n\s*\n', r'\n', text)
+
     #text = ssml_text
     return text
 # End: ssml2text()
@@ -77,6 +81,7 @@ def clean_text(text, config):
     
     import re
     from html import unescape 
+    import pprint
 
     # enable removal of bad chars
     bad_chars = ()
@@ -103,6 +108,7 @@ def clean_text(text, config):
                 remove_char['underscore'] = True 
 
 
+    #  pprint.pprint(remove_char)
     # Creating vars
     #  if "dont_remove_asterisk" in config['ARGS']:
         #  dont_remove_asterisk = config['ARGS']['keep_asterisk']
@@ -122,6 +128,19 @@ def clean_text(text, config):
         #  keep_bad_chars = config['preferred']['keep_bad_chars']
     #  else:
         #  keep_bad_chars = 0
+#      text = '<s>"Fascinating."</s> \
+#  <s>"Yeah. Why are we whispering?"</s> \
+#  <s>Grimalkin and Chaldion both turned to look at Saliss. The third Drake paused.</s>\
+#  <s>"I mean<break time="200ms" /> Chaldion’s using his ring. Why are we whispering?"</s>\
+#  <s>i""""""The other two Drakes stared at the [Alchemist]. ’Annoyed’ was a mild word to describe how they felt about Saliss. Resigned, aggravated<break time="200ms" /> you had to combine descriptors. But the Named Adventurer was the best [Alchemist] in all of Pallass, perhaps the world. He was more useful than he looked. And<break time="200ms" /> well, he was also hard to get rid of \'\'\'\'.</s> \
+#  <s>Moreover, he was amid equals, in a sense. Grimalkin, the [Sinew Magus], and Chaldion, [Grand Strategist] in charge of Pallass’ armies were both famed and influential. If anything, Grimalkin was the lesser figure here. If anyone was being a stickler for the exact nuance of rank.</s> '
+#
+#      print('***********************************************')
+#      print(text)
+#      print('----------------------------------------------')
+#      print(input_format)
+    #  text = re.sub(r'\[', '#', text)
+
 
     # strip leading/trailing whitespace
     text = text.strip()
@@ -138,13 +157,23 @@ def clean_text(text, config):
     
     # Remove 2+ single quote
     text = re.sub("[’][’]*", "’", text)
-    text = text.replace('’’', '') # is this correct?
+    text = text.replace('’’', '') 
 
-    # Remove Double Quote: remove spoken quotes   FIXME!!!!!!! dont remove quotes in tags
-    if remove_char['double_quote'] and not input_format == 'ssml':
-        text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '', text)
+    # Remove Double Quote: remove spoken quotes
+    if remove_char['double_quote']:
+        if input_format == 'ssml':
+            #  from bs4 import BeautifulSoup
+            #  bstext = BeautifulSoup(text)
+            #  for sentance in bstext.find_all('s'):
+                #  sentance.string.replaceWith(re.sub(r'[“”„“‟”"❝❞⹂〝〞〟＂"]', '', bstext.string))
+                #  print('bs')
+            text = re.sub(r'[“”„“‟”"❝❞⹂〝〞〟＂]', '"', text) # FIXME in ssml, no quotes removed due to tags
+        else:
+            text = re.sub(r'[“”„“‟”"❝❞⹂〝〞〟＂]', '', text)
+            #  print('nbs')
     else:
-        text = re.sub('[“”„“‟”"❝❞⹂〝〞〟＂]', '"', text)
+        #  print('nrm')
+        text = re.sub(r'[“”„“‟”"❝❞⹂〝〞〟＂]', '"', text)
 
     # Remove 3+ quotes in a row
     text = re.sub(r'"{3,}', '', text)
@@ -179,6 +208,10 @@ def clean_text(text, config):
     # 2+ new line
     text = re.sub("[\n][\n]*", "\n", text)
 
+
+    #  print(text)
+    #  print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+    #  exit()
     #  text = 'a'
     #  import difflib
 
@@ -244,7 +277,8 @@ def clean_ssml(ssml_text, voice, speaking_rate):
         
     # remove blank sentences
     ssml_text = re.sub(r'<s>\s</s>', '', ssml_text)        
-
+    ssml_text = re.sub(r'<s></s>', '', ssml_text)   
+    
     # adding the <speak> tag
     ssml_text = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="string">' + ssml_text + '</speak>'
     
@@ -404,12 +438,13 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
 
 
 
+  
+    # clean up the ssml code
+    ssml_text = clean_ssml(ssml_text, "", "")
+
     # clean up text
     ssml_text = clean_text(ssml_text, config)
-   
-    # clean up the ssml code
-    #  ssml_text = clean_ssml(ssml_text, "", "")
-
+ 
     # Re-Add <speak> tags
     #  ssml_text = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="string">\n' + ssml_text + "\n</speak>"
 

@@ -541,7 +541,7 @@ def ffmpeg_reencode(filename_orig, filename_tmp_audio):
             ffmpeg_out = proc.communicate()
             if DEBUG: print( ffmpeg_out)
 
-        print("\n\tOutput file: ", filename_output_audio, '\n')
+        print("\tOutput file: ", filename_output_audio)
 # End: ffmpeg_reencode()
 
 
