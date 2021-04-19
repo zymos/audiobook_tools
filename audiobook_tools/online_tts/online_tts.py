@@ -663,7 +663,8 @@ def main():
     # Run for each file inputed
     for filename in file_list:
         process_file(filename)
-    
+   
+
     # remove temp files
     clean_up()
 
