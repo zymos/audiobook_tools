@@ -774,6 +774,8 @@ def process_url(url):
     #article_text  = re.sub('<[^>]+>', '', article_ssml) # remove any tags
     article_text = ssml2text(article_ssml)
 
+
+
     #  if DEBUG:
         #  print("----------------------TEXT-------------------------------")
         #  print(article_text)

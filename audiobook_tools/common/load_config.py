@@ -40,40 +40,49 @@ def load_config(config_filename, args, tmp_dir):
     appauthor = "audiobook-tools"
 
     config_file = os.path.join(user_config_dir(appname, appauthor), config_filename)
-    default_config_file = os.path.join(os.path.dirname(__file__), '..', '..', 'config_files', config_filename)
+    global_config_file = os.path.join(os.path.dirname(__file__), '..', '..', 'config_files', config_filename)
+    default_config_file = os.path.join(os.path.dirname(__file__), '..', '..', 'config_files', 'DEFAULT', 'DEFAULT-' + config_filename)
 
 
     if args.debug:
         print("Local config file:", config_file)
-    if args.debug:
+        print("Global config file:", global_config_file)
         print("Default config file:", default_config_file)
 
     cfg_found = 0
     cfg_default_found = 0
+    cfg_global_found = 0
     if os.path.isfile(config_file):
         print("Using local config file:", config_file)
         cfg = configparser.RawConfigParser()
         cfg.read(config_file)
         cfg_found = 1
+    if os.path.isfile(global_config_file):
+        cfg_global = configparser.RawConfigParser()
+        cfg_global.read(default_config_file)
+        cfg_global_found = 1
     if os.path.isfile(default_config_file):
         cfg_default = configparser.RawConfigParser()
         cfg_default.read(default_config_file)
         cfg_default_found = 1
         if not cfg_found:
             print("Using default config file:", default_config_file)
-    if cfg_found == 0 and cfg_default_found == 0:
+    if cfg_found == 0 and cfg_default_found == 0 and cfg_global_found:
         print("Config file not found.")
         print(" Not:", config_file)
+        print(" Not:", global_config_file)
         print(" Not:", default_config_file)
         exit(1)
 
 
 
-    # create dictionary (from default config) (lowest priority)
+    # Create config dictionary (from default config) (lowest priority)
     if cfg_default_found:
+        # Load config with defaults
         config = {s:dict(cfg_default.items(s)) for s in cfg_default.sections()}
-        # overwrite config var's defaults using local config (med priority)
-        if cfg_found:
+
+        # Overwrite with global config var's defaults using local config (med priority)
+        if cfg_global_found:
             for s in cfg.sections():
                 if not s in config:
                     config.update({s: {'set': 1}})
@@ -83,10 +92,44 @@ def load_config(config_filename, args, tmp_dir):
                     else:
                         config[s][op[0]] = op[1]
                     # if args.debug: print("local config:", s, " - ", op[0], " = ", op[1])
+        
+        # Overwrite with local config
+        if cfg_found:
+            for s in cfg.sections():
+                if not s in config:
+                    config.update({s: {'set': 1}})
+                for op in cfg.items(s):
+                    if not op in config[s]:
+                        config[s].update({op[0]: op[1]})
+                    else:
+                        config[s][op[0]] = op[1]
+
+    elif cfg_global_found:
+        # no default, global only
+        config = {s:dict(cfg_global.items(s)) for s in cfg_global.sections()}
+
+        # Overwrite with local config
+        if cfg_found:
+            for s in cfg.sections():
+                if not s in config:
+                    config.update({s: {'set': 1}})
+                for op in cfg.items(s):
+                    if not op in config[s]:
+                        config[s].update({op[0]: op[1]})
+                    else:
+                        config[s][op[0]] = op[1]
     else:
-        # no default, local only
+        # no default or global, using local
         config = {s:dict(cfg.items(s)) for s in cfg.sections()}
 
+    # overwrite with global vars TODO (Check)
+    #  if cfg_global_found:
+    #      config = {s:dict(cfg_global.items(s)) for s in cfg_global.sections()}
+    #
+    #  # overwrite with local TODO (check)
+    #  if cfg_found:
+    #      config = {s:dict(cfg.tems(s)) for s in cfg.sections()}
+    #
 
     # Add args to config var for conveonce of a single var
     config.update({'ARGS': {'set': 1}})
@@ -205,7 +248,7 @@ def load_config(config_filename, args, tmp_dir):
     for section in config:
         for param in config[section]:
             if type(config[section][param]) == str: # only alter strings
-                if config['ARGS']['debug']: print("config", section, param, config[section][param])
+                #  if config['ARGS']['debug']: print("config", section, param, config[section][param])
                 # remove leading quotes
                 config[section][param] = re.sub(r"^[\"']", '', config[section][param])
                 # remove trailing quotes

@@ -66,11 +66,11 @@ def get_tts_audio(text_in, config, args):
     import requests # for sending request to server
     import time # for sleep
     
-    try:
-        from audiobook_tools.common.basic_url_request import basic_url_request
-    except:
-        print("Error: loading basic url request")
-        exit(1)
+    #  try:
+    from audiobook_tools.common.basic_url_request import basic_url_request
+    #  except:
+        #  print("Error: loading basic url request")
+        #  exit(1)
     
     # Enable/Disable debug
     DEBUG = config['DEBUG']['debug']
@@ -123,11 +123,7 @@ def get_tts_audio(text_in, config, args):
 
     ############
     # Send the request and get the audio
-    try:
-        audio = basic_url_request(url)
-    except:
-        print("Error: calling basic_url_request failed")
-        exit(1)
+    audio = basic_url_request(url, config)
         
     return audio
 # End: voicerss_tts()

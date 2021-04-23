@@ -148,8 +148,8 @@ def clean_text(text, config):
     # convert html escape code to Unicode/ASCII
     text = unescape(text)
  
-    # Non-Standard Chars: remove all non-standard chars
-    text = remove_nonstandard_chars(text)
+    # Non-Standard Chars: remove all non-standard chars FIXME
+    #  text = remove_nonstandard_chars(text)
 
     textold = text
     # Fix Single Quotes
@@ -285,7 +285,7 @@ def clean_ssml(ssml_text, voice, speaking_rate):
     
     #print("@@@@@@@@@@@@@@@@@@@@@@clean_ssml @@@@@@@@@@@@@@@@@@@@")
     #print(ssml_text)
-    #print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    #print("@@@@@@@@@@@@@@@@@ clean_ssml (end) @@@@@@@@@@@@@@@@@@@@@@")
     return ssml_text
 
 # End: clean_ssml()
@@ -304,11 +304,11 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
 
     # article_write = 0
     # line_cnt=0
-
-    print("----------------------html_text-------------------------------")
-    print(html_article)
-    # print(type(html_article))
-    print("---------------------html_text (end)-------------------------")
+    if config['DEBUG']['debug']:
+        print("----------------------html_text-------------------------------")
+        print(html_article)
+        # print(type(html_article))
+        print("---------------------html_text (end)-------------------------")
 
     # Clean the text up
     ssml_text = clean_text(html_article, config)
