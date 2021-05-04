@@ -1,3 +1,8 @@
 {
-    "jedi.enable": false
-i}
+"signature.enable": false,
+"suggest.autoTrigger": "always",
+"python.autoComplete.addBrackets": true,
+"python.jediEnabled": true,
+"suggest.echodocSupport": false
+
+}

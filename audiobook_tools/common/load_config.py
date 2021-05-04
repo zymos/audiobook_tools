@@ -83,10 +83,10 @@ def load_config(config_filename, args, tmp_dir):
 
         # Overwrite with global config var's defaults using local config (med priority)
         if cfg_global_found:
-            for s in cfg.sections():
+            for s in cfg_global.sections():
                 if not s in config:
                     config.update({s: {'set': 1}})
-                for op in cfg.items(s):
+                for op in cfg_global.items(s):
                     if not op in config[s]:
                         config[s].update({op[0]: op[1]})
                     else:
