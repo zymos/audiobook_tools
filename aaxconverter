@@ -213,13 +213,11 @@ fi
 # See Readme.md for details on how to acquire your personal authcode for your personal
 # audible AAX files.
 if [ -z $auth_code ]; then
-  echo "dsadasd"
   if [ -r .authcode ]; then
     auth_code=`head -1 .authcode`
   elif [ -r ${HOME}/.authcode ]; then
     auth_code=`head -1 ~/.authcode`
   elif [ -r "${HOME}/.config/audiobook-tools/aax-authcode.conf" ]; then
-    echo "asasasas"
     auth_code=`head -1 ~/.config/audiobook-tools/aax-authcode.conf`
   fi
 fi
