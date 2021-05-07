@@ -2,16 +2,16 @@
 
 Description: A set of command line tools for creating, re-encoding and optimizing audiobooks
 
-_________**audiobook-reencoder**____
+_** Audiobook ReEncoder (audiobook-reencoder)**__
 * Scans your audiobook folder, re-encoding your audiobooks to the same uniform format, clean up directories, embed cover art, etc.
 
-____**online-tts_**____*******__
+__**Online TTS (online-tts_**____*****)**
 * converting text-to-speech using online/cloud TTS services, accepts SSML or TXT.  Supports Microsoft Azure TTS, VoiceRSS TTS, Google translate TTS, and can easily add more TTS servies.
 
-__**web-novel-to-text**__
+**Web Novel to Text (web-novel-to-text)**
 * extracts the web-novel's articles/chapters' text from it's websites and saving to TXT or SSML.
 
-__**aaxconverter**__
+**AAX Converter (aax-converter)**
 * convert AAX files to MP3 or M4B, removing DRM
 
 
