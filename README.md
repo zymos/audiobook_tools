@@ -8,30 +8,12 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 
 
 ## Audiobook ReEncoder (audiobook_reencoder)
-
-  Scans your audiobook folder, re-encoding your audiobooks to the same uniform format, clean up directories, embed cover art, etc.
-
-## Online TTS (online-tts_)
-
-  converting text-to-speech using online/cloud TTS services, accepts SSML or TXT.  Supports Microsoft Azure TTS, VoiceRSS TTS, Google translate TTS, and can easily add more TTS servies.
-
-## Web Novel to Text (web-novel-to-text)**
-
-  extracts the web-novel's articles/chapters' text from it's websites and saving to TXT or SSML.
-
-## AAX Converter (aaxconverter)
-
-  convert AAX files to MP3 or M4B, removing DRM
-
-
-
-# audiobook_reencoder
 * Description: Re-encodes all MP3/M4B files in a directory, recursivly.
 * Features:
 	* Encodes using ffmpeg
-    * Accepts mp3, m4b, m4a 
+    * Accepts mp3, m4b, m4a, flac, ogg, opus, aax(with auth code)
     * Grabs audio files data using ffprobe, for re-encoding and embedding cover art
-    * Split into chapters (not implemented)
+    * Split into chapters
     * Removes unneeded files (nfo/cue/m2u) (can be disabled)
     * Add genre="Audiobook" (can be disabled)
     * Normalize volume (can be disabled)
@@ -47,7 +29,7 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/audiobook_reencoder.md)
 
 
-# online-tts
+## Online TTS (online-tts)
 * Description: Text-to-Speech program using online/cloud TTS services.
 * Supported service
   * Microsoft Azure TTS
@@ -58,7 +40,7 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 
 
 
-# web-novel-to-text
+## Web-Novel to Text (web-novel-to-text)
 * Description: Extracts the text of web-novels articles/chapters to a TXT or SSML file to be used in a text-to-speech program or service.
 * Supported Sites
   * Royal Road
@@ -67,13 +49,13 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/web_novel_to_text.md)
 
 
-# aaxconverter (opus, ogg may not work)
+## AAX Converter (aaxconverter)
 * Description: convert AAX(Audible) files to mp3, m4b, single or chapter files, removing DRM.  This almost a copy of KrumpetPirate's [AAXtoMP3](https://github.com/KrumpetPirate/AAXtoMP3)
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/aaxconverter.md)
 
 
-# Other tools
-## google-cloud-tts.sh
+## Other tools
+### google-cloud-tts.sh
 * Description: Creates audiobooks from ebooks using Google voice (text-to-speech)
 *	Requirements:
 	* ffmpeg
@@ -81,7 +63,7 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/audiobook_tools/google_cloud_tts)
 
 
-## m4b split
+### m4b split
 * Desciption: Splits m4b files to chaptered mp3 files
 * Requirements
 	* ffmpeg
@@ -92,13 +74,13 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 
 # Recomneded External Programs
 
-## Calibre (external)
+### Calibre (external)
 * ebook reader/converter (GUI and CLI)
 * <https://calibre-ebook.com/>
 	* Ebook to txt: 'ebook-convert Book.epub Book.txt'
 	* Extract cover art: ebook-meta --get-cover=cover.jpg
 
-## youtube-dl: Convert Youtube audiobooks to mp3 files (external)
+### youtube-dl: Convert Youtube audiobooks to mp3 files (external)
 * Description: There are many audiobooks on youtube.  Mostly web-novels and light-novels read by computers, that will likely never be produced in studios.
 * Usage: download single file
 	* youtube-dl --extract-audio --embed-thumbnail --add-metadata --audio-format mp3 "[URL_GOES_HERE]"
@@ -109,23 +91,23 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 * Download : <https://youtube-dl.org/>
 * Git: <https://github.com/ytdl-org/youtube-dl>
 
-## Mycroft Mimic TTS (external)
+### Mycroft Mimic TTS (external)
 * Description: Free TTS for running on your computer, better than festival or espeak
 	* <https://mycroft-ai.gitbook.io/docs/mycroft-technologies/mimic-overview>
 
 
-## inAudible-NG/audible-activator: Extract your Audible authorization code (external)
+### inAudible-NG/audible-activator: Extract your Audible authorization code (external)
 * Description: Find your Audible 'activation byte', aka 'auth code', which is required for listening or converting your Audible audiobooks
 * Download: <https://github.com/inAudible-NG/audible-activator>
 * Notes: This tool requires Google Crome, but you can download Chrome and CromeDriver from the site, install it in a temp folder, adn delete it after.  Make sure the version of Chrome and CromeDriver are the same.
 
-## AAXtoMP3: Convert Audible AAX files to mp3 (or other formats) (external)
+### AAXtoMP3: Convert Audible AAX files to mp3 (or other formats) (external)
 * Description: Convert **your** Audible audio book to a useful non-DRM format, default is chaptered mp3s, but it can do m4b and other formats
 * Download: <https://github.com/KrumpetPirate/AAXtoMP3>
 * Usage: AAXtoMP3 --authcode [YOUR_AUTH_CODE] [YOUR_AUDIBLE_FILE]
 * Notes: If you want to use ffmpeg or avconv instead of AAXtoMP3, just use 'ffmpeg -activation_bytes [YOUR_AUTH_CODE] .....'
 
-# Other useful tools (external)
+## Other useful tools (external)
 * Audible-activator - extract your Audible authorization code (CLI)
 	* <https://github.com/inAudible-NG/audible-activator>
 * inAudible - Convert Audible audiobooks to useful format ie. mp3, m4b (GUI, windows/mac only) <https://github.com/rmcrackan/inAudible>
