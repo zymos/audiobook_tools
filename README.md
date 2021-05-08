@@ -2,31 +2,26 @@
 
 Description: A set of command line tools for creating, re-encoding and optimizing audiobooks
 
-_** Audiobook ReEncoder (audiobook-reencoder)**__
-* Scans your audiobook folder, re-encoding your audiobooks to the same uniform format, clean up directories, embed cover art, etc.
-
-__**Online TTS (online-tts_**____*****)**
-* converting text-to-speech using online/cloud TTS services, accepts SSML or TXT.  Supports Microsoft Azure TTS, VoiceRSS TTS, Google translate TTS, and can easily add more TTS servies.
-
-**Web Novel to Text (web-novel-to-text)**
-* extracts the web-novel's articles/chapters' text from it's websites and saving to TXT or SSML.
-
-**AAX Converter (aax-converter)**
-* convert AAX files to MP3 or M4B, removing DRM
-
-
-* Requirements:
-	* python
-	* ffmpeg
-    * See below for required modules
-
-
-
-
 Download tools: [zip file](https://github.com/zymos/audiobook_tools/archive/master.zip)
 
 Git: *git clone https://github.com/zymos/audiobook_tools.git*
 
+
+# Audiobook ReEncoder (audiobook_reencoder)
+
+  Scans your audiobook folder, re-encoding your audiobooks to the same uniform format, clean up directories, embed cover art, etc.
+
+# Online TTS (online-tts_)
+
+  converting text-to-speech using online/cloud TTS services, accepts SSML or TXT.  Supports Microsoft Azure TTS, VoiceRSS TTS, Google translate TTS, and can easily add more TTS servies.
+
+#Web Novel to Text (web-novel-to-text)**
+
+  extracts the web-novel's articles/chapters' text from it's websites and saving to TXT or SSML.
+
+# AAX Converter (aaxconverter)
+
+  convert AAX files to MP3 or M4B, removing DRM
 
 
 
@@ -71,9 +66,11 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
   * to add more
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/web_novel_to_text.md)
 
+
 # aaxconverter (opus, ogg may not work)
 * Description: convert AAX(Audible) files to mp3, m4b, single or chapter files, removing DRM.  This almost a copy of KrumpetPirate's [AAXtoMP3](https://github.com/KrumpetPirate/AAXtoMP3)
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/aaxconverter.md)
+
 
 # Other tools
 ## google-cloud-tts.sh
@@ -82,6 +79,7 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 	* ffmpeg
 	* Google Cloud SDK
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/audiobook_tools/google_cloud_tts)
+
 
 ## m4b split
 * Desciption: Splits m4b files to chaptered mp3 files
