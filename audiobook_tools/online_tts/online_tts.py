@@ -602,6 +602,7 @@ def clean_up():
     #      print("Removing temp files")
     #      os.rmdir(config['TMP']['tmp_dir'])
 
+    # TODO change to os module
     import shutil
 
     if DEBUG: print("Deleting tmp dir")

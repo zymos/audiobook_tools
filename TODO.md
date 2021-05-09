@@ -1,6 +1,11 @@
 Entire package
 * create setup/install
-* create deb package
+  * copy to python dir
+  * copy main exe to bin
+  * make copy config to .config 
+* create other package (deb, ...)
+
+Create seperate online-tts package (maybe)
 
 web-novel-tts (create)
 * joining web-novel-to-text and online-tts
@@ -12,12 +17,10 @@ online-tts
 * remove_nonstandard_chars seems to be locked up for too much time
 * implement profiles
 * add amazion polly, ibm, google cloud support
+* check timeout-retry
 
 audiobook-reenconder
-* check if adding cover art to all files
 * check m4b split
-
-aaxconverter
-* check opus and ogg output
-* maybe covert to python
+* test output m4b, ogg, opus
+* *add cover art non mp3
 

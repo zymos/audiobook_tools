@@ -1,10 +1,20 @@
-# Audiobook Tools
+# Audiobook Tools - Command line tools
 
 Description: A set of command line tools for creating, re-encoding and optimizing audiobooks
 
-Download tools: [zip file](https://github.com/zymos/audiobook_tools/archive/master.zip)
+
+Includes
+* Audiobook ReEncoder - re-encode audiobook files to uniform format
+* Online TTS - Coverts Text-to-Speech audio files using various online TTS services
+* Web-novel to Text - extracts web-novels from website and save to txt/ssml file
+* AAX Converter - convert AAX(Audible) to MP3/M4B file (to be included in Audiobook ReEncoder)
+
+
+ Download tools: [zip file](https://github.com/zymos/audiobook_tools/archive/master.zip)
+
 
 Git: *git clone https://github.com/zymos/audiobook_tools.git*
+
 
 
 ## Audiobook ReEncoder (audiobook_reencoder)
@@ -25,7 +35,7 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 		* Can delete original image file, after embedding (not default)
 * Requirments
 	* ffmpeg and ffprobe
-	* python
+	* python3
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/audiobook_reencoder.md)
 
 
@@ -46,6 +56,9 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
   * Royal Road
   * WordPress sites
   * to add more
+* Requirements
+  * python3
+    * text2digits module
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/web_novel_to_text.md)
 
 

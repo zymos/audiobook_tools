@@ -14,10 +14,10 @@
 #
 #       Requirements:
 #           python, ffmpeg, ffprobe
-#
+#           mutigen, imghdr modules
 #       Features: 
 #           Encodes using ffmpeg
-#           Accepts mp3, m4b, m4a (todo maybe flac)
+#           Accepts mp3, m4b, m4a, flac, ogg, opus, aax
 #           Grabs audio files data using ffprobe, for re-encoding and embedding cover art
 #           Split into chapters (not implemented)
 #           Removes unneeded files (nfo/cue/m3u) (can be disabled)
@@ -83,7 +83,7 @@ cover art not extract
 #
 
 # Defaults
-bitrate_default = "32k"
+bitrate_default = "64k"
 samplerate_default = "22050"
 version = "0.1"
 program_name = "audiobook_reencoder(ffmpeg)-v" + version
@@ -148,7 +148,7 @@ def parse_args():
     parser.add_argument('--force-add-cover-art', help="Ignores filename similarity ratio to decide weather to add cover art", action="store_true")
     parser.add_argument('--delete-image-file-after-adding', help="Delete image file from directory after adding it to id3 as cover art (unimplimented)", action="store_true")
     parser.add_argument('--audio-output-format', help="m4b or mp3 (default mp3)")
-    parser.add_argument('--bitrate', help="8k, 16k, 32k, 64k, 128k, etc (default 32k)")
+    parser.add_argument('--bitrate', help="8k, 16k, 32k, 48k, 56k, 64k, 128k, etc (default 32k)")
     parser.add_argument('--samplerate', help="16000, 22050, 44100, etc (default 22050)")
     parser.add_argument('--threads', help="number of CPU threads to use (default 4)(Not Used Yet)")
     parser.add_argument('--keep-original-files', help="do not delete original audio files", action="store_true")
@@ -403,7 +403,8 @@ def extract_audiofile_data(logger, audio_file):
     audio_file_data['read_data_failed'] = False
 
     # ffprobe command
-    cmd = 'ffprobe -loglevel 8 -show_format -show_chapters -show_streams -print_format json "' + audio_file + '"' 
+    cmd = 'ffprobe ' +  ffmpeg_aax_activation_parameters(audio_file) + ' -loglevel 8 -show_format -show_chapters -show_streams -print_format json "' + audio_file + '"' 
+
     # Executing command
     logger.debug("------ffprobe-ing----")
     logger.debug(cmd)
@@ -442,7 +443,7 @@ def extract_audiofile_data(logger, audio_file):
             audio_file_data['bitrate'] = str(int(stream['bit_rate'])/1000) + "k"
             audio_file_data['samplerate'] = stream['sample_rate']
             # logger.debug("-   Codec: mp3")
-            if stream['bit_rate'] == "32000" or stream['bit_rate'] == "16000" or stream['bit_rate'] == "8000":
+            if int(stream['bit_rate']) <= 32000:
                 # logger.debug("-   Bitrate: 32k or less, no need to reencode")
                 audio_file_data['low_bitrate'] = True
             else:
@@ -500,6 +501,25 @@ def extract_audiofile_data(logger, audio_file):
 
     return(audio_file_data)
 # end extract_audiofile_data
+
+
+
+
+########################################################
+# AAX ffmpeg tags
+#
+def ffmpeg_aax_activation_parameters(filename):
+    """
+    creates the arguments to decode aax files
+    input: file_extention str
+    """
+    print("Extension: " + os.path.splitext(filename)[1].lower())
+
+    if os.path.splitext(filename)[1].lower() == '.aax':
+        return "-activation_bytes " + config['GENERAL']['aax_authcode']
+    else:
+        return ""
+# End: ffmpeg_aax_activation_parameters(filename):
 
 
 
@@ -972,7 +992,7 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             
             # Encoding (1st stage) 
             #   copy id3, Remove chapter data, encode w/ codec/bitrate/samplerate, vol normalize
-            ffmpeg_cmd = "ffmpeg -loglevel error -y -i \"" + ffmpeg_input + "\"" + ffmpeg_audio_codec + ffmpeg_bitrate +                ffmpeg_samplerate + ffmpeg_loudnorm + " -id3v2_version 3 -write_id3v1 1 -map_chapters -1  -metadata compatible_brands= -metadata minor_version= -metadata major_brand= \"" + ffmpeg_single_tmp + "\"" 
+            ffmpeg_cmd = "ffmpeg  " +  ffmpeg_aax_activation_parameters(ffmpeg_input) + " -loglevel error -y -i \"" + ffmpeg_input + "\"" + ffmpeg_audio_codec + ffmpeg_bitrate + ffmpeg_samplerate + ffmpeg_loudnorm + " -id3v2_version 3 -write_id3v1 1 -map_chapters -1  -metadata compatible_brands= -metadata minor_version= -metadata major_brand= \"" + ffmpeg_single_tmp + "\"" 
 
             if debug:
                 logging.debug("    Encoding (" + str(file_count) + " of " + str(total_count) + "): " + os.path.basename(ffmpeg_input_old) )
