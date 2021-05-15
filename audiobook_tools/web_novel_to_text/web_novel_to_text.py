@@ -540,7 +540,7 @@ def extract_txt_wordpress(site_code):
     # convert to string
     article_html = ''
     for line in content:
-        article_html += str(etree.tostring(line).decode('utf-8'))
+        article_html += str(etree.tostring(line).decode('utf-8', errors='ignore'))
 
     meta = { 'author': author,
             'book_title': book_title,

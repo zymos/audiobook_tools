@@ -115,7 +115,8 @@ import tempfile # for logging
 import logging # for logging
 import datetime # for logging
 import random
-
+import shutil
+# json
 
 
 
@@ -233,18 +234,18 @@ def process_directory(logger, dirpath, audio_files, audio_file_data, single_file
 
     # Extract the cover art from audio file to cover.jpg
     if not (config['preferred']['only_delete_unneeded_files'] or config['preferred']['only_add_id3_genre'] or config['preferred']['only_reencode']):
-        audio_file_data = extract_cover_art(logger, dirpath, audio_files, audio_file_data, single_file)
+        cover_art_file = extract_cover_art(logger, dirpath, audio_files, audio_file_data, single_file)
     else:
         cover_art_file = ''
     # print("ooooooooooooooooooooooooooooooooooo" + cover_art_file
 
-    # Process each file in the current directory
-    # for audio_file in audio_files:
-    #     logger.debug("-  Processing file: " + audio_file)
-
-    #     # Add cover art file to data var
-    #     audio_file_data[audio_file]['cover_art_file'] = cover_art_file
-    #     # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" + audio_file_data[audio_file]['cover_art_file']
+    # ReProcess each file in the current directory if cover art extracted
+    if not cover_art_file == '':
+        for audio_file in audio_files:
+            logger.debug("-  Processing file: " + audio_file)
+            # Add cover art in each file
+            audio_file_data[audio_file]['cover_art_file'] = cover_art_file
+            audio_file_data[audio_file]['cover_art_embeded'] = True
 
     return(audio_file_data)
 # end process_directory()
@@ -401,6 +402,9 @@ def extract_audiofile_data(logger, audio_file):
     audio_file_data['cover_art_file'] = ''
     audio_file_data['title'] = ''
     audio_file_data['read_data_failed'] = False
+    # add distinct metadata section
+    audio_file_data['metadata'] = {}
+    audio_file_data['remove_chapter_data'] = False
 
     # ffprobe command
     cmd = 'ffprobe ' +  ffmpeg_aax_activation_parameters(audio_file) + ' -loglevel 8 -show_format -show_chapters -show_streams -print_format json "' + audio_file + '"' 
@@ -417,7 +421,7 @@ def extract_audiofile_data(logger, audio_file):
     # put ffprobe in to ffprobe_data dictionary
     ffprobe_data = json.loads(output)
 
-
+    # Check if ffprobe failed
     if err or not ffprobe_data:
         audio_file_data['read_data_failed'] = True
         logger.debug("Error reading \"" + audio_file + "\" with ffprobe, file probably broken") 
@@ -425,12 +429,20 @@ def extract_audiofile_data(logger, audio_file):
             exit(1)       
         return(audio_file_data)
 
-    # pprint.pprint(ffprobe_data)
+    # grab the audio-metadata
+    
+    # Prints ffprobe info in dictionary
+    logger.debug(",,,,,,,,,,,,,,,,,,,,,,,, ffprobe data ,,,,,,,,,,,,,,,,,,,,,,,,")
+    logger.debug(pprint.pformat(ffprobe_data))
+    logger.debug(",,,,,,,,,,,,,,,,,,,,,,,, ffprobe data (end) ,,,,,,,,,,,,,,,,,,")
+
+
+   
 
     # parse ffprobe output to extract data
     for stream in ffprobe_data['streams']:
         # Check for cover art
-        if stream['codec_name'] == 'mjpeg' or stream['codec_name'] == 'png':
+        if stream['codec_name'] == 'mjpeg' or stream['codec_name'] == 'png' or stream['codec_name'] == 'theora':
             audio_file_data['cover_art_embeded'] = True
             # logger.debug("-   Cover art exists")
         else:
@@ -440,8 +452,10 @@ def extract_audiofile_data(logger, audio_file):
         # Check if mp3
         if stream['codec_name'] == 'mp3':
             audio_file_data['codec_name'] = 'mp3'
-            audio_file_data['bitrate'] = str(int(stream['bit_rate'])/1000) + "k"
-            audio_file_data['samplerate'] = stream['sample_rate']
+            if 'bit_rate' in stream.keys():
+                audio_file_data['bitrate'] = str(int(stream['bit_rate'])/1000) + "k"
+            if 'sample_rate' in stream.keys():
+                audio_file_data['samplerate'] = stream['sample_rate']
             # logger.debug("-   Codec: mp3")
             if int(stream['bit_rate']) <= 32000:
                 # logger.debug("-   Bitrate: 32k or less, no need to reencode")
@@ -449,54 +463,117 @@ def extract_audiofile_data(logger, audio_file):
             else:
                 # logger.debug("-   Bitrate: " + stream['bit_rate'] + ", will reencode")
                 audio_file_data['low_bitrate'] = False
+            #copy metadata
+            if 'format' in ffprobe_data.keys():
+                if 'tags' in ffprobe_data['format'].keys():
+                    audio_file_data['metadata'] = audio_file_data['metadata']
 
 
         # Check if m4b/m4a
         if stream['codec_name'] == 'aac':
             audio_file_data['codec_name'] = 'm4b'
-            audio_file_data['bitrate'] = stream['bit_rate']
-            audio_file_data['samplerate'] = str(int(stream['sample_rate'])/1000) + "k"
-    # end of stream loop   
+            if 'bit_rate' in stream.keys():
+                audio_file_data['bitrate'] = str(int(stream['bit_rate'])/1000) + "k"
+            if 'sample_rate' in stream.keys():
+                audio_file_data['samplerate'] = stream['sample_rate']
+            #copy metadata
+            if 'format' in ffprobe_data.keys():
+                if 'tags' in ffprobe_data['format'].keys():
+                    audio_file_data['metadata'] = audio_file_data['metadata']
 
+        # ogg
+        if  stream['codec_name'] == 'vorbis':
+            audio_file_data['codec_name'] = 'ogg'
+            if 'bit_rate' in stream.keys():
+                audio_file_data['bitrate'] = str(int(stream['bit_rate'])/1000) + "k"
+            if 'sample_rate' in stream.keys():
+                audio_file_data['samplerate'] = stream['sample_rate']
+            #copy metadata (from audio stream)
+            if 'tags' in stream.keys():
+                audio_file_data['metadata'] = stream['tags']
+
+        # opus
+        if stream['codec_name'] == 'opus':
+            audio_file_data['codec_name'] = 'opus'
+            if 'bit_rate' in stream.keys():
+                audio_file_data['bitrate'] = str(int(stream['bit_rate'])/1000) + "k"
+            if 'sample_rate' in stream.keys():
+                audio_file_data['samplerate'] = stream['sample_rate']
+            #copy metadata (from audio stream)
+            if 'tags' in stream.keys():
+                audio_file_data['metadata'] = stream['tags']
+
+        # flac
+        if  stream['codec_name'] == 'flac':
+            audio_file_data['codec_name'] = 'flac'
+            if 'bit_rate' in stream.keys():
+                audio_file_data['bitrate'] = str(int(stream['bit_rate'])/1000) + "k"
+            if 'sample_rate' in stream.keys():
+                audio_file_data['samplerate'] = stream['sample_rate']
+            #copy metadata
+            if 'format' in ffprobe_data.keys():
+                if 'tags' in ffprobe_data['format'].keys():
+                    audio_file_data['metadata'] = audio_file_data['metadata']
+    # end of stream loop   
+    
     # get the id3 encoder tag
-    if 'encoded_by' in ffprobe_data['format']['tags'].keys():
-        audio_file_data['encoded_by'] = ffprobe_data['format']['tags']['encoded_by']
+    if 'encoded_by' in audio_file_data['metadata'].keys():
+        audio_file_data['encoded_by'] = audio_file_data['metadata']['encoded_by']
     
     # get title
-    if 'title' in ffprobe_data['format']['tags'].keys():
-        audio_file_data['title'] = ffprobe_data['format']['tags']['title']
+    if 'title' in audio_file_data['metadata'].keys():
+        audio_file_data['title'] = audio_file_data['metadata']['title']
 
 
     # Get chapter data
     if not config['preferred']['disable_split_chapters']:
         if 'chapters' in ffprobe_data.keys():
+            chapter_number = 1
             if len(ffprobe_data['chapters']) > 1:
-                # Multiple chapters exit
+                # Multiple chapters exist
                 audio_file_data['chapters_exist'] = True
                 audio_file_data['chapters_total'] = len(ffprobe_data['chapters'])
                 audio_file_data['chapters'] = {} 
-                # for each chapter          
-                for chap in ffprobe_data['chapters']:
-                    # Chapter index
-                    index = chap['id']
-                    audio_file_data['chapters'][index] = {}
-                    audio_file_data['chapters'][index]['id'] = chap['id'] + 1
-                    track_num = chap['id'] + 1
-                    # chapter name
-                    if '%03d' % track_num == chap['tags']['title']:
-                        audio_file_data['chapters'][index]['name'] = chap['tags']['title']
-                    elif '%02d' % track_num == chap['tags']['title']:
-                        audio_file_data['chapters'][index]['name'] = chap['tags']['title'] 
-                    else:                   
-                        if track_num + 1 > 99:
-                            audio_file_data['chapters'][index]['name'] = '%03d' % track_num + ' - ' + chap['tags']['title']
-                        else:
-                            audio_file_data['chapters'][index]['name'] = '%02d' % track_num + ' - ' + chap['tags']['title']
-                    # chapter start time
-                    audio_file_data['chapters'][index]['start_time'] = "%.2f" % float(chap['start_time'])
-                    # chapter durration
-                    audio_file_data['chapters'][index]['duration'] = "%.2f" % (float(chap['end_time']) - float(chap['start_time']))
 
+                # for each chapter         
+                for chap in ffprobe_data['chapters']:
+                    # check if chap is less than  second ignore
+                    if (float(chap['end_time']) - float(chap['start_time'])) < 1:
+                        continue
+                    else:
+                        # Chapter index
+                        index = chap['id']
+                        audio_file_data['chapters'][index] = {}
+                        audio_file_data['chapters'][index]['id'] = chapter_number # FIXME check if is needs index or chap_num
+                        track_num = chapter_number
+                        # chapter name
+                        if '%03d' % track_num == chap['tags']['title']:
+                            audio_file_data['chapters'][index]['name'] = chap['tags']['title']
+                        elif '%02d' % track_num == chap['tags']['title']:
+                            audio_file_data['chapters'][index]['name'] = chap['tags']['title'] 
+                        else:                   
+                            if track_num + 1 > 99:
+                                audio_file_data['chapters'][index]['name'] = '%03d' % track_num + ' - ' + chap['tags']['title']
+                            else:
+                                audio_file_data['chapters'][index]['name'] = '%02d' % track_num + ' - ' + chap['tags']['title']
+                        # chapter start time
+                        audio_file_data['chapters'][index]['start_time'] = "%.2f" % float(chap['start_time'])
+                        # chapter durration
+                        audio_file_data['chapters'][index]['duration'] = "%.2f" % (float(chap['end_time']) - float(chap['start_time']))
+                        # increment chapter_number
+                        chapter_number += 1
+            else: # probably doesn't have any chap meta, but remove it just incase
+                audio_file_data['remove_chapter_data'] = True
+            # there shouldn't be any chapters because only one chap > 1s
+            if chapter_number == 2:
+                audio_file_data['chapters_exist'] = False
+                audio_file_data['remove_chapter_data'] = True
+    # Chap meta (end)
+
+
+    logger.debug(",,,,,,,,,,,,,,,,,,,,,,,, audio_file_data ,,,,,,,,,,,,,,,,,,,,,,,,")
+    logger.debug(pprint.pformat(audio_file_data))
+    logger.debug(",,,,,,,,,,,,,,,,,,,,,,audio_file_data (end) ,,,,,,,,,,,,,,,,,,,,,,,,")
 
 
     return(audio_file_data)
@@ -513,7 +590,7 @@ def ffmpeg_aax_activation_parameters(filename):
     creates the arguments to decode aax files
     input: file_extention str
     """
-    print("Extension: " + os.path.splitext(filename)[1].lower())
+    #  print("Extension: " + os.path.splitext(filename)[1].lower())
 
     if os.path.splitext(filename)[1].lower() == '.aax':
         return "-activation_bytes " + config['GENERAL']['aax_authcode']
@@ -610,9 +687,10 @@ def add_metadata(logger, audio_filename, audio_file_data, chap_num):
     output_format = config['preferred']['audio_output_format'] 
     
     # track numbers (TRCK)
-    track_num = chap_num
-    track_total = str(audio_file_data['chapters_total'])
-    track_string = str(chap_num) + "/" + str(audio_file_data['chapters_total'])
+    if not chap_num == None:
+        track_num = chap_num
+        track_total = str(audio_file_data['chapters_total'])
+        track_string = str(chap_num) + "/" + str(audio_file_data['chapters_total'])
     #  track_string = track_string.encode('utf-8') # ensure its unicode
 
     # encode meta (ie this program) (TENC) maybe (TSSE), "audiobook_reencoder(ffmpeg)-v0.1
@@ -645,23 +723,17 @@ def add_metadata(logger, audio_filename, audio_file_data, chap_num):
     genre="Audiobook"
 
     # Cover art Mime type
-    if imghdr.what(cover_art_filename) == 'png':
-        mime_type = 'image/png'
-    elif imghdr.what(cover_art_filename) == 'jpeg':
-        mime_type = 'image/jpeg'
+    if audio_file_data['cover_art_embeded']:
+        if imghdr.what(cover_art_filename) == 'png':
+            mime_type = 'image/png'
+        elif imghdr.what(cover_art_filename) == 'jpeg':
+            mime_type = 'image/jpeg'
+        else:
+            print("Warning: cover art file format unknow, not embedding cover art")
+            mime_type = None
     else:
-        print("Warning: cover art file format unknow, not embedding cover art")
-        #  return 1
-
-    logger.debug("  ~~~~~~~~~~~~~~~~~ cover art stuff~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    logger.debug("  ~   Audio filename: " + audio_filename)
-    logger.debug("  ~   cover art filename: " + cover_art_filename)
-    logger.debug("  ~   cover art file type: " + imghdr.what(cover_art_filename))
-    logger.debug("  ~   mime type: " + mime_type)
-    logger.debug("  ~   output file format: " + output_format)
-    #  logger.debug("  ~   Audio filename: " + audio_filename
-    logger.debug("  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    #  logger.debug("  ~       Dir: " + os.path.dirname(audio_file_data['filename']))
+        mime_type = None
+            #  return 1
 
     # Add MP3 cover art (id3/APIC)
     if output_format == 'mp3':
@@ -674,21 +746,26 @@ def add_metadata(logger, audio_filename, audio_file_data, chap_num):
         #  aud = ID3(audio_filename)
         
         #add cover art
-        if aud.tags.getall('APIC'):
-            aud.tags.delall("APIC") # Delete existing art
-        aud.tags.add( APIC(
-                #  COVER_FRONT = <PictureType.COVER_FRONT: 3>
-                encoding=3,         # 3 is for UTF8
-                mime=mime_type,  # image/jpeg or image/png
-                type=3,             # 3 is for the cover(front) image
-                desc=u'Cover (front)',
-                data=open(cover_art_filename, 'rb').read()
-        ) )
+        if mime_type:
+            if aud.tags.getall('APIC'):
+                aud.tags.delall("APIC") # Delete existing art
+            aud.tags.add( APIC(
+                    #  COVER_FRONT = <PictureType.COVER_FRONT: 3>
+                    encoding=3,         # 3 is for UTF8
+                    mime=mime_type,  # image/jpeg or image/png
+                    type=3,             # 3 is for the cover(front) image
+                    desc=u'Cover (front)',
+                    data=open(cover_art_filename, 'rb').read()
+            ) )
+
         # Genre
         aud.tags.add(TCON(encoding=3, text=u"Audiobook"))
+
         #Track
         #  aud.tags.add(TRCK(encoding=3, text=u"2/4")) #text=str(track_string))
-        aud.tags.add(TRCK(encoding=3, text=str(track_string)))
+        if not chap_num == None:
+            aud.tags.add(TRCK(encoding=3, text=str(track_string)))
+
         # encoder "audiobook-reencoder(v...)"
         aud.tags.add(TENC(encoding=3, text=encoded_by))
 
@@ -738,8 +815,7 @@ def add_metadata(logger, audio_filename, audio_file_data, chap_num):
         #      audio.add_picture(image)
         #      audio.save()
         #
-
-
+ 
 
     # Adding metadata Genre and encoder
     #  if not config['preferred']['disable_id3_change']:
@@ -751,6 +827,16 @@ def add_metadata(logger, audio_filename, audio_file_data, chap_num):
     #          # makes sure id3 tags are writen and removes some leftovers from m4b files
     #          ffmpeg_metadata += " -metadata compatible_brands= -metadata minor_version= -metadata major_brand= "
     #  return
+
+    logger.debug("  ~~~~~~~~~~~~~~~~~ cover art stuff~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    logger.debug("  ~   Audio filename: " + audio_filename)
+    logger.debug("  ~   cover art filename: " + cover_art_filename)
+    #  logger.debug("  ~   cover art file type: " + imghdr.what(cover_art_filename))
+    logger.debug("  ~   mime type: " + mime_type)
+    logger.debug("  ~   output file format: " + output_format)
+    #  logger.debug("  ~   Audio filename: " + audio_filename
+    logger.debug("  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+
 # End: add_metadata()
 
 
@@ -815,7 +901,20 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
     else:
         samplerate = samplerate_default
     cover_art_same = False
-    ffmpeg_output = os.path.join(temp_root_dir, re.sub(r'\.[a-zA-Z0-9]{3,4}$', '.' + config['preferred']['audio_output_format'], ffmpeg_input))
+
+    # Output filename
+    #   final is orginal dir + filename + new ext   (original_dir/filename.mp3)
+    #   ffmpeg_output = temp dir + random number + final file name (/tmp/audiobook_reencode/432432535235235-filename.mp3)
+    final_output = os.path.splitext(ffmpeg_input)[0] + '.' + config['preferred']['audio_output_format']
+    ffmpeg_output = os.path.join(temp_root_dir, str(random.randrange(1, 999999999999999)) + os.path.basename(final_output))
+
+    #  ffmpeg_output = os.path.join(temp_root_dir,
+    #                               os.path.splitext(os.path.basename(ffmpeg_input))[0] + '.' + config['preferred']['audio_output_format'])
+                                 #  re.sub(r'\.[a-zA-Z0-9]{3,4}$', '.' + config['preferred']['audio_output_format'], ffmpeg_input))
+
+    #  print(config['preferred']['audio_output_format'])
+    #  print(ffmpeg_output)
+
 
     # Deciding to skip encoding
     chapter_it = False
@@ -864,7 +963,7 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
     # ffmpeg_input = os.path.dirname(ffmpeg_input_old) + "/original-" + os.path.basename(ffmpeg_input_old)
     # logger.debug("- Moving '" + os.path.basename(ffmpeg_input_old) + "' to '" + os.path.basename(ffmpeg_input) + "'")
     # if not config['preferred']['test']:
-    #     os.rename(ffmpeg_input_old, ffmpeg_input)
+    #     shutil.move(ffmpeg_input_old, ffmpeg_input)
 
 
     # No re-encode ffmpeg settings
@@ -877,7 +976,9 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
     else:
         #Re-encode options
 
-        # Set Codec and Output file's extention
+
+
+        # Set Codec and Output file's extention TODO Add opus, ogg HERE
         if config['preferred']['audio_output_format'] == 'm4b':
             ffmpeg_audio_codec = " -c:a libfdk_aac"
             # ffmpeg_output = re.sub('\.[a-zA-Z0-9]{3,4}$', '.m4b', audio_file_data['filename'])
@@ -885,6 +986,8 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             # Should be mp3
             ffmpeg_audio_codec = " -c:a libmp3lame"
             # ffmpeg_output = re.sub('\.[a-zA-Z0-9]{3,4}$', '.mp3', audio_file_data['filename'])
+
+
 
         # Set Bitrate and Sample rate
         if not ( config['preferred']['only_add_id3_genre'] or config['preferred']['only_extract_cover_art']):
@@ -907,31 +1010,33 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
 
     # Adding metadata Genre and encoder
     if not config['preferred']['disable_id3_change']:
-        if not (config['preferred']['disable_add_id3_encoded_by'] or config['preferred']['only_add_id3_genre'] ):
-            ffmpeg_metadata= " -metadata encoded_by=\"" + program_name + "\""
-        if not config['preferred']['disable_add_id3_genre'] :
-            ffmpeg_metadata += " -metadata genre=\"Audiobook\""
+        #  if not (config['preferred']['disable_add_id3_encoded_by'] or config['preferred']['only_add_id3_genre'] ):
+        #      ffmpeg_metadata= " -metadata encoded_by=\"" + program_name + "\""
+        #  if not config['preferred']['disable_add_id3_genre'] :
+        #      ffmpeg_metadata += " -metadata genre=\"Audiobook\""
         if config['preferred']['audio_output_format'] == 'mp3':
             # makes sure id3 tags are writen and removes some leftovers from m4b files
-            ffmpeg_metadata += " -metadata compatible_brands= -metadata minor_version= -metadata major_brand= "
+            ffmpeg_metadata += " -id3v2_version 3 -write_id3v1 1 -metadata compatible_brands= -metadata minor_version= -metadata major_brand= "
+        if audio_file_data['remove_chapter_data']:
+            ffmpeg_metadata += " -map_chapters -1 " 
 
     # Cover art: adding it
     #  print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-    if not no_need_to_reencode: #cover_art_same:
-        #  print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-        if config['preferred']['audio_output_format'] == 'm4b':
-            if debug:
-                logger.debug("Warning: embedded cover art in m4b files is currently unimplemented")
-            else:
-                print("Warning: embedded cover art in m4b files is currently unimplemented")
-        if add_cover_art:
-            # should be mp3 and can add cover art
-            #  print("00000000000000000000000000000000000000000000000000000000000000000000000000000000")
-            ffmpeg_cover_art =" -i \"" + audio_file_data['cover_art_file'] + "\" -map 0:0 -map 1:0 -c copy -metadata:s:v title=\"Album cover\" -metadata:s:v comment=\"Cover (front)\""
-            # put after audio input
-        else:
-            logger.debug("Not adding cover art")
-    
+    #  if not no_need_to_reencode: #cover_art_same:
+    #      #  print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+    #      if config['preferred']['audio_output_format'] == 'm4b':
+    #          if debug:
+    #              logger.debug("Warning: embedded cover art in m4b files is currently unimplemented")
+    #          else:
+    #              print("Warning: embedded cover art in m4b files is currently unimplemented")
+    #      if add_cover_art:
+    #          # should be mp3 and can add cover art
+    #          #  print("00000000000000000000000000000000000000000000000000000000000000000000000000000000")
+    #          ffmpeg_cover_art =" -i \"" + audio_file_data['cover_art_file'] + "\" -map 0:0 -map 1:0 -c copy -metadata:s:v title=\"Album cover\" -metadata:s:v comment=\"Cover (front)\""
+    #          # put after audio input
+    #      else:
+    #          logger.debug("Not adding cover art")
+    #
     logger.debug("  ~~~~~~~~~~~~~~~~~file info (audio_file_data)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     logger.debug("  ~   Encoding file: " + os.path.basename(audio_file_data['filename']))
     logger.debug("  ~       Dir: " + os.path.dirname(audio_file_data['filename']))
@@ -943,9 +1048,10 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
     logger.debug("  ~      Greater than 32k bitrate: " + str( not audio_file_data['low_bitrate'] ))
     logger.debug("  ~      Embedded cover art: " + str( audio_file_data['cover_art_embeded'] ))
     logger.debug("  ~      Cover art file: " + os.path.basename(audio_file_data['cover_art_file']))
-    logger.debug(" ~    Chapters: " +  str(audio_file_data['chapters_exist']))
+    logger.debug("  ~      Chapters: " +  str(audio_file_data['chapters_exist']))
+    logger.debug("------------------------------- audio_file_data (raw) ---------------------------")
     logger.debug(pprint.pformat(audio_file_data))
-    logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-------------------~~~~~~~~~~~~")
 
     if audio_file_data['chapters_exist']:
         for chap in audio_file_data['chapters']:
@@ -954,14 +1060,13 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
     
     logger.debug(" ~~~~~~~~~~~~~~~~~~~~~ file encode info ~~~~~~~~~~~~~~~~~~~~~~~~")
     logger.debug(" ~   FFMPEG flags")
-    logger.debug(" ~    bitrate: " +  ffmpeg_bitrate)
-    logger.debug(" ~    samplerate: " +  ffmpeg_samplerate)
-    logger.debug(" ~    cover art: " +  ffmpeg_cover_art)
-    logger.debug(" ~    metadata: " +  ffmpeg_metadata)
-    logger.debug(" ~    loudnorm: " +  ffmpeg_loudnorm)
-    logger.debug(" ~    audio codec: " +  ffmpeg_audio_codec)
-    logger.debug(" ~    input: " +  os.path.basename(ffmpeg_input))          
-    logger.debug(" ~    output: " +  os.path.basename(ffmpeg_output))
+    logger.debug(" ~      bitrate: " +  ffmpeg_bitrate)
+    logger.debug(" ~      samplerate: " +  ffmpeg_samplerate)
+    logger.debug(" ~      metadata: " +  ffmpeg_metadata)
+    logger.debug(" ~      loudnorm: " +  ffmpeg_loudnorm)
+    logger.debug(" ~      audio codec: " +  ffmpeg_audio_codec)
+    logger.debug(" ~      input: " +  os.path.basename(ffmpeg_input))          
+    logger.debug(" ~      output: " +  os.path.basename(ffmpeg_output))
     logger.debug("  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     
     if no_need_to_reencode:
@@ -979,7 +1084,7 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             ffmpeg_output_chap_temp_dirname = os.path.join(temp_root_dir, ffmpeg_output_subdir)
 
             # Remove chapter data from single file
-            ffmpeg_metadata += " -map_chapters -1"
+            #  ffmpeg_metadata += " -map_chapters -1"
 
             logger.debug("making tmp dir: " + ffmpeg_output_chap_temp_dirname)
             if not os.path.isdir(ffmpeg_output_chap_temp_dirname):
@@ -988,11 +1093,15 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             # total tracks
             ffmpeg_track_total = str(audio_file_data['chapters_total'])
 
-            ffmpeg_single_tmp = os.path.join(temp_root_dir, "temp-single-" + str(random.randrange(1,999999999)) + "." + config['preferred']['audio_output_format'])
+            ffmpeg_single_tmp = os.path.join(temp_root_dir, "temp-single-" + str(random.randrange(1,99999999999999)) + "." + config['preferred']['audio_output_format'])
             
+
             # Encoding (1st stage) 
             #   copy id3, Remove chapter data, encode w/ codec/bitrate/samplerate, vol normalize
-            ffmpeg_cmd = "ffmpeg  " +  ffmpeg_aax_activation_parameters(ffmpeg_input) + " -loglevel error -y -i \"" + ffmpeg_input + "\"" + ffmpeg_audio_codec + ffmpeg_bitrate + ffmpeg_samplerate + ffmpeg_loudnorm + " -id3v2_version 3 -write_id3v1 1 -map_chapters -1  -metadata compatible_brands= -metadata minor_version= -metadata major_brand= \"" + ffmpeg_single_tmp + "\"" 
+            ffmpeg_cmd = "ffmpeg  " +  ffmpeg_aax_activation_parameters(ffmpeg_input) + \
+                    " -loglevel error -y -i \"" + ffmpeg_input + "\"" + \
+                    ffmpeg_audio_codec + ffmpeg_bitrate + ffmpeg_samplerate + ffmpeg_loudnorm + ffmpeg_metadata + \
+                    " \"" + ffmpeg_single_tmp + "\"" 
 
             if debug:
                 logging.debug("    Encoding (" + str(file_count) + " of " + str(total_count) + "): " + os.path.basename(ffmpeg_input_old) )
@@ -1014,27 +1123,27 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             x=0
             for chap in audio_file_data['chapters']:    
 
-    # DELETE ME
-                #  x += 1
-                #  if x == 5:
-                    #  break
-
                 # track num
                 ffmpeg_track_num = str(audio_file_data['chapters'][chap]['id'])
-                # output file name
+                
+                # Output file name
                 ffmpeg_output = os.path.join(ffmpeg_output_chap_temp_dirname, audio_file_data['chapters'][chap]['name'] + \
                                              "." + config['preferred']['audio_output_format'])
-                ffmpeg_output_tmp = os.path.join(temp_root_dir, "temp" + str(random.randrange(1,9999999)) + "." + config['preferred']['audio_output_format'])
-                chap_filename_tmp =  os.path.join(temp_root_dir, "temp" + str(random.randrange(1,9999999)) + "." + config['preferred']['audio_output_format'])
+                ffmpeg_output_tmp = os.path.join(temp_root_dir, 
+                                                 "temp" + str(random.randrange(1,9999999999999999)) + "." + config['preferred']['audio_output_format'] )
+                chap_filename_tmp =  os.path.join(temp_root_dir, 
+                                                  "temp" + str(random.randrange(1,9999999999999999)) + "." + config['preferred']['audio_output_format'])
 
 
                 # metadata track info
-                ffmpeg_metadata_track = " -metadata track=\"" + ffmpeg_track_num + "/" + ffmpeg_track_total + "\""
-                # time
+                #  ffmpeg_metadata_track = " -metadata track=\"" + ffmpeg_track_num + "/" + ffmpeg_track_total + "\""
+
+                # Time
                 if float(audio_file_data['chapters'][chap]['start_time']) == 0:
                     ffmpeg_time = " -t " + str(audio_file_data['chapters'][chap]['duration'])
                 else:
-                    ffmpeg_time = " -ss " + str(audio_file_data['chapters'][chap]['start_time']) + " -t " + str(audio_file_data['chapters'][chap]['duration'])                
+                    ffmpeg_time = " -ss " + str(audio_file_data['chapters'][chap]['start_time']) + " -t " + \
+                        str(audio_file_data['chapters'][chap]['duration'])                
 
      
                 # Encodding: spliting chapters (2nd stage)
@@ -1066,21 +1175,17 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
 
                 #  ffmpeg_cmd_add_art = "ffmpeg -loglevel error" + " -y -i \"" + ffmpeg_output_tmp + "\"" + ffmpeg_cover_art + \
                     #  ffmpeg_metadata + ffmpeg_metadata_track + " -id3v2_version 3 -write_id3v1 1 \"" + ffmpeg_output + "\""
-
-                if debug:
-                    logger.debug("         Adding cover art and ID3 tags")
-                else:
-                    print("         Adding cover art and ID3 tags")
-                logger.debug(" ~~~~~~~~~~~~~~ encoding split chap ~~~~~~~~~~~~~~~~~~~~~")
-                logger.debug(" ~    metadata tracks: " +  ffmpeg_metadata_track)            
+                logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ encoding split chap ~~~~~~~~~~~~~~~~~~~~~")
+                #  logger.debug(" ~    metadata tracks: " +  ffmpeg_metadata_track)
                 logger.debug(" ~    metadata: " +  ffmpeg_metadata)
                 logger.debug(" ~    record time: " +  ffmpeg_time)           
                 
                 logger.debug(" ~    tmp filename: " +  chap_filename_tmp)           
                 logger.debug(" ~    output dir: " +  ffmpeg_output_chap_temp_dirname)           
                 logger.debug(" ~    output: " +  os.path.basename(ffmpeg_output))
-                logger.debug(" ~~~~~~~~~~~~~~ encoding split chap (2nd) ~~~~~~~~~~~~~~~")
-                logger.debug(" CMD: " + ffmpeg_cmd)
+                logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ encoding split chap (2nd) ~~~~~~~~~~~~~~~")
+                logger.debug(" ~ CMD: " + ffmpeg_cmd)
+                logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                 #  logger.debug("  ~~~~~~~~~~~~~~~~~~ ffmpeg add cover art    ~~~~~~~~~~~~")
                 #  logger.debug(" CMD: " + ffmpeg_cmd_add_art)
                 #  logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -1089,7 +1194,12 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
                 #  encoder_error = reencode_audio_file_ffmpeg(logger, ffmpeg_cmd_add_art, ffmpeg_output_tmp, ffmpeg_output, ffmpeg_cover_art)
 
 
-                
+
+                if debug:
+                    logger.debug("         Adding cover art and ID3 tags")
+                else:
+                    print("         Adding cover art and ID3 tags")
+                 
                 # add metadata to audio file (currently only add cover art because ffmpeg stuff works as is, so why change it)
                 #   add_metadata(logstuff, audiofilename, audiodatadic, chapnumber)
                 meta_status = add_metadata(logger, chap_filename_tmp, audio_file_data, audio_file_data['chapters'][chap]['id'])
@@ -1097,7 +1207,7 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
 
                 logger.debug("Moving tmp chapter file, to  ")
                 if not config['preferred']['test']:
-                    os.rename(chap_filename_tmp, ffmpeg_output)
+                    shutil.move(chap_filename_tmp, ffmpeg_output)
 
             #      if encoder_error:
             #          logger.debug("Encoding failed on \"" + audio_file_data['chapters'][chap]['name'] + "\", stopping encoding of rest of book")
@@ -1105,7 +1215,7 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             #      else:
             #          logger.debug("Moving tmp chapter file, to  ")
             #          if not config['preferred']['test']:
-            #              os.rename(ffmpeg_output_tmp, ffmpeg_output)
+            #              shutil.move(ffmpeg_output_tmp, ffmpeg_output)
             #  # end chapter loop, encoding done
 
             # dir temp to move
@@ -1116,10 +1226,10 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             ####################################
             # Encoding - Not-Chaptered
 
-            ffmpeg_output = os.path.join(temp_root_dir,os.path.basename(ffmpeg_input))
+            #  ffmpeg_output = os.path.join(temp_root_dir,os.path.basename(ffmpeg_input))
             
             # Creating ffmpeg command
-            ffmpeg_cmd = "ffmpeg -loglevel error" + " -y -i \"" + ffmpeg_input + "\"" + ffmpeg_cover_art + ffmpeg_audio_codec + \
+            ffmpeg_cmd = "ffmpeg -loglevel error" + " -y -i \"" + ffmpeg_input + "\"" + ffmpeg_audio_codec + \
                 ffmpeg_bitrate + ffmpeg_samplerate + ffmpeg_metadata + ffmpeg_loudnorm + " \"" + ffmpeg_output + "\""
 
             logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -1137,21 +1247,35 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             logger.debug(" CMD: " + ffmpeg_cmd)
             logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
-            # Encoding file, without chapter
-            print("    Encoding (" + str(file_count) + " of " + str(total_count) + "): " + os.path.basename(ffmpeg_input_old) )
             if no_need_to_reencode:
                 if debug:
                     logger.debug("      Skipping: This file has likely already been encoded by this program.")
                 else:
                     print("      Skipping: This file has likely already been encoded by this program.")
+                return
         
-            
+ 
+            # Encoding file, without chapter
+            print("    Encoding (" + str(file_count) + " of " + str(total_count) + "): " + os.path.basename(ffmpeg_input_old) )           
+
             # Send to Encoder
             encoder_error = reencode_audio_file_ffmpeg(logger, ffmpeg_cmd, ffmpeg_input, ffmpeg_output, ffmpeg_cover_art)
             if encoder_error:
                 logger.debug("Encoding failed")
+            else:
+                # no errors add meta 
+                if debug:
+                    logger.debug("         Adding cover art and ID3 tags")
+                else:
+                    print("         Adding cover art and ID3 tags")
+                # add metadata to audio file (currently only add cover art because ffmpeg stuff works as is, so why change it)
+                #   add_metadata(logstuff, audiofilename, audiodatadic, chapnumber)
+                meta_status = add_metadata(logger, ffmpeg_output, audio_file_data, None)
+ 
+
             temp_output = ffmpeg_output
-            final_output = ffmpeg_input
+
+            #  final_output = ffmpeg_input
         # end single file encoding
 
         # Error delete tmp
@@ -1159,8 +1283,10 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             logger.debug("encoding failed, deleting temporary file:")
             if not config['preferred']['test'] and os.path.exists(temp_output):
                 os.remove(temp_output)
-        else: 
+        else:
             # encoding sucess
+
+
             if chapter_it:
                 logger.debug("Encoding success: moving old file to backup(in desired), moving new file to original")
                 
@@ -1170,23 +1296,24 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
                         new_filename = os.path.join(os.path.dirname(ffmpeg_input), "original-" + os.path.basename(ffmpeg_input))
                         if os.path.exists(new_filename):
                             new_filename = os.path.join(os.path.dirname(ffmpeg_input), "original2-" + os.path.basename(ffmpeg_input))
-                        os.rename(ffmpeg_input,new_filename)
+                        shutil.move(ffmpeg_input,new_filename)
                     # move temp to original location
                     if os.path.exists(final_output):
                         # if folder already exists , move to "folder-new"
                         final_output = final_output + "-new"
-                    os.rename(temp_output,final_output)
+                    logger.debug("Moving: " + temp_output + "\nTo: " + final_output)
+                    shutil.move(temp_output,final_output)
             else: # single file
                 if not config['preferred']['test']:
                     if config['preferred']['keep_original_files']:
                         new_filename = os.path.join(os.path.dirname(ffmpeg_input), "original-" + os.path.basename(ffmpeg_input))
                         if os.path.exists(new_filename):
                             new_filename = os.path.join(os.path.dirname(ffmpeg_input), "original2-" + os.path.basename(ffmpeg_input))
-                        os.rename(ffmpeg_input,new_filename)
+                        shutil.move(ffmpeg_input,new_filename)
                     if os.path.exists(final_output):
                         # if folder already exists , delete
                         os.remove(final_output)
-                    os.rename(temp_output,final_output)
+                    shutil.move(temp_output,final_output)
     return
 # end encode_audio_files()
 
@@ -1229,7 +1356,7 @@ def reencode_audio_file_ffmpeg(logger, ffmpeg_cmd, ffmpeg_input, ffmpeg_output, 
                     print("   Moving files back to original state, and continuing to next file")
                 if os.path.isfile(ffmpeg_output): 
                     os.remove(ffmpeg_output)
-                os.rename(ffmpeg_input,ffmpeg_output)
+                shutil.move(ffmpeg_input,ffmpeg_output)
             else:
                 # Encoding failed, Exiting
                 if debug: logger.debug("Exiting after failure")
@@ -1313,12 +1440,14 @@ def extract_cover_art(logger, dirpath, audio_files, audio_file_data, single_file
     # See if we can fing cover art in dir
     if True:
         # Get lists of mp3, m4b/m4a, and jpg/png (full dir)
-        cover_art_list = glob.glob(os.path.join(dirpath,'*.png')) + glob.glob(os.path.join(dirpath,'*.jpg')) 
+        cover_art_list = glob.glob(os.path.join(dirpath,'*.[pP[nN][gG]')) + glob.glob(os.path.join(dirpath,'*.[jJ][pP][gG]')) 
         # mp3_files = glob.glob(os.path.join(dirpath,'*.[mM][pP]3'))
         # m4b_files = glob.glob(os.path.join(dirpath,'*.[mM]4[aAbB]'))
         # audio_files = mp3_files + m4b_files
 
         # Check to see if cover art should not be added to files in dir
+        #  similarity = filename_similarity(logger, audio_files)
+        #  logger.debug(" File similarity :" + similarty)
         if not filename_similarity(logger, audio_files):
             logger.debug("-    > Cover art will not be added")
             dir_filename_similarity = False
@@ -1368,25 +1497,28 @@ def extract_cover_art(logger, dirpath, audio_files, audio_file_data, single_file
                 # add similarity to data file, just in case needed
                 audio_file_data[audio_file]['dir_filename_similarity'] = dir_filename_similarity
                 # extract art
-                if audio_file_data.get(audio_file)['cover_art_embeded']:
+                if audio_file_data[audio_file]['cover_art_embeded']:
                     file_with_embedded_cover_art = audio_file
                     
                     # Create random filename
-                    random_cover_art_name = os.path.join(temp_root_dir, str(int(random.random()*100000000000)) + ".jpg")
+                    random_cover_art_name = os.path.join(temp_root_dir, str(int(random.random()*10000000000000000)) + ".jpg")
                     #extract cover art
                     extract_cover_art_ffmpeg(logger, file_with_embedded_cover_art, random_cover_art_name, single_file)
                     audio_file_data[audio_file]['cover_art_file'] = random_cover_art_name
+                    dir_cover_art = random_cover_art_name
                     logger.debug("-    > Using cover art embedded in : " + os.path.basename(file_with_embedded_cover_art))
-                else:
+                #  else:
                     # no embedded art
-                    if dir_cover_art:
+                    #  if dir_cover_art:
                         # cover art is in dir, set it to data file
-                        audio_file_data[audio_file]['cover_art_file'] = dir_cover_art
+                        #  audio_file_data[audio_file]['cover_art_file'] = dir_cover_art
 
 
     logger.debug("-    > Cover art is: " + os.path.basename(cover_art))
-    return audio_file_data
+    return dir_cover_art
 # end def extract_cover_art
+
+
 
 
 
@@ -1479,7 +1611,7 @@ def main():
     logger.debug("*********************************************************************")
 
     # clean up tmp dir in case it ran before TODO remove and use tmp module
-    clean_up_tmp_dir()
+    #  clean_up_tmp_dir()
    
     # Processing
     if os.path.isfile(path):
@@ -1556,7 +1688,7 @@ def main():
 
  
     # print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"
-    logger.debug(pprint.pformat(audio_file_data))
+    #  logger.debug(pprint.pformat(audio_file_data))
     #  exit()
 
 
