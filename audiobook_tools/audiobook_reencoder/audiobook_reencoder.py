@@ -116,7 +116,7 @@ import logging # for logging
 import datetime # for logging
 import random
 import shutil
-# json
+# import json imghdr mutegen
 
 
 
@@ -161,7 +161,7 @@ def parse_args():
     parser.add_argument('--force-normalization', help="Force re-encoder to normalize volume. By default, normalization is skipped if this encoder was likely run previously on file", action="store_true")
     parser.add_argument('--delete-non-audio-files', help="Delete all non-audio files(not implemented yet)", action="store_true")
     parser.add_argument('--delete-non-audio-image-files', help="Delete all non-audio, or non-image files(not implemented yet)", action="store_true")
-    # parser.add_argument('--', help="", action="store_true")
+    parser.add_argument('--delete-ebooks', help="Deletes ebooks (unimplemeted)", action="store_true")
     # parser.add_argument('--', help="", action="store_true")
     # parser.add_argument('--', help="", action="store_true")
     # parser.add_argument('--', help="", action="store_true")
@@ -381,10 +381,6 @@ def extract_audiofile_data(logger, audio_file):
     # https://trac.ffmpeg.org/wiki/FFprobeTips
     # ffprobe -loglevel -8 -show_format -show_chapters -show_streams
 
-
-    # ffmpeg -i in.mp3 -f ffmetadata metadata.txt
-    # ffmpeg32 -i in.mp3 -i metadata.txt -map_metadata 1 -c:a copy -id3v2_version 3 -write_id3v1 1 out.mp3
-    # Example of output
 
     import json
 
@@ -608,7 +604,7 @@ def clean_up_tmp_dir():
     """
     Deletes the tmp dir
     """
-    temp_root_dir = os.path.join(tempfile.gettempdir(), 'audiobook_reencode')
+    temp_root_dir = os.path.join(tempfile.gettempdir(), 'audiobook_reencode', str(random.randrange(1,99999999)))
     # dont delete log files
 
     logging.debug("Cleaning up tmp dir:" + temp_root_dir)
@@ -1017,26 +1013,9 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
         if config['preferred']['audio_output_format'] == 'mp3':
             # makes sure id3 tags are writen and removes some leftovers from m4b files
             ffmpeg_metadata += " -id3v2_version 3 -write_id3v1 1 -metadata compatible_brands= -metadata minor_version= -metadata major_brand= "
-        if audio_file_data['remove_chapter_data']:
+        if audio_file_data['remove_chapter_data']: #FIXME maybe
             ffmpeg_metadata += " -map_chapters -1 " 
 
-    # Cover art: adding it
-    #  print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-    #  if not no_need_to_reencode: #cover_art_same:
-    #      #  print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-    #      if config['preferred']['audio_output_format'] == 'm4b':
-    #          if debug:
-    #              logger.debug("Warning: embedded cover art in m4b files is currently unimplemented")
-    #          else:
-    #              print("Warning: embedded cover art in m4b files is currently unimplemented")
-    #      if add_cover_art:
-    #          # should be mp3 and can add cover art
-    #          #  print("00000000000000000000000000000000000000000000000000000000000000000000000000000000")
-    #          ffmpeg_cover_art =" -i \"" + audio_file_data['cover_art_file'] + "\" -map 0:0 -map 1:0 -c copy -metadata:s:v title=\"Album cover\" -metadata:s:v comment=\"Cover (front)\""
-    #          # put after audio input
-    #      else:
-    #          logger.debug("Not adding cover art")
-    #
     logger.debug("  ~~~~~~~~~~~~~~~~~file info (audio_file_data)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     logger.debug("  ~   Encoding file: " + os.path.basename(audio_file_data['filename']))
     logger.debug("  ~       Dir: " + os.path.dirname(audio_file_data['filename']))
@@ -1080,12 +1059,14 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
 
             # Create dir to put chapter files (remove invalid chars)
             input_files_dir = os.path.dirname(ffmpeg_input)
-            ffmpeg_output_subdir = re.sub(r"[<>:;\"'|?*\\\/]", "", audio_file_data['title'])
+            
+            # subdirectory for chaptered
+            if audio_file_data['title'] != '':
+                ffmpeg_output_subdir = re.sub(r"[<>:;\"'|?*\\\/]", "", audio_file_data['title'])
+            else:
+                ffmpeg_output_subdir = os.path.splitext(os.path.basename(audio_file_data['filename']))[0]
+            # Temp dir for chapters
             ffmpeg_output_chap_temp_dirname = os.path.join(temp_root_dir, ffmpeg_output_subdir)
-
-            # Remove chapter data from single file
-            #  ffmpeg_metadata += " -map_chapters -1"
-
             logger.debug("making tmp dir: " + ffmpeg_output_chap_temp_dirname)
             if not os.path.isdir(ffmpeg_output_chap_temp_dirname):
                 os.mkdir(ffmpeg_output_chap_temp_dirname)
@@ -1138,7 +1119,7 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
                 # metadata track info
                 #  ffmpeg_metadata_track = " -metadata track=\"" + ffmpeg_track_num + "/" + ffmpeg_track_total + "\""
 
-                # Time
+                # Time (durration/start time)
                 if float(audio_file_data['chapters'][chap]['start_time']) == 0:
                     ffmpeg_time = " -t " + str(audio_file_data['chapters'][chap]['duration'])
                 else:
@@ -1154,7 +1135,6 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
                 logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~") 
                 logger.debug(" ~~~~~~~~~~~~~~ ( Chap " + ffmpeg_track_num + " ) ~~~~~~~~~~~~~~~~~~~~") 
                 logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~") 
-
                 if debug:
                     logging.debug("         Spliting chapter: " + ffmpeg_track_num + "/" + ffmpeg_track_total)
                 else:
@@ -1166,15 +1146,6 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
                     logger.debug("Encoding failed on \"" + audio_file_data['chapters'][chap]['name'] + "\", stopping encoding of rest of book")
                     break
 
-                # Encoding: adding cover are and metadata (3rd stage)
-                #  ffmpeg_cmd_add_art = "ffmpeg -loglevel error" + " -y -i \"" + ffmpeg_output_tmp + "\"" + ffmpeg_cover_art + " -c:a copy" + ffmpeg_metadata + ffmpeg_metadata_track + "  -id3v2_version 3 -write_id3v1 1 \"" + ffmpeg_output + "\""
-
-
-                #  chap_file_info['chapter'] =  str(audio_file_data['chapters'][chap]['id'])
-
-
-                #  ffmpeg_cmd_add_art = "ffmpeg -loglevel error" + " -y -i \"" + ffmpeg_output_tmp + "\"" + ffmpeg_cover_art + \
-                    #  ffmpeg_metadata + ffmpeg_metadata_track + " -id3v2_version 3 -write_id3v1 1 \"" + ffmpeg_output + "\""
                 logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ encoding split chap ~~~~~~~~~~~~~~~~~~~~~")
                 #  logger.debug(" ~    metadata tracks: " +  ffmpeg_metadata_track)
                 logger.debug(" ~    metadata: " +  ffmpeg_metadata)
@@ -1186,21 +1157,15 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
                 logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ encoding split chap (2nd) ~~~~~~~~~~~~~~~")
                 logger.debug(" ~ CMD: " + ffmpeg_cmd)
                 logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-                #  logger.debug("  ~~~~~~~~~~~~~~~~~~ ffmpeg add cover art    ~~~~~~~~~~~~")
-                #  logger.debug(" CMD: " + ffmpeg_cmd_add_art)
-                #  logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
                 # run the encoding
                 #  encoder_error = reencode_audio_file_ffmpeg(logger, ffmpeg_cmd_add_art, ffmpeg_output_tmp, ffmpeg_output, ffmpeg_cover_art)
 
-
-
-                if debug:
-                    logger.debug("         Adding cover art and ID3 tags")
-                else:
-                    print("         Adding cover art and ID3 tags")
                  
-                # add metadata to audio file (currently only add cover art because ffmpeg stuff works as is, so why change it)
+                # Add Metadata:
+                #   to audio file (currently only add cover art because ffmpeg stuff works as is, so why change it)
+                if debug:  logger.debug("         Adding cover art and ID3 tags")
+                else:       print("         Adding cover art and ID3 tags")
                 #   add_metadata(logstuff, audiofilename, audiodatadic, chapnumber)
                 meta_status = add_metadata(logger, chap_filename_tmp, audio_file_data, audio_file_data['chapters'][chap]['id'])
                 
@@ -1209,18 +1174,10 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
                 if not config['preferred']['test']:
                     shutil.move(chap_filename_tmp, ffmpeg_output)
 
-            #      if encoder_error:
-            #          logger.debug("Encoding failed on \"" + audio_file_data['chapters'][chap]['name'] + "\", stopping encoding of rest of book")
-            #          break
-            #      else:
-            #          logger.debug("Moving tmp chapter file, to  ")
-            #          if not config['preferred']['test']:
-            #              shutil.move(ffmpeg_output_tmp, ffmpeg_output)
-            #  # end chapter loop, encoding done
 
             # dir temp to move
             temp_output = ffmpeg_output_chap_temp_dirname
-            # dir to move to
+            # dir to move to [input_file_loc]/[title_sub_dir]
             final_output = os.path.join(input_files_dir,ffmpeg_output_subdir)
         else:
             ####################################
@@ -1260,23 +1217,23 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
 
             # Send to Encoder
             encoder_error = reencode_audio_file_ffmpeg(logger, ffmpeg_cmd, ffmpeg_input, ffmpeg_output, ffmpeg_cover_art)
+
             if encoder_error:
                 logger.debug("Encoding failed")
             else:
-                # no errors add meta 
+                # no errors add meta     
+                # Add Metadata to audio file (currently only add cover art because ffmpeg stuff works as is, so why change it)
                 if debug:
                     logger.debug("         Adding cover art and ID3 tags")
                 else:
                     print("         Adding cover art and ID3 tags")
-                # add metadata to audio file (currently only add cover art because ffmpeg stuff works as is, so why change it)
                 #   add_metadata(logstuff, audiofilename, audiodatadic, chapnumber)
                 meta_status = add_metadata(logger, ffmpeg_output, audio_file_data, None)
  
-
             temp_output = ffmpeg_output
 
             #  final_output = ffmpeg_input
-        # end single file encoding
+        # End: single file encoding
 
         # Error delete tmp
         if encoder_error:
@@ -1284,26 +1241,30 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
             if not config['preferred']['test'] and os.path.exists(temp_output):
                 os.remove(temp_output)
         else:
-            # encoding sucess
+            # Success: All encoding 
 
-
-            if chapter_it:
+            # Moving temp to new files
+            if chapter_it: # Chaptered
                 logger.debug("Encoding success: moving old file to backup(in desired), moving new file to original")
                 
-                # create backup of original
+                # Moving temp files to final location
                 if not config['preferred']['test']:
                     if config['preferred']['keep_original_files']:
+                        # Create backup
                         new_filename = os.path.join(os.path.dirname(ffmpeg_input), "original-" + os.path.basename(ffmpeg_input))
                         if os.path.exists(new_filename):
                             new_filename = os.path.join(os.path.dirname(ffmpeg_input), "original2-" + os.path.basename(ffmpeg_input))
                         shutil.move(ffmpeg_input,new_filename)
-                    # move temp to original location
+                    # Move temp to original location
                     if os.path.exists(final_output):
                         # if folder already exists , move to "folder-new"
-                        final_output = final_output + "-new"
-                    logger.debug("Moving: " + temp_output + "\nTo: " + final_output)
-                    shutil.move(temp_output,final_output)
-            else: # single file
+                        if os.path.isfile(final_output): # it should be a dir but just in case
+                            final_output = os.path.splitext(final_output)[0] + '-new.' +  os.path.splitext(final_output)[1]
+                        elif os.path.isdir(final_output):
+                            final_output = final_output + "-new"
+                        logger.debug("Moving: " + temp_output + "\nTo: " + final_output)
+                        shutil.move(temp_output,final_output)
+            else: # Single file
                 if not config['preferred']['test']:
                     if config['preferred']['keep_original_files']:
                         new_filename = os.path.join(os.path.dirname(ffmpeg_input), "original-" + os.path.basename(ffmpeg_input))
@@ -1311,11 +1272,12 @@ def reencode_audio_file(logger, audio_file_data, file_count, total_count):
                             new_filename = os.path.join(os.path.dirname(ffmpeg_input), "original2-" + os.path.basename(ffmpeg_input))
                         shutil.move(ffmpeg_input,new_filename)
                     if os.path.exists(final_output):
-                        # if folder already exists , delete
+                        # if folder already exists , delete, it shouldn't be there anyway
                         os.remove(final_output)
                     shutil.move(temp_output,final_output)
+            # End: Moving
     return
-# end encode_audio_files()
+# End encode_audio_files()
 
 
 

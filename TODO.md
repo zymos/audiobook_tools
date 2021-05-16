@@ -41,10 +41,13 @@ lxml.etree.SerialisationError: IO_ENCODER
 * Bug: File does not exist shows as 0 files
 
 # audiobook-reenconder
-* check m4b split
+* Create temp dir per instance ?done?
+* Add parallel process files
 * test output m4b, ogg, opus
 * *add cover art non mp3
+* remove ebook options (pdf,epub,...)
 * Bug
   * chap with ~= 0 should be ignored: Done?
   * -new is moveing wrong thing
   * fix input bandwidth < output bandwidth: skip
+
