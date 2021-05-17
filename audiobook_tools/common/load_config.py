@@ -176,7 +176,7 @@ def load_config(config_filename, args, tmp_dir):
                           'disable_add_id3_genre', 'only_add_id3_genre', 'force_add_cover_art', 'delete_image_file_after_adding', 
                           'audio_output_format', 'bitrate', 'samplerate', 'threads', 'keep_original_files', 'test', 'disable_normalize', 
                           'disable_add_id3_encoded_by', 'ignore_errors', 'disable_id3_change', 'force_normalization', 
-                          'delete_non_audio_files', 'delete_non_audio_image_files', 'debug')
+                          'delete_non_audio_files', 'delete_non_audio_image_files', 'debug', 'force_reencode')
         # go through each setting
         for setting in preferred_vars:
             config['preferred'].update({setting: ''})

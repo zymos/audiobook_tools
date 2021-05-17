@@ -45,9 +45,11 @@ lxml.etree.SerialisationError: IO_ENCODER
 * Add parallel process files
 * test output m4b, ogg, opus
 * *add cover art non mp3
-* remove ebook options (pdf,epub,...)
+* remove all non-audio/image
 * Bug
   * chap with ~= 0 should be ignored: Done?
   * -new is moveing wrong thing
   * fix input bandwidth < output bandwidth: skip
-
+  * Seas the Day: Bad Guys Series, Book 5/ Initiate: Animus, Book 1/ no encoded by
+  * no delete old
+  * split not copying
