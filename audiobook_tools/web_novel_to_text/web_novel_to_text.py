@@ -136,7 +136,8 @@ Output filename can be dynamic, using variables extracted from webpage. \n\
     parser.add_argument('INPUT', type=str, help='URL of post or file with list of URLs')
 
     #  parser.add_argument('-f', '--file', help='Use a file with list of URLs, instead of URL in CLI', action="store_true")
-    #  parser.add_argument('-a', '--keep-asterisk', help='Speaks out asterisk[*] (off by default)', action="store_true")
+    parser.add_argument('--remove-non-eu-chars', help='Removes non-European charators (non-latin1). ie Arabic/Chinese/Japanese/etc', action="store_true")
+    parser.add_argument('--remove-non-ascii-chars', help='Removes non-ASCII charators', action="store_true")
     #  parser.add_argument('-q', '--keep-quotes', help='leave double quotes in place and may or may not be spoken (off by default)', action="store_true")
     #  parser.add_argument('--keep-problematic-chars', help=r'don\'t removes problematic charactors, that are often spoken [\"\\\/*]', action="store_true")
     parser.add_argument('--no-emphasis', help='don\'t emphasize some text in ssml', action="store_true")
@@ -540,7 +541,7 @@ def extract_txt_wordpress(site_code):
     # convert to string
     article_html = ''
     for line in content:
-        article_html += str(etree.tostring(line).decode('utf-8', errors='ignore'))
+        article_html += str(etree.tostring(line, encoding='utf-8').decode('utf-8', errors='ignore'))
 
     meta = { 'author': author,
             'book_title': book_title,

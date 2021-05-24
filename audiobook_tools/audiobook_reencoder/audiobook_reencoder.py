@@ -1845,7 +1845,7 @@ def main():
         if debug: 
             logger.debug("Generating audiobook data...")
         else:
-            print("Generating audiobook files data...")
+            print("Generating audiobook files data...", end="")
             # audio_file_data.update( process_directory(logger, dirpath, audio_files, audio_file_data) )      
         audio_file = [path]
         # audio_file_data[audio_file] = {}
@@ -1862,7 +1862,7 @@ def main():
         if debug: 
             logger.debug("Extracting audiobook data from directory...")
         else:
-            print("Generating audiobook files data...")
+            print("Generating audiobook files data...", end="")
         for (dirpath, dir_list_in_dirpath, file_list) in os.walk(path):
             logger.debug(" ......................................................................")
             logger.debug(" : Processing directory: " + dirpath)

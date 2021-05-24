@@ -154,7 +154,8 @@ def load_config(config_filename, args, tmp_dir):
     # web-novel-to-text.py config
     if config_filename == "web-novel-to-text.conf":
         preferred_vars = ('delay_between_requests', 'format', 'speak_asterisk', 'dont_remove_quotes', 'dont_emphasize',
-                'dont_remove_asterisk', 'filename_format', 'debug', 'output_filename', 'test', 'remove_all_bad_chars', 'remove_bad_char')
+                            'dont_remove_asterisk', 'filename_format', 'debug', 'output_filename', 'test', 
+                            'remove_all_bad_chars', 'remove_bad_char', 'remove_non_eu_chars', 'remove_non_ascii_char')
         # go through each setting
         for setting in preferred_vars:
             config['preferred'].update({setting: ''})
@@ -193,7 +194,7 @@ def load_config(config_filename, args, tmp_dir):
     elif config_filename == "online-tts.conf":
         preferred_vars = ('voice', 'profile', 'locale', 'gender', 'key', 'input_format', 'audio_format', 'audio_settings', 'gtts_lang', 
                           'gtts_tld', 'url_parameters', 'delay_between_requests', 'max_charactors','speaking_rate', 'debug', 'test', 
-                          'remove_all_bad_chars', 'remove_bad_chars')
+                          'remove_all_bad_chars', 'remove_bad_chars', 'remove_non_eu_chars', 'remove_non_ascii_char')
 
         if config.get(config['GENERAL']['tts_service']) is None :
             print("Error: tts serivce \"" + config['GENERAL']['tts_service'] +

@@ -13,23 +13,46 @@ text = remove_nonstandard_chars(text)
 #############################################################################
 # Remove non-standard charactors
 #
-def remove_nonstandard_chars(text):
+def remove_nonstandard_chars(text, config):
     """
     Removes non-standard charactors
     Ref: https://stackoverflow.com/questions/92438/stripping-non-printable-characters-from-a-string-in-python
     """
 
+    # remove non-european chars (non latin-1)
+    if config['preferred']['remove_non_eu_chars']:
+        text.encode('latin-1', 'ignore').decode('utf-8', 'ignore')
+
+    # remove non-ASCII chars
+    if config['preferred']['remove_non_ascii_char']:
+        text.encode('ascii', 'ignore').decode('utf-8', 'ignore')
+
+    
     # remove all non-unicode
     text = bytes(text, 'utf-8').decode('utf-8', 'ignore')
 
-    import sys # for sys.maxunicode
+    import unicodedata, re, itertools, sys
 
-    # build a table mapping all non-printable characters to None
-    NOPRINT_TRANS_TABLE = {
-        i: None for i in range(0, sys.maxunicode + 1) if not chr(i).isprintable()
-    }
-    # remove non-printable chars
-    text.translate(NOPRINT_TRANS_TABLE)
+    all_chars = (chr(i) for i in range(sys.maxunicode))
+    categories = {'Cc'}
+    control_chars = ''.join(c for c in all_chars if unicodedata.category(c) in categories)
+    # or equivalently and much more efficiently
+    control_chars = ''.join(map(chr, itertools.chain(range(0x00,0x20), range(0x7f,0xa0))))
+
+    control_char_re = re.compile('[%s]' % re.escape(control_chars))
+
+    text = control_char_re.sub('', text)
+
+
+
+    #  import sys # for sys.maxunicode
+    #
+    #  # build a table mapping all non-printable characters to None
+    #  NOPRINT_TRANS_TABLE = {
+    #      i: None for i in range(0, sys.maxunicode + 1) if not chr(i).isprintable()
+    #  }
+    #  # remove non-printable chars
+    #  text.translate(NOPRINT_TRANS_TABLE)
 
     return str(text)
 # End: remove_nonstandard_chars()
@@ -148,8 +171,8 @@ def clean_text(text, config):
     # convert html escape code to Unicode/ASCII
     text = unescape(text)
  
-    # Non-Standard Chars: remove all non-standard chars FIXME
-    #  text = remove_nonstandard_chars(text)
+    # Non-Standard Chars: remove all non-standard chars FIXME speed?
+    text = remove_nonstandard_chars(text, config)
 
     textold = text
     # Fix Single Quotes

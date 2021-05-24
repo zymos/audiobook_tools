@@ -193,6 +193,8 @@ def parse_args():
     parser.add_argument('--test', help='test mode, no writing data', action="store_true")
     #  parser.add_argument('--', type=str, help='', choices=[""], default="")
 
+    parser.add_argument('--remove-non-ascii-chars', help='Removes non-ASCII charators', action="store_true")
+    parser.add_argument('--remove-non-eu-chars', help='Removes non-European charators (non-latin1). ie Arabic/Chinese/Japanese/etc', action="store_true")
     #  parser.add_argument('-a', '--speak-asterisk', help='Speaks out asterisk[*] (off by default)', action="store_true")
     #  parser.add_argument('-q', '--dont-remove-quotes', help='Leave quotes in place and may or may not be spoken (off by default)', action="store_true")
     
