@@ -38,9 +38,42 @@ def basic_url_request(url, config):
     import requests # for sending request to server
     import time # for sleep
 
-    max_retries =3
-    response = requests.get(url, timeout=400)
-    trys = 1
+    error = ''
+    max_retries = 5 #config["preferred"]['retries']
+    trys = 0
+    if config["DEBUG"]['debug']:
+        print("URL=" + url)
+    while True:
+        try:
+            response = requests.get(url, 10) #, timeout=60) #config["preferred"]["timeout"])
+            #  out = 1/0
+        except Exception as e:
+            trys += 1
+            error = e
+            print("!", end="", flush= True)
+        else:
+            #  break
+            return response.content
+        #  if trys == 0:
+        #      return response.content
+        #  elif trys == max_retries:
+        #      print("Error: Conversion failed. " + e)
+        #      exit(1)
+        if trys == 4:
+            print("\nError: Conversion failed. " + str(error))
+            exit(1)
+
+
+    #  try:
+    #      response = requests.get(url, timeout=6) #config["preferred"]["timeout"])
+    #  except Exception as e:
+    #      print("Error: Conversion failed. " + e)
+    #      exit(1)
+    #      #  trys += 1
+    #      #  error = e
+    #      print("!", end="")
+    #
+    #  trys = 1
     # try a couple of times
     #  while 1:
     #      # Send request to server
@@ -95,5 +128,5 @@ def basic_url_request(url, config):
 
 
     # return response (audio out, binary)
-    return response.content
+    #  return response.content
 # End: basic_url_request()
