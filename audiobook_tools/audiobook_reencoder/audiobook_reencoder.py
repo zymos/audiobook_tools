@@ -312,7 +312,7 @@ def process_directory(logger, log_files, dirpath, audio_files, audio_file_data, 
     # Process each file to get data and find cover art
     for audio_file in audio_files:
         logger.debug("-  Grabing files data: " + os.path.basename(audio_file))
-        if not debug: print(".", end="", flush=True)
+        #  if not debug: print(".", end="", flush=True)
         # Grab some embeded data and stats
         audio_file_data[audio_file] = extract_audiofile_data(logger, log_files, audio_file)
 
@@ -342,14 +342,14 @@ def process_directory(logger, log_files, dirpath, audio_files, audio_file_data, 
     # ReProcess each file in the current directory if cover art extracted
     if not shared_cover_art_file == '':
         for audio_file in audio_files:
-            if not debug: print(".", end="", flush=True)
+            #  if not debug: print(".", end="", flush=True)
             logger.debug("-  Processing file: " + audio_file)
             # Add cover art in each file
             audio_file_data[audio_file]['cover_art_file'] = shared_cover_art_file
             audio_file_data[audio_file]['cover_art_embeded'] = True
 
     # Print newline after dots
-    if not debug: print("")
+    #  if not debug: print("")
 
     return(audio_file_data)
 # end process_directory()
@@ -942,20 +942,20 @@ def add_metadata(logger, audio_filename, audio_file_data, chap_num):
 
 
 
-    
-    logger.debug("  ~~~~~~~~~~~~~~~~~ cover art stuff~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    logger.debug("  ~   Audio filename: " + audio_filename)
-    logger.debug("  ~   cover art filename: " + cover_art_filename)
-    #  logger.debug("  ~   cover art file type: " + imghdr.what(cover_art_filename))
-    logger.debug("  ~   mime type: " + mime_type)
-    logger.debug("  ~   Height/Width/Depth: " + str(height) + "/" + str(width) + "/" + str(depth))
-    logger.debug("  ~   Adding cover art: " + str(add_cover_art))
-    #  logger.debug("  ~   output file format: " + output_format)
-    #  logger.debug("  ~   Audio filename: " + audio_filename
-    logger.debug("  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    if add_cover_art:        
+        logger.debug("  ~~~~~~~~~~~~~~~~~ cover art stuff~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        logger.debug("  ~   Audio filename: " + audio_filename)
+        logger.debug("  ~   cover art filename: " + cover_art_filename)
+        #  logger.debug("  ~   cover art file type: " + imghdr.what(cover_art_filename))
+        logger.debug("  ~   mime type: " + mime_type)
+        logger.debug("  ~   Height/Width/Depth: " + str(height) + "/" + str(width) + "/" + str(depth))
+        logger.debug("  ~   Adding cover art: " + str(add_cover_art))
+        #  logger.debug("  ~   output file format: " + output_format)
+        #  logger.debug("  ~   Audio filename: " + audio_filename
+        logger.debug("  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
 
-    # Add MP3 cover art (id3/APIC)
+    # Add MP3 (id3/APIC)
     if output_format == 'mp3' and not config['preferred']['test']:
         # import needed modules
         from mutagen.mp3 import MP3
@@ -970,17 +970,18 @@ def add_metadata(logger, audio_filename, audio_file_data, chap_num):
             aud.tags.add(TIT2(encoding=3, text=new_title))
 
         # Cover art
-        if mime_type:
-            if aud.tags.getall('APIC'):
-                aud.tags.delall("APIC") # Delete existing art
-            aud.tags.add( APIC(
-                    #  COVER_FRONT = <PictureType.COVER_FRONT: 3>
-                    encoding=3,         # 3 is for UTF8
-                    mime=mime_type,  # image/jpeg or image/png
-                    type=3,             # 3 is for the cover(front) image
-                    desc=u'Cover (front)',
-                    data=open(cover_art_filename, 'rb').read()
-            ) )
+        if add_cover_art:
+            if mime_type:
+                if aud.tags.getall('APIC'):
+                    aud.tags.delall("APIC") # Delete existing art
+                aud.tags.add( APIC(
+                        #  COVER_FRONT = <PictureType.COVER_FRONT: 3>
+                        encoding=3,         # 3 is for UTF8
+                        mime=mime_type,  # image/jpeg or image/png
+                        type=3,             # 3 is for the cover(front) image
+                        desc=u'Cover (front)',
+                        data=open(cover_art_filename, 'rb').read()
+                ) )
 
         # Genre
         aud.tags.add(TCON(encoding=3, text=u"Audiobook"))
@@ -1406,7 +1407,7 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
 
             # Encoding (1st stage) 
             #   copy id3, Remove chapter data, encode w/ codec/bitrate/samplerate, vol normalize
-            ffmpeg_cmd = "FFREPORT=file=" + ffmpeg_log_file + ":level=40 ffmpeg  " +  ffmpeg_aax_activation_parameters(ffmpeg_input) + \
+            ffmpeg_cmd = "FFREPORT=file=\"" + ffmpeg_log_file + ":level=40\" ffmpeg  " +  ffmpeg_aax_activation_parameters(ffmpeg_input) + \
                     " -loglevel error -y -i \"" + ffmpeg_input + "\"" + \
                     ffmpeg_audio_codec + ffmpeg_bitrate + ffmpeg_samplerate + ffmpeg_loudnorm + ffmpeg_metadata + \
                     " \"" + ffmpeg_single_tmp + "\"" 
@@ -1465,7 +1466,7 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
 
      
                 # Encodding: spliting chapters (2nd stage)
-                ffmpeg_cmd = "FFREPORT=file=" + ffmpeg_log_file + ":level=40 ffmpeg -loglevel error -y -i \"" + ffmpeg_single_tmp + "\"" + ffmpeg_time + \
+                ffmpeg_cmd = "FFREPORT=file=\"" + ffmpeg_log_file + ":level=40\" ffmpeg -loglevel error -y -i \"" + ffmpeg_single_tmp + "\"" + ffmpeg_time + \
                     " -c:v copy -c:a copy \"" + ffmpeg_output + "\""
                 #  ffmpeg_cmd = "ffmpeg -loglevel error -y -i \"" + ffmpeg_single_tmp + "\"" + ffmpeg_time + \
                     #  " -c:v copy -c:a copy \"" + chap_filename_tmp + "\""
@@ -1530,7 +1531,7 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
             #  ffmpeg_output = os.path.join(temp_root_dir,os.path.basename(ffmpeg_input))
             
             # Creating ffmpeg command
-            ffmpeg_cmd = "FFREPORT=file=" + ffmpeg_log_file + ":level=40 ffmpeg -loglevel error" + " -y -i \"" + ffmpeg_input + "\"" + ffmpeg_audio_codec + \
+            ffmpeg_cmd = "FFREPORT=file=\"" + ffmpeg_log_file + ":level=40\" ffmpeg -loglevel error" + " -y -i \"" + ffmpeg_input + "\"" + ffmpeg_audio_codec + \
                 ffmpeg_bitrate + ffmpeg_samplerate + ffmpeg_metadata + ffmpeg_loudnorm + " \"" + \
                 ffmpeg_output + "\""
 
@@ -1957,6 +1958,7 @@ def mktmpdir(tmp_file):
     # check and create dir
     os.makedirs(tmp_dir, exist_ok=True)
 
+
     return tmp_file
 # End: mktmpdir()
 
@@ -2005,6 +2007,7 @@ def main():
     
     logger.debug("*********************************************************************")
     logger.debug("* Root directory: " + path)
+    logger.debug("* Temp dir: " + tmp_dir)
     logger.debug("*********************************************************************")
 
     # clean up tmp dir in case it ran before TODO remove and use tmp module
