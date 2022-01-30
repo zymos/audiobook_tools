@@ -3,14 +3,16 @@
 
 """
 #####################################################################
-#        audiobook_reencode
 #
-#        Description: Re-encode all audiofile in a directory, with some 
+#   ==[[Audiobook Reencoder]]==
+#
+#       Description: Re-encode all audiofile in a directory, with some 
 #           bells and whistles
 # 
-#        Usage: id3_cover_art [DIRECTORY]
+#       Usage: audiobook-reencoder [DIRECTORY]
 #
-#        Author: ZyMOS, 03/2020
+#       Author: ZyMOS, 03/2020 - 01-2022
+#       License: GPL3
 #
 #       Requirements:
 #           python, ffmpeg, ffprobe
@@ -19,11 +21,10 @@
 #           Encodes using ffmpeg
 #           Accepts mp3, m4b, m4a, flac, ogg, opus, aax
 #           Grabs audio files data using ffprobe, for re-encoding and embedding cover art
-#           Split into chapters (not implemented)
+#           Split into chapters
 #           Removes unneeded files (nfo/cue/m3u) (can be disabled)
 #           Add genre="Audiobook" (can be disabled)
 #           Normalize volume (can be disabled)
-#                        Won't re-encode if it is obvious it has been done before (can be forced)
 #           Cover art:
 #               Extracts cover art to cover.jpg (can be disabled)
 #               Embeds cover art to each audiofile (can be disabled)
@@ -44,42 +45,12 @@
 #               with settings from data compiled
 #
 #                           
-#   TODO
-#       add force reencode
-#       add input flac
-# FIXME 
-#    in test mode, gets error 
-#       Error: Cover art is set, but file doesn't exist
-#       01:37:18:ERROR:         Filename: /tmp/audiobook_reencode/68991546/Ravaged Land - The Realms 7/9499753791500434.jpg
-#       because cov art not extracted
+ TODO
+    add input flac
 
-remove? TXXX=iTunSMPB= 
+ * remove? TXXX=iTunSMPB= 
 
-
-The Guild Core 1- Dragon Bourne.m4b
-m4b with chap
-
-
-first file has 2 cover art
-
-
-
-check if ok with m4b output
-    -metadata compatible_brands= -metadata minor_version= -metadata major_brand= 
-
-when spliting its not using names
-
-coverart is not adding track2+
-
-Traceback (most recent call last):
-  File "/home/zymos/Documents/working-dirs/audiobook_tools/audiobook-reencoder", line 11, in <module>
-    audiobook_reencoder.main()   
-  File "/home/zymos/Online Storage/Zoho Docs/Documents/working-dirs/audiobook_tools/audiobook_tools/audiobook_reencoder/audiobook_reencoder.py", line 273, in main
-    print("Error: ffprobe(from ffmpeg) is required, not found")
-KeyError: "carl/Carl's Doomsday Scenario Dungeon Crawler Carl, Book 2.opus"<F3><F3>
-
-
-
+ * print log file location
 
 ***
 'The Dungeon Anarchists Cookbook Dungeon Crawler Carl, Book 3.m4b.0.log:level=40'
@@ -105,6 +76,30 @@ log file name
 03:31:34:DEBUG: ffmpeg error:
 >b'Incorrect BOM value\nError reading comment frame, skipped\n'
 
+
+
+### Minor bugs
+ * improper indent when ...
+     ↳ 00a/
+        ↳ Beneath the Dragoneye Moons 2 by Selkie Myth.mp3
+           → Between Decisions - W R Gingell.m4b
+           → Between Walls - W.R. Gingell.m4b
+ * spinner doesn't disapear sometimes
+        ↳ Cipher Hill 12.mp3-] 
+        ↳ Cipher Hill 13.mp3\] 
+        ↳ Cipher Hill 14.mp3-] 
+        ↳ Cipher Hill 15.mp3/] 
+        maybe spinner function isnt stoped (after error?)
+
+ * printed encoding number flips after error detected 
+    flips from current file number to error files number
+        maybe spinner function isnt stoped
+
+
+## improvments
+ * add config summary
+
+
 #####################################################################
 """
 
@@ -119,7 +114,6 @@ log file name
 bitrate_default = "64k"
 samplerate_default = "22050"
 version = "0.1"
-program_name = "audiobook_reencoder(ffmpeg)-v" + version
 
 
 # Filename's similarity ratio in a directory, 
@@ -129,6 +123,7 @@ filename_similarity_cover_art_percentage = 85
 
 
 
+program_name =  "audiobook_reencoder(ffmpeg)-v" + version # + "+loudnorm"
 
 
 
@@ -1510,9 +1505,6 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
             # run encoding command (1st stage)
             encoder_error = reencode_audio_file_ffmpeg(logger, ffmpeg_cmd, ffmpeg_input, ffmpeg_single_tmp, log_file, ffmpeg_log_file)
 
-            # stop spinner
-            if not debug:
-                spinner.stop()
 
             # error found
             if encoder_error:
@@ -1520,12 +1512,15 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
                 if not debug:
                     print("Error encoding: skipping book...")
                 # skip file on error
+                # stop spinner
+                if not debug:
+                    spinner.stop()               
                 return False 
                                 
             # Chapters (2nd stage):Process each chap
             x=0
             for chap in audio_file_data['chapters']:    
-
+                # dont print for each chapter only show the original file printed above
                 # track num
                 ffmpeg_track_num = str(audio_file_data['chapters'][chap]['id'])
                 
@@ -1549,7 +1544,7 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
                         str(audio_file_data['chapters'][chap]['duration'])                
 
      
-                # Encodding: spliting chapters (2nd stage)
+                # Encoding: ffmpeg command: spliting chapters (2nd stage)
                 ffmpeg_cmd = "FFREPORT=file=\"" + ffmpeg_log_file + ":level=40\" ffmpeg -loglevel error -y -i \"" + ffmpeg_single_tmp + "\"" + ffmpeg_time + \
                     " -c:v copy -c:a copy \"" + ffmpeg_output + "\""
                 #  ffmpeg_cmd = "ffmpeg -loglevel error -y -i \"" + ffmpeg_single_tmp + "\"" + ffmpeg_time + \
@@ -1583,9 +1578,8 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
                     logger.error("Encoding failed, skipping chapter spliting and keeping original, " + ffmpeg_input)
                     logger.debug("Encoding failed on \"" + audio_file_data['chapters'][chap]['name'] + "\", stopping encoding of rest of book")
             
-                    # stop spinner
-                    if not debug:
-                        spinner.stop()
+                    if not debug: 
+                        spinner.stop() 
                         print("Error: encoding failed of chapter.  Skipping files.")
                     #skipping
                     #  break
@@ -1684,7 +1678,11 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
             if encoder_error:
                 logger.error("Encoding failed")
                 # encoding failed
+                 # stop spinner
+                if not debug:
+                    spinner.stop()               
                 return False
+
             else:
                 # no errors add meta     
                 # Add Metadata to audio file (currently only add cover art because ffmpeg stuff works as is, so why change it)
@@ -1707,6 +1705,9 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
             logger.debug("encoding failed, deleting temporary file:")
             if not config['preferred']['test'] and os.path.exists(temp_output):
                 os.remove(temp_output)
+            # stop spinner
+            if not debug:
+                spinner.stop()               
             return False
         else:
             # Success: All encoding 
@@ -2095,6 +2096,9 @@ def main():
     """
     Main fuction
     """
+
+    #start up
+    print("Starting: " + program_name)
     audio_file_data = {}
     unneeded_files = []
     error_list = []
@@ -2138,9 +2142,9 @@ def main():
     logger.debug('~~~~~~~~~~~~~~~~~~~~ Config (end) ~~~~~~~~~~~~~~~~~~~~~~~')
 
 
-    # clean up tmp dir in case it ran before TODO remove and use tmp module
-    #  clean_up_tmp_dir()
-
+    # prints log filename
+    print("  Log file: " + log_filename)
+    
 
     if debug: 
         logger.debug("Collecting audiobook files info...")

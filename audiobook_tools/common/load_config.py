@@ -53,7 +53,8 @@ def load_config(config_filename, args, tmp_dir):
     cfg_default_found = 0
     cfg_global_found = 0
     if os.path.isfile(config_file):
-        print("Using local config file:", config_file)
+        #  print("Using local config file:", config_file)
+        config_file_used = config_file
         cfg = configparser.RawConfigParser()
         cfg.read(config_file)
         cfg_found = 1
@@ -231,7 +232,7 @@ def load_config(config_filename, args, tmp_dir):
 
     # Unknown config file
     else:
-        print("Error unknown config file, should be 'web-novel-to-text.conf' or 'online-tts.conf'")
+        print("Error unknown config file, should be 'web-novel-to-text.conf' or 'online-tts.conf' or audiobook-reencoder.conf")
         exit(1)
 
 
@@ -242,7 +243,7 @@ def load_config(config_filename, args, tmp_dir):
     config['INPUT'].update({'text_chunk': ''})
     config.update({'OUTPUT':{'filename': ''}})
     config.update({'TMP':{'tmp_dir': tmp_dir}})
-
+    
     config.update({'DEBUG':{'debug': args.debug}}) # legacy, TODO remove all instances
 
     # Correct some posible problems
