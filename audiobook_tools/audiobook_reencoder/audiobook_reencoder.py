@@ -15,8 +15,9 @@
 #       License: GPL3
 #
 #       Requirements:
-#           python, ffmpeg, ffprobe
-#           mutigen, imghdr modules
+#           programs: python, ffmpeg, ffprobe
+#           python modules: mutigen, imghdr modules
+#           unicode support for pretty output
 #       Features: 
 #           Encodes using ffmpeg
 #           Accepts mp3, m4b, m4a, flac, ogg, opus, aax
@@ -24,25 +25,26 @@
 #           Split into chapters
 #           Removes unneeded files (nfo/cue/m3u) (can be disabled)
 #           Add genre="Audiobook" (can be disabled)
-#           Normalize volume (can be disabled)
-#           Cover art:
+#           Normalize volume using R128 specs @ -17dB (can be disabled)
+#           Adds Cover art:
 #               Extracts cover art to cover.jpg (can be disabled)
 #               Embeds cover art to each audiofile (can be disabled)
-#               If directory contains multiple different audiobooks it won't
-#                   try extract/embed cover art
+#               Skips if directory contains multiple different audiobooks
 #               Can delete original image file, after embedding (not default)
 #
 #
 #       How the program works:
 #           Walk through each subdirectory in the main directory
-#               Check if audio exists in each directory
+#               Check if audio exists in each directory, and create list
 #                   Work on getting cover art
 #                       Check if filenames in directory are similar
 #                           Check if image file exist, otherwise try to extract it
 #                   Generate data on each audio file
 #           Process files though list
-#               re-encode if bitrate is higher or changing format 
-#               with settings from data compiled
+#               re-encode if 
+#                   original bitrate is higher or 
+#                   changing format or
+#                   force reencode
 #
 #                           
  TODO
@@ -50,9 +52,7 @@
 
  * remove? TXXX=iTunSMPB= 
 
- * print log file location
-
-***
+ ***
 'The Dungeon Anarchists Cookbook Dungeon Crawler Carl, Book 3.m4b.0.log:level=40'
 log file name 
 'This Book Is Full of Spiders Seriously, Dude, Dont Touch It.m4b.0.log:level=40'
@@ -76,28 +76,82 @@ log file name
 03:31:34:DEBUG: ffmpeg error:
 >b'Incorrect BOM value\nError reading comment frame, skipped\n'
 
+why does this fail
+    ↳ 022 Michael-Scott Earle - Star Justice Book 12_ Red Nova - End Credits.mp3
+Errors detected:22) [|] 
+05:36:55:ERROR:       Error: Cover art is set, but file doesn't exist
+05:36:55:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:38:00:ERROR:       Error: Cover art is set, but file doesn't exist
+05:38:00:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:39:45:ERROR:       Error: Cover art is set, but file doesn't exist
+05:39:45:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:41:27:ERROR:       Error: Cover art is set, but file doesn't exist
+05:41:27:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:43:10:ERROR:       Error: Cover art is set, but file doesn't exist
+05:43:10:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:44:56:ERROR:       Error: Cover art is set, but file doesn't exist
+05:44:56:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:46:23:ERROR:       Error: Cover art is set, but file doesn't exist
+05:46:23:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:47:32:ERROR:       Error: Cover art is set, but file doesn't exist
+05:47:32:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:48:36:ERROR:       Error: Cover art is set, but file doesn't exist
+05:48:36:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:50:16:ERROR:       Error: Cover art is set, but file doesn't exist
+05:50:16:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:51:54:ERROR:       Error: Cover art is set, but file doesn't exist
+05:51:54:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:53:55:ERROR:       Error: Cover art is set, but file doesn't exist
+05:53:55:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:55:24:ERROR:       Error: Cover art is set, but file doesn't exist
+05:55:24:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:57:37:ERROR:       Error: Cover art is set, but file doesn't exist
+05:57:37:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:58:46:ERROR:       Error: Cover art is set, but file doesn't exist
+05:58:46:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+05:59:47:ERROR:       Error: Cover art is set, but file doesn't exist
+05:59:47:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+06:01:32:ERROR:       Error: Cover art is set, but file doesn't exist
+06:01:32:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+06:03:05:ERROR:       Error: Cover art is set, but file doesn't exist
+06:03:05:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+06:05:04:ERROR:       Error: Cover art is set, but file doesn't exist
+06:05:04:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+06:06:57:ERROR:       Error: Cover art is set, but file doesn't exist
+06:06:57:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+06:08:11:ERROR:       Error: Cover art is set, but file doesn't exist
+06:08:11:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
+06:08:12:ERROR:       Error: Cover art is set, but file doesn't exist
+06:08:12:ERROR:         Filename: /tmp/audiobook_reencode/24974965/Star_Justice_Book_12%3A_Red_Nova__Michael-Scott_Earle/9855428880718556.jpg
 
 
 ### Minor bugs
- * improper indent when ...
-     ↳ 00a/
-        ↳ Beneath the Dragoneye Moons 2 by Selkie Myth.mp3
-           → Between Decisions - W R Gingell.m4b
-           → Between Walls - W.R. Gingell.m4b
- * spinner doesn't disapear sometimes
+ * spinner doesn't disapear sometimes if next string is shorter than spinner string
         ↳ Cipher Hill 12.mp3-] 
         ↳ Cipher Hill 13.mp3\] 
         ↳ Cipher Hill 14.mp3-] 
-        ↳ Cipher Hill 15.mp3/] 
+        ↳ Cipher Hill 15.mp3/]
+  ↳ 024.mp3of 30) [\] 
+    ↳ 025.mp3of 30) [|] 
+    ↳ 026.mp3of 30) [\] 
+    ↳ 027.mp3of 30) [|] 
+    ↳ 028.mp3of 30) [/] 
+    ↳ 029.mp3of 30) [-] 
+    ↳ 030.mp3of 30) [\] 
+done.ing (30 of 30) [-] 
         maybe spinner function isnt stoped (after error?)
+
+
+* Very slow: Collecting audiobook files info...
+
 
  * printed encoding number flips after error detected 
     flips from current file number to error files number
         maybe spinner function isnt stoped
 
 
-## improvments
- * add config summary
+
+
 
 
 #####################################################################
@@ -115,6 +169,8 @@ bitrate_default = "64k"
 samplerate_default = "22050"
 version = "0.1"
 
+# volume normalization integrated volume(I) dB
+loudnorm_int_vol = "-17"
 
 # Filename's similarity ratio in a directory, 
 #   must be >= for cover art to be added
@@ -145,10 +201,12 @@ import datetime # for logging
 import random
 import shutil
 # import json imghdr mutegen
-
 from audiobook_tools.common.load_config import load_config
 from audiobook_tools.common.spinner import Spinner
 
+# setup a timer for debuging
+import time
+start_time = time.time()
 
 
 ###################################################################################################
@@ -1194,7 +1252,7 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
     #  ffmpeg encoding notes
     #  -map_chapters -1
     #      Remove chapters
-    #   -metadata compatible_brands= -metadata minor_version= -metadata major_brand=
+    #   -metadata compatible_brands= -metadata minor_version= -metadata major_brand= -iTunSMPB=
     #      remove leftovers info from aax/m4b
     #  -filter:a loudnorm
     #      volume normalization
@@ -1217,7 +1275,22 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
     #       log filename
     #
    
+    # Metadata info
+    # mp4/m4b
+    #   media_type=2 is audiobook
+    #   'compatible_brands': 'M4A mp42isom'
+    #   'genre': 'Audiobook'
+    # mp3
+    #   stik=2 iTunes Media Type(2=audiobook)
+    #       https://github.com/sergiomb2/libmp4v2/wiki/iTunesMetadata#user-content-media-type-stik
     # initialize spinner
+
+
+    # Mediadata info
+    #   https://github.com/sergiomb2/libmp4v2/wiki/iTunesMetadata
+    #   http://mutagen.readthedocs.io/en/latest/user/id3.html
+
+
     spinner = Spinner()
 
     # Skipping: no need to re-encode, skipping
@@ -1398,7 +1471,7 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
                     config['preferred']['disable_reencode'] or \
                     config['preferred']['only_extract_cover_art'] or \
                     config['preferred']['only_add_id3_genre']):
-            ffmpeg_loudnorm = " -filter:a loudnorm"
+            ffmpeg_loudnorm = " -filter:a loudnorm=I=" + str(loudnorm_int_vol)
             # todo add check for ReplayGain metadata check 
             # ffprobe doesn't show APE tags, where mp3gain is usually placed
 
@@ -1410,7 +1483,7 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
         #      ffmpeg_metadata += " -metadata genre=\"Audiobook\""
         if config['preferred']['audio_output_format'] == 'mp3':
             # makes sure id3 tags are writen and removes some leftovers from m4b files
-            ffmpeg_metadata += " -id3v2_version 3 -write_id3v1 1 -metadata compatible_brands= -metadata minor_version= -metadata major_brand= "
+            ffmpeg_metadata += " -id3v2_version 3 -write_id3v1 1 -metadata compatible_brands= -metadata minor_version= -metadata major_brand= -metadata iTunSMPB="
         if chapter_it: #FIXME maybe
             ffmpeg_metadata += " -map_chapters -1 " 
 
@@ -1441,7 +1514,7 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
     
     if no_need_to_reencode:
         #  print("     Skipping: (" + str(file_count) + " of " + str(total_count) + "): " + os.path.basename(ffmpeg_input))
-        print("     → Skipping: " + os.path.basename(ffmpeg_input))
+        print_80_char("        → Skipping: " + os.path.basename(ffmpeg_input))
     else:
         ##################################
         # Chapters exist, so split
@@ -1483,8 +1556,8 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
             else:
                 # starting spinner
                 #  print("    Encoding (" + str(file_count) + " of " + str(total_count) + "): " + os.path.basename(ffmpeg_input_old))
-                print("       → " + os.path.basename(ffmpeg_input_old))
-                spinner.start("Encoding (" + str(file_count) + " of " + str(total_count) + ")")
+                print_80_char("        → " + os.path.basename(ffmpeg_input_old))
+                spinner.start("◎ Encoding (" + str(file_count) + " of " + str(total_count) + ")")
 
 
             #  print("         Encoding: first stage"            )
@@ -1502,15 +1575,16 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
             logger.debug(" CMD: " + ffmpeg_cmd)
             logger.debug(" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~") 
 
+            print_time(logger)
             # run encoding command (1st stage)
             encoder_error = reencode_audio_file_ffmpeg(logger, ffmpeg_cmd, ffmpeg_input, ffmpeg_single_tmp, log_file, ffmpeg_log_file)
-
+            print_time(logger)
 
             # error found
             if encoder_error:
                 logger.error("Encoding failed on \"" + ffmpeg_input + "\", stopping encoding book")
                 if not debug:
-                    print("Error encoding: skipping book...")
+                    print("!!!!!! Error encoding: skipping book... !!!!!!")
                 # skip file on error
                 # stop spinner
                 if not debug:
@@ -1571,7 +1645,9 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
                     #  print("         Splitting chapter: " + ffmpeg_track_num + "/" + ffmpeg_track_total)
 
                 # Reencode command (Chap: 2nd stage)             
+                print_time(logger)
                 encoder_error = reencode_audio_file_ffmpeg(logger, ffmpeg_cmd, ffmpeg_input, ffmpeg_output, log_file, ffmpeg_log_file)
+                print_time(logger)
                 #  encoder_error = reencode_audio_file_ffmpeg(logger, ffmpeg_cmd, ffmpeg_input, ffmpeg_output_tmp, ffmpeg_cover_art)
                 
                 if encoder_error:
@@ -1580,7 +1656,7 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
             
                     if not debug: 
                         spinner.stop() 
-                        print("Error: encoding failed of chapter.  Skipping files.")
+                        print("!!!!!!! Error: encoding failed of chapter.  Skipping files. !!!!!!")
                     #skipping
                     #  break
                     # I this this should be a return not a break for error
@@ -1656,12 +1732,19 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
             else:
                 #  print("    Encoding (" + str(file_count) + " of " + str(total_count) + "): " + os.path.basename(ffmpeg_input_old) )
                 #  spinner.start("")
-                print("    ↳ " + os.path.basename(ffmpeg_input_old))
-                spinner.start("Encoding (" + str(file_count) + " of " + str(total_count) + ")")
+                # work around to spinner output problem when len(text) < len(spinner)
+                print_80_char("        → " + os.path.basename(ffmpeg_input_old))
+                #  text="       ↳ " + os.path.basename(ffmpeg_input_old)
+                #  if len(text) < 24:
+                #      text += "                      "
+                #  print(text)
+                spinner.start("* Encoding (" + str(file_count) + " of " + str(total_count) + ")")
 
             if os.path.isfile(ffmpeg_input):
                 # Send to Encoder
+                print_time(logger)
                 encoder_error = reencode_audio_file_ffmpeg(logger, ffmpeg_cmd, ffmpeg_input, ffmpeg_output, log_file, ffmpeg_log_file)
+                print_time(logger)
             else:
                 # this shouldn't happen
                 logger.error("      Error: input file to ffmpeg doesn't exist.  This shouldn't happen!")
@@ -2022,6 +2105,24 @@ def extract_cover_art(logger, audio_file, audio_file_data):
 
 
 
+
+
+#############################################################
+# Print a string of 80 chars, fill in with spaces
+#
+def print_80_char(text):
+    """
+    prints a string of 80 chars or more"""
+
+
+    while len(text) < 80:
+        text += " "
+
+    print(text)
+
+# End: print_80_char()
+
+
 ##############################################################
 # Check similarity of list of filenames
 #
@@ -2069,6 +2170,46 @@ def filename_similarity(logger, filename_list):
 
 
 
+#################################################
+# Print intro banner
+#
+def print_banner(log_filename, config):
+    # print info
+    print("╭────────────────────────────────────────────────────────────────────────╼")
+    print("│ " + program_name)
+    print("│  Encoder settings: " + config['preferred']['audio_output_format'] + "bps @ " + config['preferred']['bitrate'] + "/" + config['preferred']['samplerate'] + "Hz")
+    options = []
+    if not config['preferred']['disable_add_id3_genre']:
+        options.append('genre')
+    if not config['preferred']['disable_embed_cover_art']:
+        options.append( 'cover art')
+    if not config['preferred']['disable_normalize']:
+        options.append ( 'normalize')
+    if not config['preferred']['disable_delete_unneeded_files']:
+        options.append ( 'remove cue/nfo/m3u')
+    if not config['preferred']['keep_original_files']:
+        options.append ( 'keep originals')
+    if not config['preferred']['disable_split_chapters']:
+        options.append ( 'split chapters')
+    if config['preferred']['force_reencode']:
+        options.append('force reencode')
+    #  else:
+        #  options.append('skip lower ')
+
+    option_str = ", ".join(options)
+    from textwrap import wrap
+    option_str_array = wrap(option_str, 70)
+    print("│  Options: ")#, end="")
+    for text in option_str_array:
+        print("│    " + text)
+    print("│  Log file: ")
+    print("│    " + log_filename)
+    print("╰─────────────────────────────────────────────────────────────────────────╼")
+# End: print_banner()
+
+
+
+
 
 ##################################################
 # Make TMP folder
@@ -2089,61 +2230,36 @@ def mktmpdir(tmp_file):
 
 
 
+
+
 ##################################################
-# main function
+# Print time for debuging
 #
-def main():
+def print_time(logger):
     """
-    Main fuction
+    prints time foe debuging
+    """
+    #  logger.debug()
+    logger.debug("{{{{{{{{{{{{{{{{{{{{ Time: " + str(round(time.time() - start_time,3)) + "s }}}}}}}}}}}}}}}}}}}}}}")
+    #  logger.debug()
+# End print_time(logger)
+
+
+
+
+
+##################################################
+# Collecting info on files
+#
+def collect_file_info(logger, config, spinner, path, log_filenames):
+    """
+    collecting audio file info
     """
 
-    #start up
-    print("Starting: " + program_name)
+    # initialize
     audio_file_data = {}
     unneeded_files = []
-    error_list = []
-
-    # CLI Arguments
-    global args, path, debug
-    args = parse_args()
-    # generate config settings
-    global config
-    # Create Temp Dir
-    tmp_dir = mktmpdir(os.path.join(tempfile.gettempdir(), 'audiobook_reencode', str(random.randrange(1,99999999))))
-
-    # Load config file
-    config = load_config("audiobook-reencoder.conf", args, tmp_dir)
-    path = args.directory
-    debug = config['preferred']['debug']
-       # Setup logging
-    [logger, log_filenames] = setup_logging()
-    [log_filename, log_ffmpeg, log_ffmpeg_error] = log_filenames
-
-    # Input/Arguments Error checks
-    error_checking(logger, path)
-
-    # initialize spinner
-    spinner = Spinner()
-
-
-    # banner for test
-    if config['preferred']['test']:
-        print("******************************************************")
-        print("* Running in test mode, no actions will be performed *")
-        print("******************************************************")
-
-    
-    logger.debug("************************ directories ************************************")
-    logger.debug("* Root directory: " + path)
-    logger.debug("* Temp dir: " + tmp_dir)
-    logger.debug("************************* directories (end) *******************************")
-    logger.debug('~~~~~~~~~~~~~~~~~~~~ Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    logger.debug(pprint.pformat(config))
-    logger.debug('~~~~~~~~~~~~~~~~~~~~ Config (end) ~~~~~~~~~~~~~~~~~~~~~~~')
-
-
-    # prints log filename
-    print("  Log file: " + log_filename)
+    #  debug = config['preferred']['debug']
     
 
     if debug: 
@@ -2151,7 +2267,7 @@ def main():
     else:
         #  print("Generating audiobook files data...", end="", flush=True)
         # start spinner for collecting data
-        print("Collecting audiobook files info...")
+        print("◎ Collecting audiobook files info...")
         spinner.start("")
    
     # Processing
@@ -2229,15 +2345,39 @@ def main():
     if not debug:
         spinner.stop()
 
+    print_time(logger)
 
-   # Encoding the files through the list
+
+    return audio_file_data
+# End: collect_file_info
+
+
+
+
+
+
+
+
+
+#########################################################
+# Encode files
+#
+def encode_files(logger, config, spinner, log_filenames, path, audio_file_data):
+    """
+    encode all files
+    """
+
+    # 
+    error_list = []
+    
+    # Encoding the files through the list
     # Re-encode the audio file
     total_count = len(audio_file_data)
     file_count = 1
     if debug:
         logger.debug("Encoding starting... ")
     else:
-        print("Encoding starting... ")
+        print("◎ Encoding starting... ")
     if os.path.isfile(path):
         # encoding a single file
         success = reencode_audio_file(logger, log_filenames, audio_file_data[path], file_count, total_count)
@@ -2254,14 +2394,27 @@ def main():
             subindent = ''
             #  if level > 0:
                 #  indent = ' ' * (level-1) + '>'
-            subindent = '  ' * (level) + '↳ '
+            subindent = '   ' * (level) + '↳ '
 
-            print(" " + subindent + os.path.basename(dirpath) + "/")
+            print("  " + subindent + os.path.basename(dirpath) + "/")
             # sort file list so its in alpha numberic order
             
             file_list.sort()
             for file_name in file_list:
                 # print("    >" + file_name
+
+                """
+                https://www.tutorialspoint.com/python/python_multithreading.htm
+                # within loop
+                thread_cnt=0
+                threading.activeCount()
+                isAlive()
+                if thread_cnt <= thread_max:
+                    thread_1 = open thread()
+                    thread_cnt += 1
+
+
+                """
                 if 'read_data_failed' in audio_file_data:
                     # reading data filed earlier, so skiping encoding
                     print("Skip encoding \"" + file_name + "\", likly has an error in it")
@@ -2273,24 +2426,105 @@ def main():
                             if not success:
                                 error_list.append(audio_file_data[os.path.join(dirpath,file_name)])
                             file_count += 1
-    # All done
 
+
+    # return list of files with encoding errors
+    return error_list
+# End: encode_files()
+
+
+
+
+
+
+##################################################
+# main function
+#
+def main():
+    """
+    Main fuction
+    """
+    
+
+    #start up
+    #  audio_file_data = {}
+    #  unneeded_files = []
+    #  error_list = []
+
+    # CLI Arguments
+    global args, path, debug
+    args = parse_args()
+    # generate config settings
+    global config
+    # Create Temp Dir
+    tmp_dir = mktmpdir(os.path.join(tempfile.gettempdir(), 'audiobook_reencode', str(random.randrange(1,99999999))))
+
+    # Load config file
+    config = load_config("audiobook-reencoder.conf", args, tmp_dir)
+    path = args.directory
+    debug = config['preferred']['debug']
+       # Setup logging
+    [logger, log_filenames] = setup_logging()
+    [log_filename, log_ffmpeg, log_ffmpeg_error] = log_filenames
+
+    # Input/Arguments Error checks
+    error_checking(logger, path)
+
+    # initialize spinner
+    spinner = Spinner()
+
+
+    # banner for test
+    if config['preferred']['test']:
+        print("******************************************************")
+        print("* Running in test mode, no actions will be performed *")
+        print("******************************************************")
+
+    
+    logger.debug("************************ directories ************************************")
+    logger.debug("* Root directory: " + path)
+    logger.debug("* Temp dir: " + tmp_dir)
+    logger.debug("************************* directories (end) *******************************")
+    logger.debug('~~~~~~~~~~~~~~~~~~~~ Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    logger.debug(pprint.pformat(config))
+    logger.debug('~~~~~~~~~~~~~~~~~~~~ Config (end) ~~~~~~~~~~~~~~~~~~~~~~~')
+
+
+    # Print Banner
+    print_banner(log_filename, config)
+
+
+    print_time(logger)
+
+
+    # Collect the audio file info and store in var
+    audio_file_data = collect_file_info(logger, config, spinner, path, log_filenames)
+
+    # encode all files
+    error_list = encode_files(logger, config, spinner, log_filenames, path, audio_file_data)
+
+
+    # All done
     # clean up tmp dir at end
     #  clean_up_tmp_dir(logger)
     
     # Print out all errors before exit
     if not len(error_list) == 0:
         print("done.")
-        print("!!! Error: some files had encoding errors, failed files !!!")
+        print("!!!!!! Error: some files had encoding errors, failed files !!!!!!")
         for file in error_list:
-            print("• " + str(file) + "\n")
-        print("!!! Read log for details: " + log_filename + " !!!")
+            print("• " + str(file[file_name]) + "\n")
+        print("!!!!!! Read log for details: " + log_filename + " !!!!!!")
         exit(1)
 
     # not sure this does anything
     print_error_file(log_filename)
 
-    print("done.")
+    print_time(logger)
+
+
+    # spaces are a workaround for spinner output problem when len(text) < len(spinner)
+    print("done.                                    ")
     exit(0)
 # end main
 
