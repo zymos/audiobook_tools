@@ -2246,7 +2246,7 @@ def print_summary(config): #common_vars):
     print_80_char("│ Summary of files:  ") 
     print_80_char("│  File count: " + str(total_file_count) )
     print_80_char("│  Total audiobooks duration: " + str(round(total_duration/60/60,1)) + "h")
-    print_80_char("│  Estimated encoding time: " + str(round(total_file_count * total_duration / threads / encode_speed_ratio /60/60,2)) + "h (very rough estimate)")
+    print_80_char("│  Estimated encoding time: " + str(round(total_duration / threads / encode_speed_ratio /60/60,2)) + "h (very rough estimate)")
     print("╰─────────────────────────────────────────────────────────────────────────╼")
 
 # End: print_summary()
@@ -2626,10 +2626,12 @@ def encode_files(logger, config, spinner, log_filenames, path, audio_file_data):
     spinner.stop()
     del spinner
     # sometimes the last few dont get caught
-    if not files_complete[-1]['file'] == last_file['file']:
-        if not files_complete[-2]['file'] == last_file['file']:
-            print("  ⊛ " + files_complete[-2]['status'] + ": " + files_complete[-2]['file'] ) # print next to last
-        print("  ⊛ " + files_complete[-1]['status'] + ": " + files_complete[-1]['file'] ) # print last
+    if len(files_complete) >0:
+        if not files_complete[-1]['file'] == last_file['file']:
+            if len(files_complete) > 1:
+                if not files_complete[-2]['file'] == last_file['file']:
+                    print("  ⊛ " + files_complete[-2]['status'] + ": " + files_complete[-2]['file'] ) # print next to last
+            print("  ⊛ " + files_complete[-1]['status'] + ": " + files_complete[-1]['file'] ) # print last
     #  print("╰─────────────────────────────────────────────────────────────────────────╼   ")
 
     #
@@ -2771,7 +2773,7 @@ def main():
     print("│   Seccessful encodings: " + str(success_cnt))
     print("│   Failures: " + str(error_cnt))
     print("│   Skipped: " + str(skip_cnt))
-    print("│   Encoding time: " + str(round((stop_time-start_time),1)) + "s")
+    print("│   Encoding time: " + str(round((stop_time-start_time)/60/60,1)) + "h")
     print("│   Encoding rate: " + str(int(total_duration/(stop_time-start_time))) + " x")
     print("╰─────────────────────────────────────────────────────────────────────────╼")
 
