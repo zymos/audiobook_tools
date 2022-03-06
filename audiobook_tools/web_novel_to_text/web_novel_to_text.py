@@ -390,24 +390,31 @@ def extract_txt_royalroad(site_code):
 
     # Extracts author
     #  <meta name="twitter:creator" content="*********">
-    author = tree.xpath('//meta[@name="twitter:creator"]/@content')[0]
+    try:
+        author = tree.xpath('//meta[@name="twitter:creator"]/@content')[0]
+    except:
+        author = ''
 
     # Extracts cover art
     # <meta property="og:image" content="********************">
-    cover = tree.xpath('//meta[@property="og:image"]/@content')[0]
+    try:
+        cover = tree.xpath('//meta[@property="og:image"]/@content')[0]
+    except:
+        cover = ''
 
     # Extracts source
     # <meta property="og:url" content="*******************">
+
     source = tree.xpath('//meta[@property="og:url"]/@content')[0]
 
     # extracts article contents
     # pages contents (found between <div class="chapter-inner chapter-content">
     content = tree.xpath('//div[@class="chapter-inner chapter-content"]')
  
-    # convert to string
+    # convert to string (including tags)
     article_html = ''
     for line in content:
-        article_html += str(tree.tostring(line).decode('utf-8'))
+        article_html += str(etree.tostring(line).decode('utf-8'))
 
     # extracts publication date
     # <time datetime="2020-08-10T18:13:21.0000000Z" format="U" >
@@ -496,11 +503,17 @@ def extract_txt_wordpress(site_code):
     tree = html.fromstring(site_code.text)
 
     # Author
-    author = str(tree.xpath('//a[@rel="author"]/text()')[0])
+    try:
+        author = str(tree.xpath('//a[@rel="author"]/text()')[0])
+    except:
+        author = ''
 
     # Extracts chapter title
     #  <meta property="og:title" content="*****title*****"/>
-    chap_title = str(tree.xpath('//meta[@property="og:title"]/@content')[0])
+    try:
+        chap_title = str(tree.xpath('//meta[@property="og:title"]/@content')[0])
+    except:
+        chap_title = ''
     #  print("chap:", chap_title , type(str(chap_title)))
 
     # Chapter number
@@ -511,32 +524,51 @@ def extract_txt_wordpress(site_code):
 
     # Extracts book title TODO this probably doesnt work with all sites
     #  <meta property="og:site_name" content="*****title*****"/>
-    book_title = str(tree.xpath('//meta[@property="og:site_name"]/@content')[0])
+    try:
+        book_title = str(tree.xpath('//meta[@property="og:site_name"]/@content')[0])
+    except:
+        book_title = ''
 
 
     # Extracts cover art
     # <meta property="og:image" content="********************">
-    cover = str(tree.xpath('//meta[@property="og:image"]/@content')[0])
+    try:
+        cover = str(tree.xpath('//meta[@property="og:image"]/@content')[0])
+    except:
+        cover = ''
 
 
     # Extracts source
     # <meta property="og:url" content="*******************">
-    source = str(tree.xpath('//meta[@property="og:url"]/@content')[0])
+    try:
+        source = str(tree.xpath('//meta[@property="og:url"]/@content')[0])
+    except:
+        source = ''
 
 
     # Pub date
     # <meta property="article:published_time
-    pub_date_time = str(tree.xpath('//meta[@property="article:published_time"]/@content')[0])
-    pub_date = re.sub('T[0-2].*', '', pub_date_time)
-    pub_year = re.sub('-.*', '', pub_date)
+    try:
+        pub_date_time = str(tree.xpath('//meta[@property="article:published_time"]/@content')[0])
+    except:
+        pub_year = ''
+        pub_time = ''
+        pub_date = ''
+    else:
+        pub_date = re.sub('T[0-2].*', '', pub_date_time)
+        pub_year = re.sub('-.*', '', pub_date)
 
-    # Pub time
-    pub_time = re.sub('.*T', '', pub_date_time)
-    pub_time = re.sub(r'\+.*', '', pub_time)
+        # Pub time
+        pub_time = re.sub('.*T', '', pub_date_time)
+        pub_time = re.sub(r'\+.*', '', pub_time)
 
     # extracts article contents
     # pages contents (found between <div class="entry-content">
-    content = tree.xpath('//div[@class="entry-content"]')
+    try:
+        content = tree.xpath('//div[@class="entry-content"]')
+    except:
+        print("Error: text not found. Wordpress html tag <div class=\"entry-content\" does not exist, where the article should be")
+        content = ''
     
     # convert to string
     article_html = ''
