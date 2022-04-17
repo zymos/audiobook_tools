@@ -12,10 +12,10 @@ Includes
 # Download
 
 Release
-* 0.01 - 
+* 0.01 - [zip file](https://github.com/zymos/audiobook_tools/archive/refs/tags/v0.01.zip), [tar.gz file](https://github.com/zymos/audiobook_tools/archive/refs/tags/v0.01.tar.gz)
 
 Current snapshot
-* Download tools: [zip file](https://github.com/zymos/audiobook_tools/archive/master.zip)
+* Download: [zip file](https://github.com/zymos/audiobook_tools/archive/master.zip)
 * Git: *git clone https://github.com/zymos/audiobook_tools.git*
 
 # Install
@@ -38,16 +38,16 @@ Current snapshot
 	* Encodes using ffmpeg
     * Accepts mp3, m4b, m4a, flac, ogg, opus, aax(with auth code)
     * Grabs audio files data using ffprobe, for re-encoding and embedding cover art
-    * Split into chapters
-    * Removes unneeded files (nfo/cue/m2u) (can be disabled)
-    * Add genre="Audiobook" (can be disabled)
-    * Normalize volume (can be disabled)
-	* Won't re-encode if it is obvious it has been done before (can be forced)
+    * Split into chapters (optional)
+    * Removes unneeded files (nfo/cue/m2u) (optional)
+    * Add genre="Audiobook" (optional, default)
+    * Normalize volume (optional, default)
+	* Won't re-encode if it is obvious it has been done before (optional, default)
     * Cover art:
-    	* Extracts cover art to cover.jpg (can be disabled)
-		* Embeds cover art to each audiofile (can be disabled)
+    	* Extracts cover art to cover.jpg (optional)
+		* Embeds cover art to each audiofile (optional, default)
 		* If directory contains multiple different audiobooks it won't try extract/embed cover art
-		* Can delete original image file, after embedding (not default)
+		* Can delete original image file, after embedding (optional)
 * Requirments
 	* ffmpeg and ffprobe
 	* python3
@@ -71,7 +71,7 @@ Current snapshot
 * Supported Sites
   * Royal Road
   * WordPress sites
-  * to add more
+  * TODO: add more
 * Requirements
   * python3
     * python module: text2digits
