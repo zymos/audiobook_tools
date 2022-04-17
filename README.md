@@ -31,6 +31,16 @@ Current snapshot
    * Example: add PATH=$PATH:/opt/audiobook_tools to ~/.bashrc
 * Use it
 
+# Configure (optional)
+
+* edit files in 'config_files/' folder
+* uncomment any option you wish to change from default
+* Or modify options 
+   * *via command line: See --help
+   * via local user config files: copy and editing config files to your user dir
+      * linux:  ~/.config/audiobook-tools/
+
+
 # Tool Description
 
 ## Audiobook ReEncoder (audiobook_reencoder)
