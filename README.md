@@ -4,21 +4,36 @@ Description: A set of command line tools for creating, re-encoding and optimizin
 
 
 Includes
-* Audiobook ReEncoder - re-encode audiobook files to uniform format
+* Audiobook ReEncoder - bulk re-encode audiobook files to uniform format, with some bells and whistles
 * Online TTS - Coverts Text-to-Speech audio files using various online TTS services
 * Web-novel to Text - extracts web-novels from website and save to txt/ssml file
-* AAX Converter - convert AAX(Audible) to MP3/M4B file (to be included in Audiobook ReEncoder)
 
 
- Download tools: [zip file](https://github.com/zymos/audiobook_tools/archive/master.zip)
+# Download
 
+Release
+* 0.01 - 
 
-Git: *git clone https://github.com/zymos/audiobook_tools.git*
+Current snapshot
+* Download tools: [zip file](https://github.com/zymos/audiobook_tools/archive/master.zip)
+* Git: *git clone https://github.com/zymos/audiobook_tools.git*
 
+# Install
+
+* Install requirements
+   * ffmpeg, python3
+   * python modules: text2digits, imghd, PIL, mutagen
+      * pip install Pillow, mutagen, text2digits, azure-cognitiveservices-speech
+   * Optional: Google Cloud SDK, youtube-dl, Calibre, azure-cognitiveservices-speech
+* Copy audiobook_tools folder where ever you want.
+**   * Example: /opt/audiobook_tools
+* Add directory to $PATH
+   * Example: add PATH=$PATH:/opt/audiobook_tools to ~/.bashrc
+* Use it
 
 
 ## Audiobook ReEncoder (audiobook_reencoder)
-* Description: Re-encodes all MP3/M4B files in a directory, recursivly.
+* Description: Bulk re-encodes all MP3/M4B files in a directory, recursivly.
 * Features:
 	* Encodes using ffmpeg
     * Accepts mp3, m4b, m4a, flac, ogg, opus, aax(with auth code)
@@ -42,7 +57,8 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 ## Online TTS (online-tts)
 * Description: Text-to-Speech program using online/cloud TTS services.
 * Supported service
-  * Microsoft Azure TTS
+  * not supported yet: Google Cloud SDK (requires Google Cloud SDK)
+  * Microsoft Azure TTS (reqires azure-cognitiveservices-speech)
   * VoiceRSS TTS
   * Google translate TTS (not Google cloud TTS)
   * Easy to add other TTS APIs
@@ -58,7 +74,7 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
   * to add more
 * Requirements
   * python3
-    * text2digits module
+    * python module: text2digits
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/web_novel_to_text.md)
 
 
@@ -74,14 +90,6 @@ Git: *git clone https://github.com/zymos/audiobook_tools.git*
 	* ffmpeg
 	* Google Cloud SDK
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/audiobook_tools/google_cloud_tts)
-
-
-### m4b split
-* Desciption: Splits m4b files to chaptered mp3 files
-* Requirements
-	* ffmpeg
-	* libmp4v2
-* [more details](https://github.com/zymos/audiobook_tools/tree/master/audiobook_tools/m4bsplit)
 
 
 
