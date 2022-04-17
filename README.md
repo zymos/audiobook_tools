@@ -31,6 +31,7 @@ Current snapshot
    * Example: add PATH=$PATH:/opt/audiobook_tools to ~/.bashrc
 * Use it
 
+# Tool Description
 
 ## Audiobook ReEncoder (audiobook_reencoder)
 * Description: Bulk re-encodes all MP3/M4B files in a directory, recursivly.
