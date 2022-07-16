@@ -16,6 +16,7 @@
 * check blank mp3 to show error
 * remove non-latin1 charators option
   * https://stackoverflow.com/questions/23680976/python-removing-non-latin-characters
+  * royalroad:text in a single line, which fails. needs to convert <br> to new line
 
 # online-tts
 * remove_nonstandard_chars seems to be locked up for too much time

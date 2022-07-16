@@ -1,58 +1,56 @@
-* Description: Extracts the text of web-novels articles/chapters to a TXT or SSML file to be used in a text-to-speech program or service.
-* Supported Sites
-  * Royal Road
-  * WordPress sites
-  * to add more
+* Description: Text-to-Speech program using online/cloud TTS services.
+* Supported service
+  * Microsoft Azure TTS
+  * VoiceRSS TTS
+  * Google translate TTS (not Google cloud TTS)
+  * Easy to add other TTS APIs
+
 
 <pre>
-usage: online-tts [-h] [--bitrate {32k,48k,64k,96k,128k,196k}]
-                  [--samplerate {16000,22050,44100,48000}] [--format {mp3,wav,ogg}]
-                  [--input-format {txt,ssml,json-txt,json-ssml}] [--key KEY]
-                  [--locale LOCALE] [--voice VOICE] [--gender GENDER]
-                  [--url_parameters URL_PARAMETERS]
-                  [--audio_settings AUDIO_SETTINGS] [--gtts-lang GTTS_LANG]
-                  [--gtts-tld GTTS_TLD] [--tts-service TTS_SERVICE]
-                  [--profile PROFILE] [--keep-asterisk] [--keep-quotes]
-                  [--keep-problematic-chars] [--debug] [--test]
-                  EBOOK [EBOOK ...]
+usage: web-novel-to-text [-h] [-a] [-q] [--keep-problematic-chars]
+                         [--disable-emphasize] [--debug] [--test]
+                         [--format {txt,ssml,json}]
+                         [--first-file-number FIRST_FILE_NUMBER]
+                         [--output-filename OUTPUT_FILENAME]
+                         INPUT
+
+Converts a post to a txt/ssml file.
 
 positional arguments:
-  EBOOK                 ebook txt file
+  INPUT                 URL of post or file with list of URLs
 
 optional arguments:
   -h, --help            show this help message and exit
-  --bitrate {32k,48k,64k,96k,128k,196k}
-                        audio encoding bitrate
-  --samplerate {16000,22050,44100,48000}
-                        audio encoding samplerate
-  --format {mp3,wav,ogg}
-                        audio encoding format
-  --input-format {txt,ssml,json-txt,json-ssml}
-                        format sent to TTS service
-  --key KEY             key, auth code, auth file
-  --locale LOCALE       example: en-us, en-au,
-  --voice VOICE         voice
-  --gender GENDER
-  --url_parameters URL_PARAMETERS
-                        this will be attached to url after question mark
-  --audio_settings AUDIO_SETTINGS
-  --gtts-lang GTTS_LANG
-                        language for google-translate-tts
-  --gtts-tld GTTS_TLD   top-level-domain for google-tanslate-tts accents
-  --tts-service TTS_SERVICE
-                        tts service to use. ie google_translate_tts, voicerss,
-                        google_cloud_tts(unimplemented), amazone_polly(unimplemented
-  --profile PROFILE     profile to use, set in config file
-  --keep-asterisk       Some TTS servers speak out "asterisk", by default they are
-                        removed
-  --keep-quotes         Some TTS servers speak out "quote", by default they are
-                        removed
+  -a, --keep-asterisk   Speaks out asterisk[*] (off by default)
+  -q, --keep-quotes     leave double quotes in place and may or may not be spoken
+                        (off by default)
   --keep-problematic-chars
-                        don\'t remove problematic charactors, that are often spoken
+                        don\'t removes problematic charactors, that are often spoken
                         [\"\\\/*]
+  --disable-emphasize   don't emphasize some text in ssml
   --debug               debug mode, more output
   --test                test mode, no writing data
+  --format {txt,ssml,json}
+                        Format to output (json stores metadata, txt and ssml)
+  --first-file-number FIRST_FILE_NUMBER
+                        number for first output file's name, each additional file
+                        will increment this number, useful for keeping output files
+                        in order
+  --output-filename OUTPUT_FILENAME
+                        filename to output, can be dynamic, see below
+
+Output filename can be dynamic, using variables extracted from webpage. 
+    %a - author
+    %b - book title
+    %t - chapter title
+    %n - chapter number (extracted from chapter title, may not be reliable)
+    %N - chapter number (three digits w/ leading zeros, extracted from chapter title, may not be reliable)
+    %c - incremental count (starting with "--start-number", increments for each link in file)
+    %F - publication date YYYY-MM-DD
+    %T - publication time HH:MM:SS
+    Example: "%b - Chapter %N" -> "Moby Dick - Chapter 003"
 </pre>
 
-==Bugs==
-* <s>"Mrsha Stone Spears. [Scry]."</s> - TTS pronounces the (dot) in ms_azure ssml mode
+Changelog
+* set default format from ssml to txt
+

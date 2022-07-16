@@ -83,11 +83,13 @@ def ssml2text(ssml_text):
     input/output str
     """
     import re
-    text = re.sub('<[^>]+>', '', ssml_text)
+    #  print(ssml_text)
+    text = re.sub('<[^>]+>', r'\n', ssml_text)
 
     # remove blank lines
     text = re.sub(r'\n\s*\n', r'\n', text)
-
+    #  text = re.sub('a','W',ssml_text)
+    #  print("XXXXXXXXXXXXXXXXXXXXXXXXXXX")
     #text = ssml_text
     return text
 # End: ssml2text()
@@ -228,9 +230,9 @@ def clean_text(text, config):
     # White Space: 2+ white space
     text = re.sub(r"[ \t][ \t]*", " ", text)
     # white space + newline
-    text = re.sub("[ \t]*\n", "\n", text)
+    text = re.sub("[ \t]*\n", r"\n", text)
     # 2+ new line
-    text = re.sub("[\n][\n]*", "\n", text)
+    text = re.sub("[\n][\n]*", r"\n", text)
 
 
     #  print(text)
@@ -399,20 +401,25 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     #  ssml_text =  ': , …, —, —-, —, &nbsp;, ___,    <s>—-</s><s>—-</s>'
 
     # remove empty <p>paragraphs FIXME!! still isnt catching all
-    ssml_text = re.sub(r'<p>\s*</p>', '', ssml_text)
+    ssml_text = re.sub(r'<p>\s*</p>', '\n', ssml_text)
+
+    # FIXME FIXME FIXME ---------- / <--is not showing up in tags s and break
 
     # text line adds break (convert <p> to <s>)
     ssml_text = re.sub(r'<p>', r'˫@!@!@!@!s˧!@!@!@!@', ssml_text)
-    ssml_text = re.sub(r'</p>', r"˫@!@!@!@!/s˧!@!@!@!@", ssml_text)
+    ssml_text = re.sub(r'</p>', "˫@!@!@!@!/s˧!@!@!@!@\n", ssml_text)
 
+    # line breaks
+    ssml_text = re.sub(r'<br ?[\/]?>', "˫@!@!@!@!break time=\"400ms\" /˧!@!@!@!@ \n\n", ssml_text)
 
+    #  ssml_text = re.sub(r'<br ?[\/]?>', "˫@!@!@!@!break time=\"400ms\" /˧!@!@!@!@ ˫@!@!@!@!newline˧!@!@!@!@", ssml_text)
     # emphasised text
     #   emphasise sounds horible for ms_azure i think its slowwer rate
     #   so only increase volume, recomend disable by default
     #   needs testing
     if config['GENERAL']['no_emphasis']:
         emph_tag = "˫@!@!@!@!prosody volume=\"10%\"˧!@!@!@!@"
-        emph_tag_end = r"˫@!@!@!@!/prosody˧!@!@!@!@"
+        emph_tag_end = "˫@!@!@!@!/prosody˧!@!@!@!@"
         ssml_text = re.sub('<strong>', emph_tag, ssml_text)
         ssml_text = re.sub('</strong>', emph_tag_end, ssml_text)
         ssml_text = re.sub('<em>', emph_tag, ssml_text)
@@ -421,10 +428,12 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
         #ssml_text = re.sub('</strong>', "@!@!@!@!/emphasis!@!@!@!@", ssml_text)
         #ssml_text = re.sub('<em>', "@!@!@!@!emphasis level=\"moderate\"!@!@!@!@", ssml_text)
         #ssml_text = re.sub('</em>', "@!@!@!@!/emphasis!@!@!@!@", ssml_text)
-    
+     #  line breaks
+    #  ssml_text = re.sub(r'<br ?[\/]?>', "˫@!@!@!@!break time=\"400ms\" /˧!@!@!@!@ XXXXXXXXXXXXXXX\n\n", ssml_text)
+   
     # Remove all other html tags
     ssml_text = re.sub('<[^>]+>', '', ssml_text) 
-    
+   
     # Add pauses
     # ': ', '…', '—' '—-' '—' '&nbsp;' '___'    <s>—-</<s>—-</s>
     ssml_text = re.sub(r'—-', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@ ", ssml_text)
@@ -432,8 +441,6 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     ssml_text = re.sub(r'…', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@ ", ssml_text)
     # nbsp space
     ssml_text = re.sub('&nbsp;', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@  ", ssml_text)
-    # line breaks
-    ssml_text = re.sub(r'<br ?[\/]?>', "˫@!@!@!@!break time=\"400ms\" /˧!@!@!@!@\n", ssml_text)
     # add pause for colon "Speaking: Words"
     if re.search('[a-zA-Z]: [a-zA-Z]', ssml_text): 
         ssml_text = re.sub(': ', "˫@!@!@!@!break time=\"200ms\" /˧!@!@!@!@ ", ssml_text)
@@ -454,7 +461,9 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
     ssml_text = re.sub("[ \t]*\n", r"\n", ssml_text)
 
     # 2+ new line
-    ssml_text = re.sub("[\n][\n]*", r"\n", ssml_text)
+    #  ssml_text = re.sub("[\n][\n]*", r"\n", ssml_text)
+
+
 
     # fix problem with multiplu delays
     ssml_text = re.sub("(<break time=\"[0-9]*ms\"/>\n){3,}", "<break time=\"1s\" />\n", ssml_text)
@@ -462,21 +471,22 @@ def html_article2ssml(html_article, config, args): # maybe convert to config ins
 
 
 
+    #  print(ssml_text)
   
     # clean up the ssml code
     ssml_text = clean_ssml(ssml_text, "", "")
 
     # clean up text
     ssml_text = clean_text(ssml_text, config)
- 
+
     # Re-Add <speak> tags
     #  ssml_text = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="string">\n' + ssml_text + "\n</speak>"
 
     #  ssml_text = re.sub("<break time=\"[0-9]*ms\"/>\n<break time=\"[0-9]*ms\"/>\n", "<break time=\"1s\">\n", ssml_text)
-    # print("----------------------ssml_text-------------------------------")
-    # print(ssml_text)
+    #  print("----------------------ssml_text-------------------------------")
+    #  print(ssml_text)
     # print(type(ssml_text))
-    # print("---------------------ssml_text (end)-------------------------") 
+    #  print("---------------------ssml_text (end)-------------------------")
     #  print(ssml_text)
     # return modified text
     return ssml_text

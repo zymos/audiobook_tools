@@ -143,7 +143,7 @@ Output filename can be dynamic, using variables extracted from webpage. \n\
     parser.add_argument('--no-emphasis', help='don\'t emphasize some text in ssml', action="store_true")
     parser.add_argument('--debug', help='debug mode, more output', action="store_true")
     parser.add_argument('--test', help='test mode, no writing data', action="store_true")
-    parser.add_argument('--format', type=str, help='Format to output (json stores metadata, txt and ssml)', choices=["txt", "ssml", "json"])
+    parser.add_argument('--format', type=str, help='Format to output (json stores metadata, txt and ssml)', choices=["txt", "ssml", "json"], default="txt")
     parser.add_argument('--first-file-number', type=int, help='number for first output file\'s name, each additional file will increment this number, useful for keeping output files in order', default=1)
     parser.add_argument('--output-filename', type=str, help=r'filename to output, can be dynamic, see below')
     parser.add_argument('--remove_all_bad_chars', help=r'remove problematic charactors, that can change speech [, ], (, ), *, /, \, "', action="store_true")
@@ -817,6 +817,7 @@ def process_url(url):
 
     # Write to output file (without invalid chars)
     #  meta['filename'] = re.sub(r"[\?:\"\|\*\\><]", ".", meta['filename'] )
+
     if(config['preferred']['format'] == "json"):
         # json stores metadata, article txt and ssml
         import json
@@ -830,6 +831,7 @@ def process_url(url):
         text_w = article_ssml
     else: # text
         #  filename = meta['filename'] + ".txt"
+        #  print("YYYYYYYYYYYY")
         text_w = article_text
 
     # Writing file
