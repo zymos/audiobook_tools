@@ -11,13 +11,15 @@
 
 # web-novel-to-text
 * add other web-novel sites
-* remove non eu (needs fixed)
+* remove non eu (needs fixed) change eu name to something
 * command line arg service not woring
 * check blank mp3 to show error
 * remove non-latin1 charators option
   * https://stackoverflow.com/questions/23680976/python-removing-non-latin-characters
   * royalroad:text in a single line, which fails. needs to convert <br> to new line
-
+* filenames with '='
+* https://royalroad.com/fiction/39408/beware-of-chicken/chapter/684101/v2-c272 gives error text2digits
+ 
 # online-tts
 * remove_nonstandard_chars seems to be locked up for too much time
 * implement profiles

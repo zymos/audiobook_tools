@@ -377,7 +377,7 @@ def extract_txt_royalroad(site_code):
     #  <meta property="og:title" content="*****title*****"/>
     title = tree.xpath('//meta[@property="og:title"]/@content')[0]
     chap_title = re.sub(r'(.*) - (.*) - (.*)', r'\1 - \2', title)
-
+    
     # Chapter number
     (chap_num, chap_num_3_dig) = get_chap_number(chap_title)
 
@@ -645,6 +645,7 @@ def get_chap_number(chap_title):
 
     # Attempt to Extract chapter number from chapter title
     ct = text2digits.Text2Digits()
+    chap_title = re.sub(r'\.', '-', chap_title) # gets rid of errors with decimals
     chap_title = ct.convert(chap_title)
     chap_number = re.sub(r'^.*?([0-9])', r'\1', chap_title)
     chap_number = re.sub(r'([0-9])[^0-9\.:]{2,}[0-9]', r'\1', chap_number)
@@ -719,7 +720,7 @@ def create_filename(meta):
     # filename_out = meta['date'] + " - " + meta['chap_title']
 
     # Ensure no forbiden chars in filename
-    filename_out = re.sub(r"[\?:\"\|\*\\><]", ".", filename_out)
+    filename_out = re.sub(r"[/\?:\"\|\*\\><=]", ".", filename_out)
 
     # Set file extension
     if(config['preferred']['format'] == "json"):
