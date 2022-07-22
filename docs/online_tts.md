@@ -1,8 +1,4 @@
-* Description: Extracts the text of web-novels articles/chapters to a TXT or SSML file to be used in a text-to-speech program or service.
-* Supported Sites
-  * Royal Road
-  * WordPress sites
-  * to add more
+* Description: Text to Speech (TTS) program which interfaces with online/cloud TTS services, and is optimized for audiobooks and web-novels
 
 <pre>
 usage: online-tts [-h] [--bitrate {32k,48k,64k,96k,128k,196k}]
@@ -54,5 +50,3 @@ optional arguments:
   --test                test mode, no writing data
 </pre>
 
-==Bugs==
-* <s>"Mrsha Stone Spears. [Scry]."</s> - TTS pronounces the (dot) in ms_azure ssml mode

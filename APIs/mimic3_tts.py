@@ -12,6 +12,8 @@ def get_tts_audio(text_in, config, args):
     import sys
     from shutil import which
     import subprocess
+    #  import ffmpeg
+
 
     # Enable/Disable debug
     DEBUG = config['DEBUG']['debug']
@@ -23,9 +25,9 @@ def get_tts_audio(text_in, config, args):
 
     VOICE_in = config['preferred']['voice']
     #  RATE = config['preferred']['read_rate']
-    AUDIO_FORMAT_in = config['preferred']['audio_format']
+    AUDIO_FORMAT_in = config['preferred']['audio_format'] # mp3
     AUDIO_SETTINGS_in = config['preferred']['audio_settings']
-    INPUT_FORMAT_in = config['preferred']['input_format']
+    INPUT_FORMAT_in = config['preferred']['input_format'] # txt/ssml
 
     #  text = "this is a test"
     
@@ -37,24 +39,47 @@ def get_tts_audio(text_in, config, args):
     if(INPUT_FORMAT_in == 'ssml'):
         mimic3_command_param += ["--ssml"]
 
-    if(AUDIO_FORMAT_in):
-        ffmpeg_command_param += ['-format', AUDIO_FORMAT_in]
-    else:
-        ffmpeg_command_param += ['-format', 'mp3']
+    #  if(AUDIO_FORMAT_in):
+        #  ffmpeg_format = AUDIO_FORMAT_in
+    #  else:
+        #  ffmpeg_format = 'mp3'
 
 
     #  if(RATE):
-        #  command_param += " --lendth-scale " + RATE + " "
+        #  mimic3_command_param += " --lendth-scale " + RATE + " "
 
-    mimic3_command = ["mimic3"] + mimic3_command_param
+    mimic3_command = ["mimic3"] + mimic3_command_param + ['-stdout']
     #  mimic3_command = "ls"
-    ffmpeg_command = ['ffmpeg', '-i', '-'] + ffmpeg_command_param
-    ffmpeg_command += ['-']
+    ffmpeg_command = ['ffmpeg', '-i', '-'] + ['-f'] + ['mp3'] + ['pipe:']
+    #  ffmpeg_command = ['ffmpeg', '-i', '-'] + ffmpeg_command_param + ['xoxox.mp3']
+    #  ffmpeg_command += ['-']
+    #  f=open('pythonout.wav', 'w+b')
+    p1 = subprocess.Popen(mimic3_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    mimic3_wav_out, mimic3_stderr = p1.communicate(input=text_in.encode()) # pipe in text to mimic3, outputs wav and stderr
+    #  p1.wait()
+    #  f.close()
+    #  audio_out, _ = (ffmpeg
+    #                  .input('pipe:', format='pcm_s16le', ac=1)
+    #                  .output('-', format=ffmpeg_format)
+    #                  .overwrite_output()
+    #                  .run(capture_stdout=True)
+    #  )
+    #  f=open('pytest.mp3', 'w+b')
+    p2 = subprocess.Popen(ffmpeg_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    ffmpeg_mp3_out, ffmpeg_stderr = p2.communicate(input=mimic3_wav_out) # pipe wav info ffmpeg; outputs mp3 and stderr
 
-    p1 = subprocess.Popen(mimic3_command + ['|'] + ffmpeg_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out = p1.communicate(input=text_in.encode())[0] # pipe in text to mimic3
 
-    audio_out = out
+    #  p2.wait()
+    #  f.close()
+    #  p2 = subprocess.Popen(ffmpeg_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
+    #  ffmpeg_mp3_out = p2.communicate(input=mimic3_wav_out)[0]
+
+
+    #  audio_out = p2.stdout
+    audio_out = ffmpeg_mp3_out
+    #  audio_out = b''
+
+
     ###############
     # Debug stuff
     if DEBUG:

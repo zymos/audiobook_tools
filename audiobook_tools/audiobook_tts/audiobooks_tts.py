@@ -586,6 +586,8 @@ def process_file(filename):
         (ebook_txt_chunks, total_char_cnt, chunk_cnt) = split_file_into_text_chunks(filename)
 
         # Sends chunks of text to audio and merging
+        if(chunk_cnt == 0):
+            chunk_cnt += 1
         print("\tProcessing:", str(total_char_cnt) , "chars, in", str(chunk_cnt), "chunks.", end="", flush=True)
         filename_tmp_audio = process_chunks(ebook_txt_chunks)
 
