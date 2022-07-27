@@ -25,7 +25,7 @@ def get_tts_audio(text_in, config, args):
 
     VOICE_in = config['preferred']['voice']
     #  RATE = config['preferred']['read_rate']
-    AUDIO_FORMAT_in = config['preferred']['audio_format'] # mp3
+    AUDIO_FORMAT_in = config['preferred']['format'] # mp3
     AUDIO_SETTINGS_in = config['preferred']['audio_settings']
     INPUT_FORMAT_in = config['preferred']['input_format'] # txt/ssml
 
@@ -48,9 +48,13 @@ def get_tts_audio(text_in, config, args):
     #  if(RATE):
         #  mimic3_command_param += " --lendth-scale " + RATE + " "
 
+    # set file format for ffmpeg to pipe currently only mp3 works
+    ffmpeg_format = 'mp3'
+
+
     mimic3_command = ["mimic3"] + mimic3_command_param + ['-stdout']
     #  mimic3_command = "ls"
-    ffmpeg_command = ['ffmpeg', '-i', '-'] + ['-f'] + ['mp3'] + ['pipe:']
+    ffmpeg_command = ['ffmpeg', '-hide_banner', '-loglevel', 'error', '-i', '-'] + ['-f'] + [ffmpeg_format] + ['pipe:']
     #  ffmpeg_command = ['ffmpeg', '-i', '-'] + ffmpeg_command_param + ['xoxox.mp3']
     #  ffmpeg_command += ['-']
     #  f=open('pythonout.wav', 'w+b')
@@ -68,6 +72,9 @@ def get_tts_audio(text_in, config, args):
     p2 = subprocess.Popen(ffmpeg_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     ffmpeg_mp3_out, ffmpeg_stderr = p2.communicate(input=mimic3_wav_out) # pipe wav info ffmpeg; outputs mp3 and stderr
 
+    if DEBUG: 
+        #  print( ffmpeg_out)
+        print('ffmpeg stderr: ' +str(ffmpeg_stderr))
 
     #  p2.wait()
     #  f.close()

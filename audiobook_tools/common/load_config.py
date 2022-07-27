@@ -194,9 +194,10 @@ def load_config(config_filename, args, tmp_dir):
 
     # audiobook-tts.py programs config
     elif config_filename == "audiobook-tts.conf":
-        preferred_vars = ('voice', 'profile', 'locale', 'gender', 'key', 'input_format', 'audio_format', 'audio_settings', 'gtts_lang', 
+        preferred_vars = ('voice', 'profile', 'locale', 'gender', 'key', 'input_format', 'gtts_lang', 
                           'gtts_tld', 'url_parameters', 'delay_between_requests', 'max_charactors','speaking_rate', 'debug', 'test', 
-                          'remove_all_bad_chars', 'remove_bad_chars', 'remove_non_eu_chars', 'remove_non_ascii_char')
+                          'remove_all_bad_chars', 'remove_bad_chars', 'remove_non_eu_chars', 'remove_non_ascii_char', 'audio_settings', 
+                          'format', 'bitrate', 'samplerate')
 
         if config.get(config['GENERAL']['tts_service']) is None :
             print("Error: tts serivce \"" + config['GENERAL']['tts_service'] +
@@ -220,7 +221,9 @@ def load_config(config_filename, args, tmp_dir):
                     #if args.debug: print("vars",vars(args)[setting] )
                     config['preferred'][setting] = vars(args)[setting]
                 elif config[config['GENERAL']['tts_service']].get(setting) is not None:
-                    config['preferred'][setting] = config[config['GENERAL']['tts_service']][setting]
+                    config['preferred'][setting] = config[ config['GENERAL']['tts_service'] ][setting]
+                elif config['GENERAL'].get(setting) is not None:
+                    config['preferred'][setting] = config['GENERAL'][setting]
             elif config[config['GENERAL']['tts_service']].get(setting) is not  None:
                 config['preferred'][setting] = config[config['GENERAL']['tts_service']][setting]
                 #  print("asdasdasdasda", setting)

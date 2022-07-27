@@ -177,16 +177,17 @@ def parse_args():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('EBOOK', nargs='+', type=str, help='ebook txt file')
-    parser.add_argument('--bitrate', type=str, help='audio encoding bitrate', choices=["32k","48k","64k","96k","128k","196k"], default="64k")
-    parser.add_argument('--samplerate', type=str, help='audio encoding samplerate', choices=[16000,22050,44100,48000], default="22050")
-    parser.add_argument('--format', type=str, help='audio encoding format', choices=["mp3", "wav", "ogg"], default="mp3")
+    # only mp3s are supported currently
+    #  parser.add_argument('--bitrate', type=str, help='audio encoding bitrate', choices=["32k","48k","64k","96k","128k","196k"])
+    #  parser.add_argument('--samplerate', type=str, help='audio encoding samplerate', choices=[16000,22050,44100,48000])
+    #  parser.add_argument('--format', type=str, help='audio encoding format', choices=["mp3", "wav", "ogg"])
     parser.add_argument('--input-format', type=str, help='format sent to TTS service', choices=["txt","ssml","json-txt","json-ssml"])
     parser.add_argument('--key', type=str, help='key, auth code, auth file')
     parser.add_argument('--locale', type=str, help='example: en-us, en-au,')
     parser.add_argument('--voice', type=str, help='voice')
     parser.add_argument('--gender', type=str, help='')
     parser.add_argument('--url_parameters', type=str, help='this will be attached to url after question mark') # remove
-    parser.add_argument('--audio_settings', type=str, help='')
+    #  parser.add_argument('--audio_settings', type=str, help='')
     parser.add_argument('--gtts-lang', type=str, help='language for google-translate-tts') # remove
     parser.add_argument('--gtts-tld', type=str, help='top-level-domain for google-tanslate-tts accents') # remove
     parser.add_argument('--tts-service', type=str, help='tts service to use. ie google_translate_tts, voicerss, google_cloud_tts(unimplemented), amazone_polly(unimplemented')
@@ -436,9 +437,9 @@ def tts_api_selection(text):
         exit(1)
 
     # Call API to post text and get audio responce        
-    response = selected_api.get_tts_audio(text, config, args)
-
-    return response
+    tts_audio_output = selected_api.get_tts_audio(text, config, args)
+    
+    return tts_audio_output
 # End: tts_service_selection()
 
 
@@ -480,31 +481,40 @@ def process_chunks(ebook_txt_chunks):
 
             # actually send the data
             if(not TEST):
-                response = tts_api_selection(chunk)
+                tts_audio_data = tts_api_selection(chunk)
                 if DEBUG:
                     filename_tmp = os.path.join(config['TMP']['tmp_dir'], str(cnt) + ".mp3")
                     print(  "Writing tmp mp3 file:", filename_tmp)
                     fp = open(filename_tmp, "wb")
-                    fp.write(response)
+                    fp.write(tts_audio_data)
                     fp.close()
+                    print("\nTTS Chunk size: " + str(sys.getsizeof(tts_audio_data)) + "bytes")
                 # join the mp3 fragments together
                 # temp mp3 file has errors, needs re-encode
-                audio_data = audio_data + response        
+                if sys.getsizeof(tts_audio_data) < 1000: # if the audio is 1kB 
+                    print("Error: audio chunk is too small and is likely broken. Check file for errors.")
+
+                audio_data = audio_data + tts_audio_data        
             else:
                 # blank in test mode
                 audio_data = b''
+
+        print("") # prints new line
         
-        # Write TMP mp3 file of joined chunks 
+        if(DEBUG):
+            print("Writing joined-audio tmp file:", filename_tmp)
+            filename_tmp_audio = os.path.join(tmp_dir, 'joined-out.mp3')
+            if(not TEST):
+                f = open(filename_tmp_audio, 'wb')
+                f.write(audio_data)
+                f.close()
+        
+        #  Write TMP mp3 file of joined chunks 
         #   TODO: ideally i would keep this as binary str and pipe to ffmpeg
-        filename_tmp_audio = os.path.join(tmp_dir, 'joined-out.mp3')
-        print("")
-        if(not TEST):
-            f = open(filename_tmp_audio, 'wb')
-            f.write(audio_data)
-            f.close()
-        
-        # returns filename for re-encoding
-        return filename_tmp_audio
+       
+              
+        # returns audio variable
+        return audio_data
 # End: process_chunks
 
 
@@ -515,7 +525,7 @@ def process_chunks(ebook_txt_chunks):
 ###############################################
 # FFMPEG: re-encode audio
 #  
-def ffmpeg_reencode(filename_orig, filename_tmp_audio):
+def ffmpeg_reencode(filename_orig, audio_data):
         """
         calls ffmpeg for reenconde
         merged audio chunks have 
@@ -530,23 +540,30 @@ def ffmpeg_reencode(filename_orig, filename_tmp_audio):
                 '-hide_banner',
                 '-loglevel', 'error',
                 '-y',
-                '-i', filename_tmp_audio,
-                '-b:a', args.bitrate,
-                '-ar', args.samplerate,
+                '-i', '-',
+                #  '-b:a', config['preferred']['bitrate'],
+                #  '-ar', config['preferred']['samplerate'],
                 filename_output_audio]
 
         if DEBUG:
-            print("\tTemp audio file: " + filename_tmp_audio)
+            print("\tFFMPEG reencode command: ")
             pprint.pprint(ffmpeg_cmd)
 
         # Run ffmpeg command
         print("\tJoining audio chunks.")
         if(not TEST):
-            proc = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            #  proc = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+             # re-en
+            #  ffmpeg_command = ['ffmpeg', '-i', '-'] + ['-f'] + ['mp3'] + ['pipe:']
+            proc = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            ffmpeg_out, ffmpeg_stderr = proc.communicate(input=audio_data) # pipe wav info ffmpeg; outputs mp3 and stderr
+
 
             # print ffmpeg output
-            ffmpeg_out = proc.communicate()
-            if DEBUG: print( ffmpeg_out)
+            #  ffmpeg_out = proc.communicate()
+            if DEBUG: 
+                #  print( ffmpeg_out)
+                print('ffmpeg stderr: ' +str(ffmpeg_stderr))
 
         print("\tOutput file: ", filename_output_audio)
 # End: ffmpeg_reencode()
@@ -567,13 +584,16 @@ def process_file(filename):
 
         # store the filename to variable
         config['INPUT']['filename'] = filename
+        #  print(config['INPUT']['filename'])
+
+        # FIXME current only supports mp3
+        config['preferred']['format'] = 'mp3'
 
         # output filename (without invalid chars)
-        config['OUTPUT']['filename'] = re.sub(r"\.....?$", "." + args.format, 
-                re.sub(r"[\?:\"\|\*\\><]", ".",
-                filename
-                ) )
+        config['OUTPUT']['filename'] = re.sub(r"\.....?$", ".", filename) + config['preferred']['format']
+        config['OUTPUT']['filename'] = re.sub(r"[\?:\"\|\*\\><]", ".", config['OUTPUT']['filename'] )
 
+        #  print(config['OUTPUT']['filename'])
         # Run the python TTS module instead of online services
         #  if config['GENERAL']['tts_service'] == 'offline_tts':
             
@@ -589,10 +609,10 @@ def process_file(filename):
         if(chunk_cnt == 0):
             chunk_cnt += 1
         print("\tProcessing:", str(total_char_cnt) , "chars, in", str(chunk_cnt), "chunks.", end="", flush=True)
-        filename_tmp_audio = process_chunks(ebook_txt_chunks)
+        audio_data = process_chunks(ebook_txt_chunks)
 
         # re-encode broken audiofile
-        ffmpeg_reencode(filename, filename_tmp_audio)
+        ffmpeg_reencode(filename, audio_data)
 # End: process_file()
 
    
