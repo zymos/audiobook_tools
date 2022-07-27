@@ -455,7 +455,9 @@ def process_chunks(ebook_txt_chunks):
 
         # Send request to service
         cnt=0
-        audio_data= b'' # bytes
+        audio_data= b'' # binary
+        tts_audio_data = b''
+
         for chunk in ebook_txt_chunks:
             #  print "************************************************"
             #  print chunk
@@ -471,7 +473,7 @@ def process_chunks(ebook_txt_chunks):
             if DEBUG:
                 filename_tmp = os.path.join(config['TMP']['tmp_dir'], str(cnt) 
                 + ".txt")
-                print(  "Writing tmp file:", filename_tmp)
+                print(  "\nWriting tmp file:", filename_tmp)
                 fp = open(filename_tmp, "w")
                 fp.write(chunk)
                 fp.close()
@@ -484,7 +486,7 @@ def process_chunks(ebook_txt_chunks):
                 tts_audio_data = tts_api_selection(chunk)
                 if DEBUG:
                     filename_tmp = os.path.join(config['TMP']['tmp_dir'], str(cnt) + ".mp3")
-                    print(  "Writing tmp mp3 file:", filename_tmp)
+                    print(  "\nWriting tmp mp3 file:", filename_tmp)
                     fp = open(filename_tmp, "wb")
                     fp.write(tts_audio_data)
                     fp.close()
@@ -563,7 +565,10 @@ def ffmpeg_reencode(filename_orig, audio_data):
             #  ffmpeg_out = proc.communicate()
             if DEBUG: 
                 #  print( ffmpeg_out)
-                print('ffmpeg stderr: ' +str(ffmpeg_stderr))
+                print("---------------------------ffmpeg joining chunks----------------------")
+                print("--- notes on ffmpeg stderr, 'Heading missing.....Error while decoding stream.....Invalid data found....' is normal, and causes no problems")
+                print('ffmpeg stderr: ' + str(ffmpeg_stderr))
+                print("-------------------------ffmeg joining chunks (end)-------------------")
 
         print("\tOutput file: ", filename_output_audio)
 # End: ffmpeg_reencode()
@@ -683,7 +688,7 @@ def main():
     # get list of files inputed
     file_list = get_file_list(args.EBOOK)
     
-    print("Using TTS service:", config['GENERAL']['tts_service'])
+    print("Using TTS service:", config['preferred']['tts_service'])
 
     # Get total char count for all files
     # in case your service has limits

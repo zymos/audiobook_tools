@@ -65,7 +65,8 @@ def get_tts_audio(text_in, config, args):
     import pprint # debuging
     import requests # for sending request to server
     import time # for sleep
-    
+    import sys
+
     #  try:
     from audiobook_tools.common.basic_url_request import basic_url_request
     #  except:
@@ -124,6 +125,15 @@ def get_tts_audio(text_in, config, args):
     ############
     # Send the request and get the audio
     audio = basic_url_request(url, config)
-        
+
+    if DEBUG:
+        print("-------------------audio size---------------------------")
+        print(sys.getsizeof(audio))
+        print("----------------------------------------------------------")
+       
+    if sys.getsizeof(audio) < 500:
+        r = re.compile(b"(ERROR)")
+        if r.match(audio):
+            print("Error in conversion:" + str(audio) )
     return audio
 # End: voicerss_tts()

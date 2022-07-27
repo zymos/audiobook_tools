@@ -194,36 +194,43 @@ def load_config(config_filename, args, tmp_dir):
 
     # audiobook-tts.py programs config
     elif config_filename == "audiobook-tts.conf":
-        preferred_vars = ('voice', 'profile', 'locale', 'gender', 'key', 'input_format', 'gtts_lang', 
+        preferred_vars = ('tts_service', 'voice', 'profile', 'locale', 'gender', 'key', 'input_format', 'gtts_lang', 
                           'gtts_tld', 'url_parameters', 'delay_between_requests', 'max_charactors','speaking_rate', 'debug', 'test', 
                           'remove_all_bad_chars', 'remove_bad_chars', 'remove_non_eu_chars', 'remove_non_ascii_char', 'audio_settings', 
-                          'format', 'bitrate', 'samplerate')
+                          'audio_format', 'bitrate', 'samplerate', 'read_speed')
 
         if config.get(config['GENERAL']['tts_service']) is None :
             print("Error: tts serivce \"" + config['GENERAL']['tts_service'] +
             "\" is set in config, yet the section does not exist.  Fix the [GENERAL] \"tts_service\" setting, or add a new section named \"" +
             config['GENERAL']['tts_service'] , "\" an create a file in 'APIs' folder named \"" + config['GENERAL']['tts_service'] + ".py\"")
             exit(1)
-        # TTS Service
-        if args.profile :
-            if config[args.profile].get('tts_service') is not None:
-                config['preferred']['tts_service'] = config[args.profile]['tts_service']
-            else:
-                config['preferred']['tts_service'] =  config['GENERAL']['tts_service']
-        else:
-            config['preferred']['tts_service'] =  config['GENERAL']['tts_service']
 
+        # TTS Service (profiles are not implimented)
+        #  if args.profile :
+            #  if config[args.profile].get('tts_service') is not None:
+                #  config['preferred']['tts_service'] = config[args.profile]['tts_service']
+            #  else:
+                #  config['preferred']['tts_service'] =  config['GENERAL']['tts_service']
+        #  else:
+            #  config['preferred']['tts_service'] =  config['GENERAL']['tts_service']
+        
+        # Set preferred setting
         for setting in preferred_vars:
             config['preferred'].update({setting: ''})
             # if args.debug: print("Config settings:", setting)
             if setting in vars(args).keys(): # var exists
+                #  print("argv tts: " + str(vars(args)['tts_service']) + "setting" + str(config[vars(args)['tts_service']].get(setting)))
                 if vars(args)[setting]: # var is set
                     #if args.debug: print("vars",vars(args)[setting] )
                     config['preferred'][setting] = vars(args)[setting]
+                elif vars(args)['tts_service'] is not None and config[vars(args)['tts_service']].get(setting) is not None: # If the tts_service is set via ARGS and setting is set in config under the selected tts_service
+                    config['preferred'][setting] = config[  vars(args)['tts_service'] ][setting]
                 elif config[config['GENERAL']['tts_service']].get(setting) is not None:
                     config['preferred'][setting] = config[ config['GENERAL']['tts_service'] ][setting]
                 elif config['GENERAL'].get(setting) is not None:
                     config['preferred'][setting] = config['GENERAL'][setting]
+            elif vars(args)['tts_service'] is not None and config[vars(args)['tts_service']].get(setting) is not None: # If the tts_service is set via ARGS and setting is set in config under the selected tts_service
+                config['preferred'][setting] = config[  vars(args)['tts_service'] ][setting]
             elif config[config['GENERAL']['tts_service']].get(setting) is not  None:
                 config['preferred'][setting] = config[config['GENERAL']['tts_service']][setting]
                 #  print("asdasdasdasda", setting)
