@@ -182,14 +182,12 @@ def parse_args():
     #  parser.add_argument('--samplerate', type=str, help='audio encoding samplerate', choices=[16000,22050,44100,48000])
     #  parser.add_argument('--format', type=str, help='audio encoding format', choices=["mp3", "wav", "ogg"])
     parser.add_argument('--input-format', type=str, help='format sent to TTS service', choices=["txt","ssml","json-txt","json-ssml"])
-    parser.add_argument('--key', type=str, help='key, auth code, auth file')
+    parser.add_argument('--key', type=str, help='tts serices\'s key, auth code, auth file')
     parser.add_argument('--locale', type=str, help='example: en-us, en-au,')
     parser.add_argument('--voice', type=str, help='voice')
     parser.add_argument('--gender', type=str, help='')
-    parser.add_argument('--url_parameters', type=str, help='this will be attached to url after question mark') # remove
+    #  parser.add_argument('--url_parameters', type=str, help='this will be attached to url after question mark') # remove
     #  parser.add_argument('--audio_settings', type=str, help='')
-    parser.add_argument('--gtts-lang', type=str, help='language for google-translate-tts') # remove
-    parser.add_argument('--gtts-tld', type=str, help='top-level-domain for google-tanslate-tts accents') # remove
     parser.add_argument('--tts-service', type=str, help='tts service to use. ie google_translate_tts, voicerss, google_cloud_tts(unimplemented), amazone_polly(unimplemented')
     #  parser.add_argument('--config-file', type=str, help='config file location')
     parser.add_argument('--profile', type=str, help='profile to use, set in config file')
@@ -199,8 +197,8 @@ def parse_args():
     parser.add_argument('--test', help='test mode, no writing data', action="store_true")
     #  parser.add_argument('--', type=str, help='', choices=[""], default="")
 
-    parser.add_argument('--remove-non-ascii-chars', help='Removes non-ASCII charators', action="store_true")
-    parser.add_argument('--remove-non-eu-chars', help='Removes non-European charators (non-latin1). ie Arabic/Chinese/Japanese/etc', action="store_true")
+    parser.add_argument('--remove-non-ascii-chars', help='Removes non-ASCII charators, ie standard english chars only', action="store_true")
+    parser.add_argument('--remove-non-latin1-chars', help='Removes non-latin1 charators. ie no Arabic/Chinese/Japanese/etc', action="store_true")
     #  parser.add_argument('-a', '--speak-asterisk', help='Speaks out asterisk[*] (off by default)', action="store_true")
     #  parser.add_argument('-q', '--dont-remove-quotes', help='Leave quotes in place and may or may not be spoken (off by default)', action="store_true")
     

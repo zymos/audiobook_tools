@@ -196,7 +196,8 @@ def load_config(config_filename, args, tmp_dir):
     elif config_filename == "audiobook-tts.conf":
         preferred_vars = ('tts_service', 'voice', 'profile', 'locale', 'gender', 'key', 'input_format', 'gtts_lang', 
                           'gtts_tld', 'url_parameters', 'delay_between_requests', 'max_charactors','speaking_rate', 'debug', 'test', 
-                          'remove_all_bad_chars', 'remove_bad_chars', 'remove_non_eu_chars', 'remove_non_ascii_char', 'audio_settings', 
+                          'remove_all_bad_chars', 'remove_bad_chars', 'remove_non_eu_chars', 'remove_non_ascii_char',         
+                          'remove_non_latin1_chars', 'audio_settings', 
                           'audio_format', 'bitrate', 'samplerate', 'read_speed')
 
         if config.get(config['GENERAL']['tts_service']) is None :

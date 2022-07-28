@@ -47,22 +47,31 @@ Current snapshot
 * Description: Bulk re-encodes all MP3/M4B files in a directory, recursivly.
 * Features:
 	* Encodes using ffmpeg
-    * Accepts mp3, m4b, m4a, flac, ogg, opus, aax(with auth code)
-    * Grabs audio files data using ffprobe, for re-encoding and embedding cover art
-    * Split into chapters (optional)
-    * Removes unneeded files (nfo/cue/m2u) (optional)
-    * Add genre="Audiobook" (optional, default)
-    * Normalize volume (optional, default)
+   * Accepts mp3, m4b, m4a, flac, ogg, opus, aax(with auth code)
+   * Grabs audio files data using ffprobe, for re-encoding and embedding cover art
+   * Split into chapters (optional)
+   * Removes unneeded files (nfo/cue/m2u) (optional)
+   * Add genre="Audiobook" (optional, default)
+   * Normalize volume (optional, default)
 	* Won't re-encode if it is obvious it has been done before (optional, default)
-    * Cover art:
+   * Cover art:
     	* Extracts cover art to cover.jpg (optional)
 		* Embeds cover art to each audiofile (optional, default)
 		* If directory contains multiple different audiobooks it won't try extract/embed cover art
 		* Can delete original image file, after embedding (optional)
-* Requirments
-	* ffmpeg and ffprobe
-	* python3
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/audiobook_reencoder.md)
+
+
+## Audiobook TTS (audiobook-tts)
+* Description: Text-to-Speech program using software or online/cloud TTS services.
+* Supported service
+   * Microsoft Azure TTS (online)
+   * VoiceRSS TTS (online)
+   * Google translate TTS (not Google cloud TTS) (online)
+   * mimic3 tts (software)
+   * Easy to add other TTS APIs
+* [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/audiobook_tts.md)
+
 
 
 ## Online TTS (online-tts)
@@ -83,14 +92,16 @@ Current snapshot
   * Royal Road
   * WordPress sites
   * TODO: add more
-* Requirements
-  * python3
-    * python module: text2digits
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/web_novel_to_text.md)
 
 
 ## AAX Converter (aaxconverter)
 * Description: convert AAX(Audible) files to mp3, m4b, single or chapter files, removing DRM.  This almost a copy of KrumpetPirate's [AAXtoMP3](https://github.com/KrumpetPirate/AAXtoMP3)
+* [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/aaxconverter.md)
+
+
+## Royalroads web-novels chapter's links (get-royalroad-chapter-links)
+* Description: gets royalroads chapter links and saves to 'links.txt', which can be used 'web-novel-to-text'
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/aaxconverter.md)
 
 
@@ -122,11 +133,6 @@ Current snapshot
 	* youtube-dl --get-thumbnail "[URL_GOES_HERE]" | xargs wget -O cover.jpg
 * Download : <https://youtube-dl.org/>
 * Git: <https://github.com/ytdl-org/youtube-dl>
-
-### Mycroft Mimic TTS (external)
-* Description: Free TTS for running on your computer, better than festival or espeak
-	* <https://mycroft-ai.gitbook.io/docs/mycroft-technologies/mimic-overview>
-
 
 ### inAudible-NG/audible-activator: Extract your Audible authorization code (external)
 * Description: Find your Audible 'activation byte', aka 'auth code', which is required for listening or converting your Audible audiobooks
