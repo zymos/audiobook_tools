@@ -136,7 +136,7 @@ Output filename can be dynamic, using variables extracted from webpage. \n\
     parser.add_argument('INPUT', type=str, help='URL of post or file with list of URLs')
 
     #  parser.add_argument('-f', '--file', help='Use a file with list of URLs, instead of URL in CLI', action="store_true")
-    parser.add_argument('--remove-non-eu-chars', help='Removes non-European charators (non-latin1). ie Arabic/Chinese/Japanese/etc', action="store_true")
+    parser.add_argument('--remove-non-latin1-chars', help='Removes non-latin1 charators (non-latin1). ie Arabic/Chinese/Japanese/etc', action="store_true")
     parser.add_argument('--remove-non-ascii-chars', help='Removes non-ASCII charators', action="store_true")
     #  parser.add_argument('-q', '--keep-quotes', help='leave double quotes in place and may or may not be spoken (off by default)', action="store_true")
     #  parser.add_argument('--keep-problematic-chars', help=r'don\'t removes problematic charactors, that are often spoken [\"\\\/*]', action="store_true")

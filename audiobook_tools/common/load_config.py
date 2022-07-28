@@ -155,8 +155,9 @@ def load_config(config_filename, args, tmp_dir):
     # web-novel-to-text.py config
     if config_filename == "web-novel-to-text.conf":
         preferred_vars = ('delay_between_requests', 'format', 'speak_asterisk', 'dont_remove_quotes', 'dont_emphasize',
-                            'dont_remove_asterisk', 'filename_format', 'debug', 'output_filename', 'test', 
-                            'remove_all_bad_chars', 'remove_bad_char', 'remove_non_eu_chars', 'remove_non_ascii_char', 'retries', 'timeout')
+                          'dont_remove_asterisk', 'filename_format', 'debug', 'output_filename', 'test', 
+                          'remove_all_bad_chars', 'remove_bad_char', 'remove_non_eu_chars', 'remove_non_latin1_chars',
+                          'remove_non_ascii_chars', 'retries', 'timeout')
         # go through each setting
         for setting in preferred_vars:
             config['preferred'].update({setting: ''})
@@ -196,7 +197,7 @@ def load_config(config_filename, args, tmp_dir):
     elif config_filename == "audiobook-tts.conf":
         preferred_vars = ('tts_service', 'voice', 'profile', 'locale', 'gender', 'key', 'input_format', 'gtts_lang', 
                           'gtts_tld', 'url_parameters', 'delay_between_requests', 'max_charactors','speaking_rate', 'debug', 'test', 
-                          'remove_all_bad_chars', 'remove_bad_chars', 'remove_non_eu_chars', 'remove_non_ascii_char',         
+                          'remove_all_bad_chars', 'remove_bad_chars', 'remove_non_eu_chars', 'remove_non_ascii_chars',         
                           'remove_non_latin1_chars', 'audio_settings', 
                           'audio_format', 'bitrate', 'samplerate', 'read_speed')
 

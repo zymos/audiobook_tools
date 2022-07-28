@@ -28,7 +28,7 @@ def remove_nonstandard_chars(text, config):
         text.encode('latin-1', 'ignore').decode('utf-8', 'ignore')
     
     # remove non-ASCII chars
-    if config['preferred']['remove_non_ascii_char']:
+    if config['preferred']['remove_non_ascii_chars']:
         text.encode('ascii', 'ignore').decode('utf-8', 'ignore')
 
     

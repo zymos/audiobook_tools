@@ -114,8 +114,21 @@ Current snapshot
 * [more details](https://github.com/zymos/audiobook_tools/tree/master/audiobook_tools/google_cloud_tts)
 
 
+# Usage Examples
 
-# Recomneded External Programs
+## Convert a web-novel to audiobook
+This example converts Void Herald's, 'THe Perfect Run' web-novel to an audiobook.  Downloads links to all chapters. 
+Downloads the contents of all chapters. Converts the first chapter to mp3. To convert the rest of the novel by repeating 
+the last command for each chapter's txt file.
+<pre>
+$ get-royalroad-chapter-links https://www.royalroad.com/fiction/36735/the-perfect-run 
+$ web-novel-to-text links.txt 
+$ audiobook-tts "2020-10-14 - 1. Quicksave - The Perfect Run.txt"
+</pre>
+Outputs: "2020-10-14 - 1. Quicksave - The Perfect Run.mp3"
+
+
+# Recommended External Programs
 
 ### Calibre (external)
 * ebook reader/converter (GUI and CLI)
