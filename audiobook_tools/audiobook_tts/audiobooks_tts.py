@@ -178,9 +178,9 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('EBOOK', nargs='+', type=str, help='ebook txt file')
     # only mp3s are supported currently
-    #  parser.add_argument('--bitrate', type=str, help='audio encoding bitrate', choices=["32k","48k","64k","96k","128k","196k"])
-    #  parser.add_argument('--samplerate', type=str, help='audio encoding samplerate', choices=[16000,22050,44100,48000])
-    #  parser.add_argument('--format', type=str, help='audio encoding format', choices=["mp3", "wav", "ogg"])
+    parser.add_argument('--bitrate', type=str, help='audio encoding bitrate', choices=["32k","48k","64k","96k","128k","196k"])
+    parser.add_argument('--samplerate', type=str, help='audio encoding samplerate', choices=[16000,22050,44100,48000])
+    parser.add_argument('--output-format', type=str, help='audio encoding format', choices=["mp3", "wav", "ogg", "m4b"])
     parser.add_argument('--input-format', type=str, help='format sent to TTS service', choices=["txt","ssml","json-txt","json-ssml"])
     parser.add_argument('--key', type=str, help='tts serices\'s key, auth code, auth file')
     parser.add_argument('--locale', type=str, help='example: en-us, en-au,')
@@ -192,7 +192,7 @@ def parse_args():
     #  parser.add_argument('--config-file', type=str, help='config file location')
     parser.add_argument('--profile', type=str, help='profile to use, set in config file')
     parser.add_argument('--debug', help='debug mode, more output', action="store_true")
-    parser.add_argument('--remove_all_bad_chars', help=r'remove problematic charactors, that can change speech. [, ], (, ), *, /, \, "', action="store_true")
+    parser.add_argument('--remove-all-bad-chars', help=r'remove problematic charactors, that can change speech. [, ], (, ), *, /, \, "', action="store_true")
     parser.add_argument('--remove-bad-char', type=str, help=r'remove problematic charactors, that can change speech, comman seperated. b=brackets, q=double_quotes, p=parentheses, a=asterisks, s=forward/back_slashs. example --remove-bad-char="b,a,q"')
     parser.add_argument('--test', help='test mode, no writing data', action="store_true")
     #  parser.add_argument('--', type=str, help='', choices=[""], default="")
@@ -540,10 +540,15 @@ def ffmpeg_reencode(filename_orig, audio_data):
                 '-hide_banner',
                 '-loglevel', 'error',
                 '-y',
-                '-i', '-',
-                #  '-b:a', config['preferred']['bitrate'],
-                #  '-ar', config['preferred']['samplerate'],
-                filename_output_audio]
+                '-i', '-']
+
+        ffmpeg_cmd += ['-b:a', config['preferred']['bitrate'] ]
+        ffmpeg_cmd += ['-ar', config['preferred']['samplerate'] ]
+
+        if config['preferred']['output_format'] == 'ogg':
+            ffmpeg_cmd += ['-c:a', 'libvorbis']
+
+        ffmpeg_cmd += [filename_output_audio]
 
         if DEBUG:
             print("\tFFMPEG reencode command: ")
@@ -590,11 +595,11 @@ def process_file(filename):
         #  print(config['INPUT']['filename'])
 
         # FIXME current only supports mp3
-        config['preferred']['format'] = 'mp3'
+        #  config['preferred']['format'] = 'mp3'
 
         # output filename (without invalid chars)
-        config['OUTPUT']['filename'] = re.sub(r"\.....?$", ".", filename) + config['preferred']['format']
-        config['OUTPUT']['filename'] = re.sub(r"[\?:\"\|\*\\><]", ".", config['OUTPUT']['filename'] )
+        config['OUTPUT']['filename'] = re.sub(r"\.....?$", ".", filename) + config['preferred']['output_format']
+        config['OUTPUT']['filename'] = re.sub(r"[\?:\"\|\*\\><]", ".", config['OUTPUT']['filename'] ) # remove invalid chars
 
         #  print(config['OUTPUT']['filename'])
         # Run the python TTS module instead of online services

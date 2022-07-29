@@ -199,7 +199,7 @@ def load_config(config_filename, args, tmp_dir):
                           'gtts_tld', 'url_parameters', 'delay_between_requests', 'max_charactors','speaking_rate', 'debug', 'test', 
                           'remove_all_bad_chars', 'remove_bad_chars', 'remove_non_eu_chars', 'remove_non_ascii_chars',         
                           'remove_non_latin1_chars', 'audio_settings', 
-                          'audio_format', 'bitrate', 'samplerate', 'read_speed')
+                          'output_format', 'bitrate', 'samplerate', 'read_speed')
 
         if config.get(config['GENERAL']['tts_service']) is None :
             print("Error: tts serivce \"" + config['GENERAL']['tts_service'] +

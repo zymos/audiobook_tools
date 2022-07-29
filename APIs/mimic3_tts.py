@@ -25,7 +25,7 @@ def get_tts_audio(text_in, config, args):
 
     VOICE_in = config['preferred']['voice']
     #  RATE = config['preferred']['read_rate']
-    AUDIO_FORMAT_in = config['preferred']['format'] # mp3
+    #  AUDIO_FORMAT_in = config['preferred']['format'] # mp3
     AUDIO_SETTINGS_in = config['preferred']['audio_settings']
     INPUT_FORMAT_in = config['preferred']['input_format'] # txt/ssml
     READ_SPEED = config['preferred']['read_speed']
@@ -39,8 +39,16 @@ def get_tts_audio(text_in, config, args):
     if(VOICE_in):
         mimic3_command_param += ["--voice"] + [VOICE_in]
 
+    # set and correct ssml
     if(INPUT_FORMAT_in == 'ssml'):
         mimic3_command_param += ["--ssml"]
+        try:
+            from audiobook_tools.common.text_conversion import clean_ssml
+        except:
+            print("loading text_conversion failed")
+        # clean ssml for errors
+        text_in = clean_ssml(text_in, VOICE_in, READ_SPEED)
+
 
     #  if(AUDIO_FORMAT_in):
         #  ffmpeg_format = AUDIO_FORMAT_in
@@ -52,12 +60,15 @@ def get_tts_audio(text_in, config, args):
         mimic3_command_param += ['--length-scale'] + [READ_SPEED]
 
     # set file format for ffmpeg to pipe currently only mp3 works
-    ffmpeg_format = 'mp3'
+    ffmpeg_format = 'mp3' # keep mp3 format no matter what final format
+    ffmpeg_bitrate = '128k' # overdo bitrate no matter what the final format
 
     # mimic3 command
     mimic3_command = ["mimic3"] + mimic3_command_param + ['--stdout']
     #  ffmpeg command
-    ffmpeg_command = ['ffmpeg', '-hide_banner', '-loglevel', 'error', '-i', '-'] + ['-f'] + [ffmpeg_format] + ['pipe:']
+    ffmpeg_command = ['ffmpeg', '-hide_banner', '-loglevel', 'error', '-i', '-']
+    ffmpeg_command += ["-b:a", ffmpeg_bitrate]
+    ffmpeg_command += ['-f', ffmpeg_format, 'pipe:']
 
 
     if DEBUG:
