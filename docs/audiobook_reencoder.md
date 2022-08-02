@@ -1,5 +1,9 @@
-- Description: Re-encodes all MP3/M4B files in a directory, recursivly.
-- Features:
+# Audiobook ReEncoder
+
+## Description:
+Re-encodes all MP3/M4B files in a directory, recursivly.
+
+## Features:
 	- Encodes using ffmpeg
     - Accepts mp3, m4b, m4a 
     - Grabs audio files data using ffprobe, for re-encoding and embedding cover art
@@ -13,10 +17,12 @@
 		- Embeds cover art to each audiofile (can be disabled)
 		- If directory contains multiple different audiobooks it won't try extract/embed cover art
 		- Can delete original image file, after embedding (not default)
-- Requirments
+
+## Requirments
 	- ffmpeg and ffprobe
 	- python
 
+## Usage
 <pre>
 usage: audiobook-reencoder [-h] [--disable-extract-cover-art]
                            [--disable-embed-cover-art] [--only-extract-cover-art]
@@ -90,7 +96,7 @@ optional arguments:
   --debug               prints debug info
 </pre>
 
-Feature Descriptions
+## Feature Descriptions
 
 - Input/Output files/directories
    - Input: single file or directory

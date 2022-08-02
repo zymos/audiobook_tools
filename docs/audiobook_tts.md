@@ -62,7 +62,7 @@ optional arguments:
 - python-gtts (optional, for google_translate_tts)
 
 
-=Mimic3 TTS (software)=
+### Mimic3 TTS (software)
 Quality varies depending on voices. 'en_UK/apope_low' is the best, it sounds natural but flat and unemotional.
 
 Requirements
@@ -78,22 +78,22 @@ Voices(en)
 - Male (American)    - en_US/m-ailabs_low -    (not-great, recomended speed 1.1)
 - Female (American)  - en_US/vctk_low -        (bad, very fast)
 
-=VoiceRSS TTS (online service)=
+### VoiceRSS TTS (online service)
 Free limited service or paid full service.  Voice quality is average (between robotic and natural).
 
 
-=MS Azure TTS (online serice)=
+### MS Azure TTS (online serice)
 requires a subsciption or free testing period
 
 
-=Google Translate TTS=
+### Google Translate TTS
 This is not Google cloud TTS, it uses Google translate's option for TTS output. Voice quality is robotic.
 
 Requirements
 - python gtts module
 
 
-=Alterative (unimplemented) TTS engines=
+## Alterative (unimplemented) TTS engines
 I have not created APIs for these serices yet, but you can add you own in the APIs folder, then add to config file. Examples/samples of various engins can be found here https://synesthesiam.github.io/opentts
 
 - marytts (software) - pitch warbles between words

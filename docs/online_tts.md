@@ -3,7 +3,7 @@
 ## Description: 
 Text to Speech (TTS) program which interfaces with online/cloud TTS services, and is optimized for audiobooks and web-novels
 
-#*# Supported service
+## Supported service
 - Microsoft Azure TTS
 - VoiceRSS TTS
 - Google translate TTS (not Google cloud TTS)

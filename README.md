@@ -104,7 +104,7 @@ Current snapshot (may not always work)
 
 ## Royalroads web-novels chapter's links (get-royalroad-chapter-links)
 - Description: gets royalroads chapter links and saves to 'links.txt', which can be used 'web-novel-to-text'
-- [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/aaxconverter.md)
+- [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/get_royalroad_chapter_links.md)
 
 
 ## Other tools
@@ -113,12 +113,12 @@ Current snapshot (may not always work)
 -	Requirements:
 	- ffmpeg
 	- Google Cloud SDK
-- [more details](https://github.com/zymos/audiobook_tools/tree/master/audiobook_tools/google_cloud_tts)
+- [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/google_cloud_tts.md)
 
 
 # Usage Examples
 
-## Convert royalroad web-novel to audiobook
+## Convert Royalroad web-novel to audiobook
 This example converts Void Herald's, 'THe Perfect Run' web-novel to an audiobook.  Downloads links to all chapters. 
 Downloads the contents of all chapters. Converts the first chapter to mp3. To convert the rest of the novel by repeating 
 the last command for each chapter's txt file.
