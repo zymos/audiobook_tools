@@ -1,5 +1,16 @@
-* Description: Text to Speech (TTS) program which interfaces with online/cloud TTS services, and is optimized for audiobooks and web-novels
+# Online TTS
 
+## Description: 
+Text to Speech (TTS) program which interfaces with online/cloud TTS services, and is optimized for audiobooks and web-novels
+
+#*# Supported service
+- Microsoft Azure TTS
+- VoiceRSS TTS
+- Google translate TTS (not Google cloud TTS)
+- Easy to add other TTS APIs
+
+
+## Usage
 <pre>
 usage: online-tts [-h] [--bitrate {32k,48k,64k,96k,128k,196k}]
                   [--samplerate {16000,22050,44100,48000}] [--format {mp3,wav,ogg}]

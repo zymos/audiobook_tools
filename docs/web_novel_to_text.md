@@ -1,11 +1,9 @@
-* Description: Text-to-Speech program using online/cloud TTS services.
-* Supported service
-  * Microsoft Azure TTS
-  * VoiceRSS TTS
-  * Google translate TTS (not Google cloud TTS)
-  * Easy to add other TTS APIs
+# Web Novel to Text
 
+## Description: 
+Text-to-Speech program using online/cloud TTS services.
 
+## Usage
 <pre>
 usage: web-novel-to-text [-h] [-a] [-q] [--keep-problematic-chars]
                          [--disable-emphasize] [--debug] [--test]
@@ -51,6 +49,6 @@ Output filename can be dynamic, using variables extracted from webpage.
     Example: "%b - Chapter %N" -> "Moby Dick - Chapter 003"
 </pre>
 
-Changelog
-* set default format from ssml to txt
+## Changelog
+- set default format from ssml to txt
 

@@ -1,8 +1,9 @@
-audiobook-tts
+# audiobook-tts
 
-Description:
+## Description:
    Text to Speech (TTS) program which interfaces with TTS software or online/cloud TTS services, and is optimized for audiobooks and web-novels
 
+## Usage
 <pre>
 usage: online-tts [-h] [--bitrate {32k,48k,64k,96k,128k,196k}]
                   [--samplerate {16000,22050,44100,48000}] [--format {mp3,wav,ogg}]
@@ -53,47 +54,29 @@ optional arguments:
   --test                test mode, no writing data
 </pre>
 
-Requirements:
-* python3
-* ffmpeg
-* account for online services (optional)
-* mimic3 (optional)
-* python-gtts (optional, for google_translate_tts)
+## Requirements:
+- python3
+- ffmpeg
+- account for online services (optional)
+- mimic3 (optional)
+- python-gtts (optional, for google_translate_tts)
 
 
 =Mimic3 TTS (software)=
 Quality varies depending on voices. 'en_UK/apope_low' is the best, it sounds natural but flat and unemotional.
 
 Requirements
-* *mimic3 - https://github.com/mycroftAI/mimic3
-***** mimic3-voices - https://github.com/MycroftAI/mimic3-voices
+- *mimic3 - https://github.com/mycroftAI/mimic3
+-**** mimic3-voices - https://github.com/MycroftAI/mimic3-voices
 
 Voices(en)
-******* Male (British)     - en_UK/apope_low -       
+-****** Male (British)     - en_UK/apope_low -       
       (good, lite british accent, dep voice, realistic voice but flat, recomended speed 0.9)
-* Male (American)    - en_US/cmu-arctic_low -  (ok, recomended speed 1.0)
-* Male (American)    - en_US/hifi-tts_low -    (not-great, deep voice, recomended speed 1.1)
-* Female (Ameican)   - en_US/ljspeech_low -    (not-great, clipped, recomended speed 0.9)
-* Male (American)    - en_US/m-ailabs_low -    (not-great, recomended speed 1.1)
-* Female (American)  - en_US/vctk_low -        (bad, very fast)
-
-
-=Test command=
-head -n 20 test.txt |mimic3 --voice "en_US/vctk_low"  --length-scale 1  |ffmpeg -y -i - out.mp3
-
-
-=bash script equivelent=
-
-<pre>
-#!/bin/env bash
-
-NAME=$(echo $1 |sed 's/\.txt$/.mp3/')
-
-echo $NAME
-
-cat "$1" | mimic3 --voice "en_US/ljspeech_low" --length-scale 0.9 | ffmpeg -y -i - "$NAME"
-</pre>
-
+- Male (American)    - en_US/cmu-arctic_low -  (ok, recomended speed 1.0)
+- Male (American)    - en_US/hifi-tts_low -    (not-great, deep voice, recomended speed 1.1)
+- Female (Ameican)   - en_US/ljspeech_low -    (not-great, clipped, recomended speed 0.9)
+- Male (American)    - en_US/m-ailabs_low -    (not-great, recomended speed 1.1)
+- Female (American)  - en_US/vctk_low -        (bad, very fast)
 
 =VoiceRSS TTS (online service)=
 Free limited service or paid full service.  Voice quality is average (between robotic and natural).
@@ -103,23 +86,22 @@ Free limited service or paid full service.  Voice quality is average (between ro
 requires a subsciption or free testing period
 
 
-
 =Google Translate TTS=
 This is not Google cloud TTS, it uses Google translate's option for TTS output. Voice quality is robotic.
 
 Requirements
-* python gtts module
+- python gtts module
 
 
 =Alterative (unimplemented) TTS engines=
 I have not created APIs for these serices yet, but you can add you own in the APIs folder, then add to config file. Examples/samples of various engins can be found here https://synesthesiam.github.io/opentts
 
-* marytts (software) - pitch warbles between words
-* espeak (software) - robotic voices
-* festival (software) - robotic voices
-* CMU Flite/festival-lite (software) - https://github.com/festvox/flite - robotic, but less than some
-* Amazon Polly - Quality is better than average.  I don't have an account.
-* IBM Cloud -  https://cloud.ibm.com/catalog/services/text-to-speech - I don't have an account
-* Coqui TTS - sounds great in a single phrases, but has intermiten odd pauses and slowed words when reading chapters
-* Google Cloud TTS - their deep-learning TTS is the best I've heard, the standard TTS is better than average.  I don't have an account.
+- marytts (software) - pitch warbles between words
+- espeak (software) - robotic voices
+- festival (software) - robotic voices
+- CMU Flite/festival-lite (software) - https://github.com/festvox/flite - robotic, but less than some
+- Amazon Polly - Quality is better than average.  I don't have an account.
+- IBM Cloud -  https://cloud.ibm.com/catalog/services/text-to-speech - I don't have an account
+- Coqui TTS - sounds great in a single phrases, but has intermiten odd pauses and slowed words when reading chapters
+- Google Cloud TTS - their deep-learning TTS is the best I've heard, the standard TTS is better than average.  I don't have an account.
 

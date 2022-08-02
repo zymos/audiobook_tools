@@ -1,16 +1,17 @@
+# Get Royalroad Chapter Links
 
-=Description=
+## Description
 Creates file 'links.txt' with links to all chapter's of a web-novels
 
 
-=Requirements=
-* python3
-* python BeautifulSoup module
-   *   debian/ubuntu: python3-bs4
-   *   pip: pip install beautifulsoup4
+## Requirements
+- python3
+- python BeautifulSoup module
+   -   debian/ubuntu: python3-bs4
+   -   pip: pip install beautifulsoup4
 
 
-=Usage=
+## Usage
 <pre>
 Getting chapters from Royalroad...
 usage: get-royalroad-chapter-links [-h] url
@@ -23,5 +24,5 @@ optional arguments:
 </pre>
 
 
-=Output=
+## Output
 Saves to 'links.txt'
