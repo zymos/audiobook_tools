@@ -4,16 +4,16 @@ Description: A set of command line tools for creating, re-encoding and optimizin
 
 
 Includes
-- **Audiobook ReEncoder* - bulk re-encode audiobook files to uniform format, with some bells and whistles
-- *******************Audiobook TTS* - Text-to-Speech program to interface with various software or online services
-- *Online TTS* - Coverts Text-to-Speech audio files using various online TTS services
-- *Web-novel to Text* - extracts web-novels from website and save to txt/ssml file
-- *get-royalroad-chapter-links* - Copies links to all novels chapters into links.txt file
+- **Audiobook ReEncoder** - bulk re-encode audiobook files to uniform format, with some bells and whistles
+- **Audiobook TTS** - Text-to-Speech program to interface with various software or online services
+- **Online TTS** - Coverts Text-to-Speech audio files using various online TTS services
+- **Web-novel to Text** - extracts web-novels from website and save to txt/ssml file
+- **get-royalroad-chapter-links** - Copies links to all novels chapters into links.txt file
 
 # Download
 
 Release
-- Version 0.02 - [zip file](https://github.com/zymos/audiobook_tools/archive/refs/tags/audiobook_tools-v0.01.zip), [tar.gz file](https://github.com/zymos/audiobook_tools/archive/refs/tags/audiobook_tools-v0.01.tar.gz)
+- **Version 0.02** - [zip file](https://github.com/zymos/audiobook_tools/archive/refs/tags/audiobook_tools-v0.02.zip), [tar.gz file](https://github.com/zymos/audiobook_tools/archive/refs/tags/audiobook_tools-v0.02.tar.gz)
 - Version 0.01 - [zip file](https://github.com/zymos/audiobook_tools/archive/refs/tags/v0.01.zip), [tar.gz file](https://github.com/zymos/audiobook_tools/archive/refs/tags/v0.01.tar.gz)
 
 Current snapshot (may not always work)
@@ -27,6 +27,7 @@ Current snapshot (may not always work)
    - python modules: text2digits, PIL(Pillow), mutagen
       - pip install Pillow, mutagen, text2digits
    - Optional: Google Cloud SDK, python-azure-cognitiveservices-speech(boto3), mimic3, python-gtts, python-pretty_errors
+- Download audiobook_tools
 - Copy audiobook_tools folder where ever you want.
    - Example: /opt/audiobook_tools
 - Add directory to $PATH
@@ -41,7 +42,7 @@ Current snapshot (may not always work)
    - via command line: See --help
    - via local user config files: copy and editing config files to your user dir
       - linux:  ~/.config/audiobook-tools/
-
+do not edit the DEFAULT config files
 
 # Tool Description
 
