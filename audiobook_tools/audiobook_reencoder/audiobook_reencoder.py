@@ -200,7 +200,7 @@ start_time = time.time()
 
 # debug tools
 import pprint
-import pretty_errors
+#  import pretty_errors
 
 ###################################################################################################
 # Functions

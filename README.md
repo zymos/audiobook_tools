@@ -1,6 +1,6 @@
 # Audiobook Tools - Command line tools
 
-Description: A set of command line tools for creating, re-encoding and optimizing audiobooks
+Description: A set of command line tools for creating, re-encoding and optimizing audiobooks. Create audiobooks from web-novels, or ebooks. Re-encode/optimize your audiobook library.
 
 
 Includes
@@ -26,7 +26,7 @@ Current snapshot (may not always work)
    - ffmpeg, python3
    - python modules: text2digits, PIL(Pillow), mutagen
       - pip install Pillow, mutagen, text2digits
-   - Optional: Google Cloud SDK, python-azure-cognitiveservices-speech(boto3), mimic3, python-gtts, python-pretty_errors
+   - Optional: Google Cloud SDK, python-azure-cognitiveservices-speech(boto3), mimic3, python-gtts
 - Download audiobook_tools
 - Copy audiobook_tools folder where ever you want.
    - Example: /opt/audiobook_tools
@@ -42,9 +42,9 @@ Current snapshot (may not always work)
    - via command line: See --help
    - via local user config files: copy and editing config files to your user dir
       - linux:  ~/.config/audiobook-tools/
-do not edit the DEFAULT config files
+do not edit the config files in 'config_files/DEFAULT/*'
 
-# Tool Description
+# Tool Descriptions
 
 ## Audiobook ReEncoder (audiobook_reencoder)
 - Description: Bulk re-encodes all MP3/M4B files in a directory, recursivly.
@@ -53,15 +53,9 @@ do not edit the DEFAULT config files
    - Accepts mp3, m4b, m4a, flac, ogg, opus, aax(with auth code)
    - Grabs audio files data using ffprobe, for re-encoding and embedding cover art
    - Split into chapters (optional)
-   - Removes unneeded files (nfo/cue/m2u) (optional)
-   - Add genre="Audiobook" (optional, default)
-   - Normalize volume (optional, default)
-	- Won't re-encode if it is obvious it has been done before (optional, default)
-   - Cover art:
-    	- Extracts cover art to cover.jpg (optional)
-		- Embeds cover art to each audiofile (optional, default)
-		- If directory contains multiple different audiobooks it won't try extract/embed cover art
-		- Can delete original image file, after embedding (optional)
+   - Removes unneeded files (nfo/cue/m2u) (optional) 
+   - Normalize volume (optional, default) 
+   - Adds Cover art:
 - [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/audiobook_reencoder.md)
 
 
@@ -134,18 +128,23 @@ Outputs: "2020-10-14 - 1. Quicksave - The Perfect Run.mp3"
 # Recommended External Programs
 
 ### Calibre (external)
-- ebook reader/converter (GUI and CLI)
-- <https://calibre-ebook.com/>
-	- Ebook to txt: 'ebook-convert Book.epub Book.txt'
-	- Extract cover art: ebook-meta --get-cover=cover.jpg
+- Description: ebook reader/converter (GUI and CLI)
+- Link: <https://calibre-ebook.com/>
+	- Usage example (ebook to txt): 'ebook-convert Book.epub Book.txt'
+	- Usage example (extract cover art): ebook-meta --get-cover=cover.jpg
+
+### Pandoc (external)
+- Description: document converter, includes epub, fb2, and pdf support
+- Link: <https://pandoc.org/>
+- Usage example: 'pandoc BOOK.epub -t plain -o BOOK.txt'
 
 ### youtube-dl: Convert Youtube audiobooks to mp3 files (external)
 - Description: There are many audiobooks on youtube.  Mostly web-novels and light-novels read by computers, that will likely never be produced in studios.
-- Usage: download single file
+- Usage example: download single file
 	- youtube-dl --extract-audio --embed-thumbnail --add-metadata --audio-format mp3 "[URL_GOES_HERE]"
-- Usage: download entire playlist: 
+- Usage example: download entire playlist: 
 	- youtube-dl --extract-audio --embed-thumbnail --add-metadata --audio-format mp3 --yes-playlist "[URL_GOES_HERE]"
-- Usage: extract cover art:  
+- Usage example: extract cover art:  
 	- youtube-dl --get-thumbnail "[URL_GOES_HERE]" | xargs wget -O cover.jpg
 - Download : <https://youtube-dl.org/>
 - Git: <https://github.com/ytdl-org/youtube-dl>
@@ -158,7 +157,7 @@ Outputs: "2020-10-14 - 1. Quicksave - The Perfect Run.mp3"
 ### AAXtoMP3: Convert Audible AAX files to mp3 (or other formats) (external)
 - Description: Convert **your** Audible audio book to a useful non-DRM format, default is chaptered mp3s, but it can do m4b and other formats
 - Download: <https://github.com/KrumpetPirate/AAXtoMP3>
-- Usage: AAXtoMP3 --authcode [YOUR_AUTH_CODE] [YOUR_AUDIBLE_FILE]
+- Usage example: AAXtoMP3 --authcode [YOUR_AUTH_CODE] [YOUR_AUDIBLE_FILE]
 - Notes: If you want to use ffmpeg or avconv instead of AAXtoMP3, just use 'ffmpeg -activation_bytes [YOUR_AUTH_CODE] .....'
 
 ## Other useful tools (external)
