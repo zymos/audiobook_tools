@@ -1315,7 +1315,8 @@ def reencode_audio_file(logger, log_files, audio_file_data, file_count, total_co
     # ffmpeg logging filename
     [log_file, ffmpeg_log_dir, ffmpeg_log_error_dir] = log_files
     ffmpeg_log_count = 0
-    ffmpeg_log_file = os.path.join(ffmpeg_log_dir, os.path.basename(ffmpeg_input) + ".0.log")
+    # remove any problematic chars
+    ffmpeg_log_file = re.sub(r'[\:\?\'\"\*\+]', '-', os.path.join(ffmpeg_log_dir, os.path.basename(ffmpeg_input) + ".0.log"))
     while os.path.exists(ffmpeg_log_file):
         ffmpeg_log_count += 1
         ffmpeg_log_file = os.path.join(ffmpeg_log_dir, os.path.basename(ffmpeg_input) + "." + str(ffmpeg_log_count) + ".log")
