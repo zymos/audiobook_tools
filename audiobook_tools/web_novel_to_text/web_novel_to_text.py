@@ -772,6 +772,9 @@ def process_url(url):
     elif( re.search(r'meta name="generator" content="WordPress.com"', html_content, re.IGNORECASE)):
         if config['preferred']['debug']: print("  > WordPress article found")
         (content, meta) = extract_txt_wordpress(site_code)
+    elif( re.search(r'wp-content', html_content, re.IGNORECASE)): # second check for wordpress
+        if config['preferred']['debug']: print("  > WordPress article found")
+        (content, meta) = extract_txt_wordpress(site_code)
     else:
         print("  > Unknown web-novel type for\'", url, "'")
         print("Skipping...")
