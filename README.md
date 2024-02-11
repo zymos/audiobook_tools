@@ -46,7 +46,7 @@ do not edit the config files in 'config_files/DEFAULT/*'
 
 # Tool Descriptions
 
-## Audiobook ReEncoder (audiobook_reencoder)
+## Audiobook ReEncoder (ab-reencoder)
 - Description: Bulk re-encodes all MP3/M4B files in a directory, recursivly.
 - Features:
 	- Encodes using ffmpeg
@@ -59,7 +59,7 @@ do not edit the config files in 'config_files/DEFAULT/*'
 - [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/audiobook_reencoder.md)
 
 
-## Audiobook TTS (audiobook-tts)
+## Audiobook TTS (ab-tts)
 - Description: Text-to-Speech program using software or online/cloud TTS services.
 - Supported service
    - Microsoft Azure TTS (online)
@@ -83,7 +83,7 @@ do not edit the config files in 'config_files/DEFAULT/*'
 
 
 
-## Web-Novel to Text (web-novel-to-text)
+## Web-Novel to Text (ab-web-novel-to-text)
 - Description: Extracts the text of web-novels articles/chapters to a TXT or SSML file to be used in a text-to-speech program or service.
 - Supported Sites
   - Royal Road
@@ -97,7 +97,7 @@ do not edit the config files in 'config_files/DEFAULT/*'
 - [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/aaxconverter.md)
 
 
-## Royalroads web-novels chapter's links (get-royalroad-chapter-links)
+## Royalroads web-novels chapter's links (ab-get-royalroad-chapter-links)
 - Description: gets royalroads chapter links and saves to 'links.txt', which can be used 'web-novel-to-text'
 - [more details](https://github.com/zymos/audiobook_tools/tree/master/docs/get_royalroad_chapter_links.md)
 
@@ -118,9 +118,9 @@ This example converts Void Herald's, 'THe Perfect Run' web-novel to an audiobook
 Downloads the contents of all chapters. Converts the first chapter to mp3. To convert the rest of the novel by repeating 
 the last command for each chapter's txt file.
 
-> $ get-royalroad-chapter-links https://www.royalroad.com/fiction/36735/the-perfect-run 
-> $ web-novel-to-text links.txt 
-> $ audiobook-tts "2020-10-14 - 1. Quicksave - The Perfect Run.txt"
+> $ ab-get-royalroad-chapter-links https://www.royalroad.com/fiction/36735/the-perfect-run 
+> $ ab-web-novel-to-text links.txt 
+> $ ab-tts "2020-10-14 - 1. Quicksave - The Perfect Run.txt"
 
 Outputs: "2020-10-14 - 1. Quicksave - The Perfect Run.mp3"
 
