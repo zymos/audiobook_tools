@@ -6,6 +6,13 @@ Main program for get-royalroad-chapter-links
 calls the functions in audiobook_tools/get_royalroad_chapter_links/get_royalroad_chapter_links.py
 """
 
+
+# use pretty-errors, if its installed
+try:
+    import pretty_errors
+except:
+    pass
+
 if __name__ == "__main__":
     from audiobook_tools.get_royalroad_chapter_links import get_royalroad_chapter_links
     get_royalroad_chapter_links.main()

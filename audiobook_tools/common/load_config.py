@@ -75,7 +75,16 @@ def load_config(config_filename, args, tmp_dir):
         print(" Not:", default_config_file)
         exit(1)
 
-
+    if args.debug:
+        print('-------------------------')
+        print(" local:", config_file)
+        print(" global:", global_config_file)
+        print(" default:", default_config_file)
+        print(" local exists:",         cfg_found)
+        print(" default exists:",         cfg_default_found)
+        print(" global exists:",         cfg_global_found)
+        print("-------------------------")
+        #  exit(1)
 
     # Create config dictionary (from default config) (lowest priority)
     if cfg_default_found:

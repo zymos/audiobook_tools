@@ -6,6 +6,12 @@ Main program for online-tts
 calls the functions in audiobook_tools/online_tts/online_tts.py
 """
 
+# use pretty-errors, if its installed
+try:
+    import pretty_errors
+except:
+    pass
+
 if __name__ == "__main__" :
     from audiobook_tools.online_tts import online_tts
     online_tts.main()   

@@ -6,6 +6,12 @@ Main program for audiobook-tts
 calls the functions in audiobook_tools/audiobook_tts/audiobooks_tts.py
 """
 
+# use pretty-errors, if its installed
+try:
+    import pretty_errors
+except:
+    pass
+
 if __name__ == "__main__" :
     from audiobook_tools.audiobook_tts import audiobooks_tts
     audiobooks_tts.main()   

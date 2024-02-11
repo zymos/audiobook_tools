@@ -6,6 +6,12 @@ Main program for audiobook-reencoder
 calls the functions in audiobook_tools/audiobook_reencoder/audiobook_reencoder.py
 """
 
+# use pretty-errors, if its installed
+try:
+    import pretty_errors
+except:
+    pass
+
 if __name__ == "__main__" :
     from audiobook_tools.audiobook_reencoder import audiobook_reencoder
     audiobook_reencoder.main()   

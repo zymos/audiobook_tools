@@ -27,7 +27,7 @@
 * check timeout-retry (error response) maybe subsplit
 * Bug: File does not exist shows as 0 files
 
-# audiobook-reenconder
+# ab-reenconder
 * Create temp dir per instance ?done?
 * Add parallel process files
 * test output m4b, ogg, opus
@@ -35,10 +35,15 @@
 * add option: remove all non-audio/image
 * chapter title: if >99 chapter make 3-dig filename
 * Bug
-  * chap with ~= 0 should be ignored: Done?
+  * displays "keep originals," when not
+  * chap with,~= 0 should be ignored: Done?
   * -new is moveing wrong thing
   * fix input bandwidth < output bandwidth: skip (FIXED)
   * no delete old
   * bitrate lower not good with m4b, check valid bitrate, check formate
   * lower bitrate doesnt copy cover art
   * force still skips
+
+
+# notes
+* icecream for debug?

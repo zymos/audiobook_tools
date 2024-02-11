@@ -186,6 +186,7 @@ import shutil
 from audiobook_tools.common.load_config import load_config
 from audiobook_tools.common.spinner import Spinner
 
+import sys
 
 import subprocess # running programs
 import queue # multithreading
@@ -1791,13 +1792,12 @@ def reencode_audio_file_ffmpeg(logger, ffmpeg_cmd, ffmpeg_input, ffmpeg_output, 
                 if debug: 
                     logger.debug("Exiting after failure")
                 else: 
-                    print("<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>")
-                    print("!!! Error: ffmpeg encoding failed, exiting !!!")
+                    print("\n<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>")
+                    print("!!! Error: ffmpeg encoding failed!!!")
                     print(" See log for details.")
                     print(" audiobook_reencode log: " + log_file)
                     print(" ffmpeg log: " + ffmpeg_log_file)
                     print("<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>")
-                    exit(1)
         else:
             found_error = False
             # encoding succeded
@@ -2032,15 +2032,15 @@ def print_banner(log_filename, config):
     print("│ Audiobook Tools: " + program_name)
     print("│  Encoder settings: " + config['preferred']['audio_output_format'] + " @ " + config['preferred']['bitrate'] + "bps/" + config['preferred']['samplerate'] + "Hz")
     options = []
-    if not config['preferred']['disable_add_id3_genre']:
-        options.append('genre')
+    #  if not config['preferred']['disable_add_id3_genre']:
+        #  options.append('genre')
     if not config['preferred']['disable_embed_cover_art']:
         options.append( 'cover art')
     if not config['preferred']['disable_normalize']:
         options.append ( 'normalize')
     if not config['preferred']['disable_delete_unneeded_files']:
         options.append ( 'remove cue/nfo/m3u')
-    if not config['preferred']['keep_original_files']:
+    if config['preferred']['keep_original_files']:
         options.append ( 'keep originals')
     if not config['preferred']['disable_split_chapters']:
         options.append ( 'split chapters')
@@ -2305,6 +2305,11 @@ def encode_files(logger, config, log_filenames, path, audio_file_data):
         success = reencode_audio_file(logger, log_filenames, audio_file_data[path], file_count, total_count)
         if not success:
             error_list.append(audio_file_data[path])
+            print("Error: Encoding failure detected.")
+            # exit all
+            worker.terminate()
+            worker.join()
+            sys.exit(1)
     else:
         # encoding directory
         for (dirpath, dir_list_in_dirpath, file_list) in os.walk(path):
