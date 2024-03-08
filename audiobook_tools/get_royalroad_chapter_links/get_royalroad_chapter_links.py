@@ -103,7 +103,7 @@ def main():
     #  print(links)
     #  save to links.txt
 
-    #  print('  - done')
+    print('Notice: Royalroad now adds warning of stolen material, because some have been selling web-novels on Amazon.  Since this is ment for personal use, warning are left in.  Please support the authors.')
 
 #End: main
 
