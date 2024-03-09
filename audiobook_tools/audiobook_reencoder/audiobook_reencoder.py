@@ -160,7 +160,7 @@ filename_similarity_cover_art_percentage = 85
 
 #  max_threads = 7
 
-encode_speed_ratio = 20
+encode_speed_ratio = 15
 
 program_name =  "audiobook_reencoder(ffmpeg)-v" + version # + "+loudnorm"
 
@@ -2028,7 +2028,7 @@ def filename_similarity(logger, filename_list):
 #
 def print_banner(log_filename, config):
     # print info
-    print("╭────────────────────────────────────────────────────────────────────────╼")
+    print("╭─────────────────────────────────────────────────────────────────────╼")
     print("│ Audiobook Tools: " + program_name)
     print("│  Encoder settings: " + config['preferred']['audio_output_format'] + " @ " + config['preferred']['bitrate'] + "bps/" + config['preferred']['samplerate'] + "Hz")
     options = []
@@ -2057,7 +2057,7 @@ def print_banner(log_filename, config):
         print("│    " + text)
     print("│  Log file: ")
     print("│    " + log_filename)
-    print("╰─────────────────────────────────────────────────────────────────────────╼")
+    print("╰──────────────────────────────────────────────────────────────────────╼")
 # End: print_banner()
 
 
@@ -2076,12 +2076,12 @@ def print_summary(config): #common_vars):
     global total_duration
     global total_file_count
 
-    print("╭────────────────────────────────────────────────────────────────────────╼")
+    print("╭─────────────────────────────────────────────────────────────────────╼")
     print_80_char("│ Summary of files:  ") 
     print_80_char("│  File count: " + str(total_file_count) )
     print_80_char("│  Total audiobooks duration: " + str(round(total_duration/60/60,1)) + "h")
     print_80_char("│  Estimated encoding time: " + str(round(total_duration / threads / encode_speed_ratio /60/60,2)) + "h (very rough estimate)")
-    print("╰─────────────────────────────────────────────────────────────────────────╼")
+    print("╰──────────────────────────────────────────────────────────────────────╼")
 
 # End: print_summary()
 
@@ -2381,13 +2381,19 @@ def encode_files(logger, config, log_filenames, path, audio_file_data):
 
     # print any files done or skipped in the first second
     x = 0
+    skipped = False
     while x < files_count_current -1:
         try:
             files_complete[x]['status']
         except IndexError:
             break
-        print( "   ⊛ " + files_complete[x]['status'] + ": " + files_complete[x]['file'] )
+        if(files_complete[x]['status'] == 'skipped'): # dont print each file if skipped
+            skipped = True
+        else:
+            print( "   ⊛ " + files_complete[x]['status'] + ": " + files_complete[x]['file'] )
         x += 1
+    if(skipped):
+        print( "   ⊛ some files skipped")
 
     # print files as they complete and display spinner
     spinner.start("➤ Encoding: (" + str(files_count_current) + " of " + str(total_count_to_encode) + ")" )
