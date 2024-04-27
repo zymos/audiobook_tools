@@ -750,9 +750,10 @@ def process_url(url):
     #  global args
 
     # grab the url text
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
     try:
         #  response = urllib3.urlopen(url)
-        site_code = requests.get(url)
+        site_code = requests.get(url,headers=headers)
     except:
         print("Error: not a valid URL: " + url)
         return
@@ -777,6 +778,7 @@ def process_url(url):
         (content, meta) = extract_txt_wordpress(site_code)
     else:
         print("  > Unknown web-novel type for\'", url, "'")
+        #  print(html_content)
         print("Skipping...")
         return
 

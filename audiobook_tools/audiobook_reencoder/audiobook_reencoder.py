@@ -1793,10 +1793,10 @@ def reencode_audio_file_ffmpeg(logger, ffmpeg_cmd, ffmpeg_input, ffmpeg_output, 
                     logger.debug("Exiting after failure")
                 else: 
                     print("\n<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>")
-                    print("!!! Error: ffmpeg encoding failed!!!")
-                    print(" See log for details.")
-                    print(" audiobook_reencode log: " + log_file)
-                    print(" ffmpeg log: " + ffmpeg_log_file)
+                    print("!!! Error: ffmpeg encoding failed !!!")
+                    print(" See logs for details.")
+                    print(" audiobook_reencode log:\n   " + log_file)
+                    print(" ffmpeg log:\n   " + ffmpeg_log_file)
                     print("<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>")
         else:
             found_error = False
